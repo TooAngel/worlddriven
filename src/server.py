@@ -11,7 +11,7 @@ app = Flask(
 api = restful.Api(app)
 
 
-class PullRequest(Object):
+class PullRequest(object):
     def __init__(self, data):
         self.data = data
 
@@ -27,23 +27,23 @@ class PullRequest(Object):
             return self.execute_closed()
 
     def execute_opened(self):
-        // TODO check PR and add message that this is under voting
+        # TODO check PR and add message that this is under voting
         print(self.data)
         print(self.data.keys)
 
     def execute_synchronize(self):
-        // TODO check PR and add message that this is under voting
+        # TODO check PR and add message that this is under voting
         print(self.data)
         print(self.data.keys())
 
     def execute_edited(self):
-        // TODO check PR and add message that this is under voting
+        # TODO check PR and add message that this is under voting
         print(self.data)
         print(self.data.keys())
         print(self.data['changes'])
 
     def execute_closed(self):
-        // TODO check PR and add message that this is under voting
+        # TODO check PR and add message that this is under voting
         print(self.data)
         print(self.data.keys())
 
@@ -61,10 +61,10 @@ class Github(restful.Resource):
         header = request.headers['X-GitHub-Event']
         if header == 'push':
             self.handle_push(data)
-            return true
+            return
         if header == 'pull_request':
             self.handle_pull_request(data)
-            return true
+            return
         print(header)
         print(data)
 
