@@ -26,15 +26,19 @@ class PullRequest(object):
         if self.data['action'] == 'closed':
             return self.execute_closed()
 
+    def _add_comment(self, repo, pull_request, message):
+        token = os.getenv('TOKEN')
+        github_client = github.Github(token)
+        repository = github_client.get_repo(repo)
+        pull_request = repository.get_pull(pull_request)
+        pull_request.create_issue_comment(message)
+
     def execute_opened(self):
         # TODO check PR and add message that this is under voting
         print(self.data)
         print(self.data.keys())
-        token = os.getenv('TOKEN')
-        github_client = github.Github(token)
-        repository = github_client.get_repo(self.data['repository']['id'])
-        pull_request = repository.get_pull(self.data['pull_request']['number'])
-        pull_request.create_issue_comment('This repository is under [democratic collaboration](https://github.com/TooAngel/democratic-collaboration) and will be merged automatically.')
+        message = 'This repository is under [democratic collaboration](https://github.com/TooAngel/democratic-collaboration) and will be merged automatically.'
+        self._add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_synchronize(self):
         # TODO check PR and add message that this is under voting
