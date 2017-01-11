@@ -11,7 +11,9 @@ app = Flask(
 api = restful.Api(app)
 
 class Github(restful.Resource):
-    def post(self, name):
+    def post(self):
+        header = request.headers['X-GitHub-Event']
+        print(header)
         data = request.json
         print(data)
 
