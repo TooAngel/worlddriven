@@ -34,8 +34,7 @@ class PullRequest(object):
         github_client = github.Github(token)
         repository = github_client.get_repo(self.data['repository']['id'])
         pull_request = repository.get_pull(self.data['pull_request']['number'])
-        pull_request.create_issue_comment('yeah')
-
+        pull_request.create_issue_comment('This repository is under [democratic collaboration](https://github.com/TooAngel/democratic-collaboration) and will be merged automatically.')
 
     def execute_synchronize(self):
         # TODO check PR and add message that this is under voting
