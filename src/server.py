@@ -16,6 +16,7 @@ class PullRequest(Object):
         self.data = data
 
     def execute(self):
+        print(self.data['action'])
         if self.data['action'] == 'opened':
             return self.execute_opened()
         if self.data['action'] == 'synchronize':
