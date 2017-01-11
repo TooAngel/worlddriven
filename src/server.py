@@ -11,10 +11,16 @@ app = Flask(
 api = restful.Api(app)
 
 class Github(restful.Resource):
+    def handle_push(self, data):
+        print(data)
+
     def post(self):
-        header = request.headers['X-GitHub-Event']
-        print(header)
         data = request.json
+        header = request.headers['X-GitHub-Event']
+        if header == 'push':
+            self.handle_push(data)
+            return true
+        print(header)
         print(data)
 
 api.add_resource(Github, '/github/')
