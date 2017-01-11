@@ -20,6 +20,8 @@ class PullRequest(Object):
             return self.execute_opened()
         if self.data['action'] == 'synchronize':
             return self.execute_synchronize()
+        if self.data['action'] == 'edited':
+            return self.execute_edited()
 
     def execute_opened(self):
         // TODO check PR and add message that this is under voting
@@ -29,7 +31,13 @@ class PullRequest(Object):
     def execute_synchronize(self):
         // TODO check PR and add message that this is under voting
         print(self.data)
-        print(self.data.keys)
+        print(self.data.keys())
+
+    def execute_edited(self):
+        // TODO check PR and add message that this is under voting
+        print(self.data)
+        print(self.data.keys())
+        print(self.data['changes'])
 
 class Github(restful.Resource):
     def handle_push(self, data):
