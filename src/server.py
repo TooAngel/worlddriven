@@ -41,9 +41,11 @@ class PullRequest(object):
         self._add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_synchronize(self):
-        # TODO check PR and add message that this is under voting
-        print(self.data)
-        print(self.data.keys())
+        # TODO check PR
+        # print(self.data)
+        # print(self.data.keys())
+        message = 'Code update recognized, countdown starts fresh.'
+        self._add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_edited(self):
         # TODO check PR and add message that this is under voting
