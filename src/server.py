@@ -23,6 +23,8 @@ class PullRequest(Object):
             return self.execute_synchronize()
         if self.data['action'] == 'edited':
             return self.execute_edited()
+        if self.data['action'] == 'closed':
+            return self.execute_closed()
 
     def execute_opened(self):
         // TODO check PR and add message that this is under voting
@@ -39,6 +41,11 @@ class PullRequest(Object):
         print(self.data)
         print(self.data.keys())
         print(self.data['changes'])
+
+    def execute_closed(self):
+        // TODO check PR and add message that this is under voting
+        print(self.data)
+        print(self.data.keys())
 
 class Github(restful.Resource):
     def handle_push(self, data):
