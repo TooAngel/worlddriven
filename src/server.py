@@ -54,9 +54,10 @@ class PullRequest(object):
         print(self.data['changes'])
 
     def execute_closed(self):
-        # TODO check PR and add message that this is under voting
-        print(self.data)
-        print(self.data.keys())
+        # TODO Anything to do here?
+        # print(self.data)
+        # print(self.data.keys())
+        pass
 
 class Github(restful.Resource):
     def handle_push(self, data):
