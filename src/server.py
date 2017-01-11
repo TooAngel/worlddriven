@@ -72,6 +72,10 @@ class Github(restful.Resource):
         if data['action'] == 'submitted':
             if data['review']['state'] == 'commented':
                 # TODO take as last point for countdown
+                token = os.getenv('TOKEN')
+                github_client = github.Github(token)
+                repository = github_client.get_repo(repo)
+                print(repository.get_stats_contributors())
                 return
             print(data['state'])
             print(data['review'])
