@@ -10,15 +10,38 @@ app = Flask(
 )
 api = restful.Api(app)
 
+
+class PullRequest(Object):
+    def __init__(self, data):
+        self.data = data
+
+    def execute(self):
+        if self.data['action'] == 'opened':
+            self.execute_opened()
+
+    def execute_opened():
+        // TODO check PR and add message that this is under voting
+        pass
+        print(self.data)
+        print(self.data.keys)
+
+
 class Github(restful.Resource):
     def handle_push(self, data):
         print(data)
+
+    def handle_pull_request(self, data):
+        pull_request = PullRequest(data)
+        pull_request.execute()
 
     def post(self):
         data = request.json
         header = request.headers['X-GitHub-Event']
         if header == 'push':
             self.handle_push(data)
+            return true
+        if header == 'pull_request':
+            self.handle_pull_request(data)
             return true
         print(header)
         print(data)
