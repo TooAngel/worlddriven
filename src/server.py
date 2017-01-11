@@ -65,16 +65,26 @@ class Github(restful.Resource):
         pull_request = PullRequest(data)
         pull_request.execute()
 
+    def handle_pull_request_review(self, data):
+        if data['action'] == 'submitted':
+            if data['review']['state'] == 'commented':
+                # TODO take as last point for countdown
+                return
+            print(data['state'])
+            print(data['review'])
+            print(self.data)
+            print(self.data.keys())
+
     def post(self):
         data = request.json
         header = request.headers['X-GitHub-Event']
         print(header)
         if header == 'push':
-            self.handle_push(data)
-            return
+            return self.handle_push(data)
         if header == 'pull_request':
-            self.handle_pull_request(data)
-            return
+            return self.handle_pull_request(data)
+        if header == 'pull_request_review':
+            return self.handle_pull_request_review(data)
         print(data)
 
 api.add_resource(Github, '/github/')
