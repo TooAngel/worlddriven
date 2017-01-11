@@ -17,18 +17,24 @@ class PullRequest(Object):
 
     def execute(self):
         if self.data['action'] == 'opened':
-            self.execute_opened()
+            return self.execute_opened()
+        if self.data['action'] == 'synchronize':
+            return self.execute_synchronize()
 
-    def execute_opened():
+    def execute_opened(self):
         // TODO check PR and add message that this is under voting
-        pass
         print(self.data)
         print(self.data.keys)
 
+    def execute_synchronize(self):
+        // TODO check PR and add message that this is under voting
+        print(self.data)
+        print(self.data.keys)
 
 class Github(restful.Resource):
     def handle_push(self, data):
-        print(data)
+        print('push - ignored')
+        # print(data)
 
     def handle_pull_request(self, data):
         pull_request = PullRequest(data)
