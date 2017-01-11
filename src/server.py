@@ -29,7 +29,13 @@ class PullRequest(object):
     def execute_opened(self):
         # TODO check PR and add message that this is under voting
         print(self.data)
-        print(self.data.keys)
+        print(self.data.keys())
+        token = os.getenv('TOKEN')
+        github_client = github.Github(token)
+        repository = github_client.get_repo(self.data['repository']['id'])
+        pull_request = repository.get_pull(self.data['pull_request']['id'])
+        pull_request.create_issue_comment('yeah')
+
 
     def execute_synchronize(self):
         # TODO check PR and add message that this is under voting
@@ -59,13 +65,13 @@ class Github(restful.Resource):
     def post(self):
         data = request.json
         header = request.headers['X-GitHub-Event']
+        print(header)
         if header == 'push':
             self.handle_push(data)
             return
         if header == 'pull_request':
             self.handle_pull_request(data)
             return
-        print(header)
         print(data)
 
 api.add_resource(Github, '/github/')
