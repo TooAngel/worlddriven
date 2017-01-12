@@ -40,6 +40,7 @@ class PullRequest(object):
         # TODO check PR
         # print(self.data)
         # print(self.data.keys())
+        print(self.data['pull_request']['title'])
         message = 'This repository is under [democratic collaboration](https://github.com/TooAngel/democratic-collaboration) and will be merged automatically.'
         self._add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
