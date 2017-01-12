@@ -121,8 +121,9 @@ def get_reviews(owner, repo, number):
     'Authorization': 'token {}'.format(os.getenv('TOKEN'))
     }
     response = requests.get(url, headers=headers)
+    response.raise_for_status()
     data = response.json()
-    if data['message'] == 'Not Found':
+    if 'message' in data and data['message'] == 'Not Found':
         return {}
     reviews_decided = [review for review in data if review['state'] != 'COMMENTED']
     last_reviews = {}
@@ -151,11 +152,18 @@ def check_pull_requests():
         for pull_request in repository.get_pulls():
             if not mergeable_pull_request(pull_request):
                 issue = repository.get_issue(pull_request.number)
-                # TODO if label not there add a message
-                issue.add_to_labels('WIP')
+                labels = [item for item in issue.labels if item.name == 'WIP']
+                if not labels:
+                    issue.add_to_labels('WIP')
+                    issue.create_comment('DCBOT: Adding WIP label, the title is prefixed with [WIP]')
                 continue
 
-            # TODO check for WIP label and write message
+            issue = repository.get_issue(pull_request.number)
+            labels = [item for item in issue.labels if item.name == 'WIP']
+            if labels:
+                issue.remove_from_labels(labels[0])
+                issue.create_comment('DCBOT: Removing WIP label, the title is not prefixed with [WIP]')
+
             author = pull_request.user.login
             possible_reviewers = {contributor: contributors[contributor] for contributor in contributors if contributor != author}
 
