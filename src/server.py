@@ -168,7 +168,7 @@ if __name__ == '__main__':
     sched = BackgroundScheduler()
     sched.start()
 
-    sched.add_job(check_pull_requests, 'cron')
+    sched.add_job(check_pull_requests, 'cron', minute=0, second=0)
 
     app.debug = os.getenv('DEBUG', 'false').lower() == 'true'
     app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5001)))
