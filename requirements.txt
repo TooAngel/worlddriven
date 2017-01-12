@@ -1,3 +1,5 @@
 Flask==0.10.1
 Flask-RESTful==0.3.3
 pygithub
+apscheduler
+requests
