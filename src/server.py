@@ -101,10 +101,10 @@ class Github(restful.Resource):
 
 api.add_resource(Github, '/github/')
 
-def get_contributors():
+def get_contributors(repository_name):
     token = os.getenv('TOKEN')
     github_client = github.Github(token)
-    repository = github_client.get_repo('tooangel/democratic-collaboration')
+    repository = github_client.get_repo(repository_name)
     return repository.get_stats_contributors()
 
 def toDateTime(value):
@@ -121,7 +121,10 @@ def get_reviews(owner, repo, number):
     'Authorization': 'token {}'.format(os.getenv('TOKEN'))
     }
     response = requests.get(url, headers=headers)
-    reviews_decided = [review for review in response.json() if review['state'] != 'COMMENTED']
+    data = response.json()
+    if data['message'] == 'Not Found':
+        return {}
+    reviews_decided = [review for review in data if review['state'] != 'COMMENTED']
     last_reviews = {}
     for review in reviews_decided:
         if review['user']['login'] not in last_reviews:
@@ -132,43 +135,61 @@ def get_reviews(owner, repo, number):
             continue
     return last_reviews
 
+def mergeable_pull_request(pull_request):
+    # TODO check number of commits and messages for 'fixup!'
+    return not pull_request.title.startswith('[WIP]')
+
 def check_pull_requests():
     token = os.getenv('TOKEN')
     github_client = github.Github(token)
-    repository = github_client.get_repo('tooangel/democratic-collaboration')
-    contributors = {contributor.author.login: contributor.total for contributor in get_contributors()}
+    repositories = ['tooangel/democratic-collaboration', 'tooangel/screeps']
 
-    for pull_request in repository.get_pulls():
-        author = pull_request.user.login
-        possible_reviewers = {contributor: contributors[contributor] for contributor in contributors if contributor != author}
+    for repository_name in repositories:
+        repository = github_client.get_repo(repository_name)
+        contributors = {contributor.author.login: contributor.total for contributor in get_contributors(repository_name)}
 
-        # Sum of total contriution without the author of the pull request
-        votes_total = sum(possible_reviewers[possible_reviewer] for possible_reviewer in possible_reviewers)
-        votes = 0
-
-        reviews = get_reviews(False, False, pull_request.number)
-
-        for review in reviews:
-            if review not in possible_reviewers:
-                print('{} not in reviewers'.format(review))
+        for pull_request in repository.get_pulls():
+            if not mergeable_pull_request(pull_request):
+                issue = repository.get_issue(pull_request.number)
+                # TODO if label not there add a message
+                issue.add_to_labels('WIP')
                 continue
 
-            if reviews[review]['state'] == 'APPROVED':
+            # TODO check for WIP label and write message
+            author = pull_request.user.login
+            possible_reviewers = {contributor: contributors[contributor] for contributor in contributors if contributor != author}
+
+            # Sum of total contriution without the author of the pull request
+            votes_total = sum(possible_reviewers[possible_reviewer] for possible_reviewer in possible_reviewers)
+            votes = 0
+
+            reviews = get_reviews(False, False, pull_request.number)
+
+            for review in reviews:
+                if review not in possible_reviewers:
+                    print('{} not in reviewers'.format(review))
+                    continue
+
+                if reviews[review]['state'] == 'APPROVED':
+                    votes += possible_reviewers[review]
+                    continue
                 votes += possible_reviewers[review]
-                continue
-            votes += possible_reviewers[review]
 
-        if votes == votes_total:
-            pull_request.merge()
+            print(pull_request.title)
+            if votes == votes_total:
+                print('Would merge now')
+                # pull_request.merge()
 
-        print(votes, votes_total)
+            # TODO chech vote percentage vs time to last event
+
+            print(votes, votes_total)
 
 
 if __name__ == '__main__':
     sched = BackgroundScheduler()
     sched.start()
 
-    sched.add_job(check_pull_requests, 'cron', minute=0, second=0)
+    sched.add_job(check_pull_requests, 'cron', second=0)
 
     app.debug = os.getenv('DEBUG', 'false').lower() == 'true'
     app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5001)))
