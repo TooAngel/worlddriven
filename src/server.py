@@ -198,18 +198,17 @@ def check_pull_request(repository, pull_request):
     votes = 0
 
     reviews = get_reviews(repository, pull_request.number)
-    print(reviews)
     for review in reviews:
         if review not in possible_reviewers:
             print('{} not in reviewers'.format(review))
             continue
-        print(reviews[review]['state'])
         if reviews[review]['state'] == 'APPROVED':
             votes += possible_reviewers[review]
             continue
-        if reviews[review]['state'] == 'CHANGES_REQUESTEDCHANGES_REQUESTED':
+        if reviews[review]['state'] == 'CHANGES_REQUESTED':
             votes -= possible_reviewers[review]
             continue
+        print(reviews[review]['state'])
 
     coefficient = 0
     if votes_total > 0:
@@ -217,7 +216,7 @@ def check_pull_request(repository, pull_request):
 
     message = '''DCBOT: Current status percentage: {} votes: {} total: {}'''.format(coefficient, votes, votes_total)
     print(message)
-    # issue.create_comment(message)
+    issue.create_comment(message)
 
     if coefficient > 0.99:
         print('Would merge now')
