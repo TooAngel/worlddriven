@@ -1,0 +1,8 @@
+test:
+  override:
+    - echo "test"
+deployment:
+  production:
+    branch: master
+    commands:
+      - curl http://basis.tooangel.de:5001/restart/
