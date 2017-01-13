@@ -211,9 +211,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
             continue
         print(reviews[review]['state'])
 
-    coefficient = 0
-    if votes_total > 0:
-        coefficient = votes / votes_total
+    coefficient = votes / votes_total
 
     commits = pull_request.get_commits()
     commit = max(commits, key=lambda commit: commit.commit.author.date)
