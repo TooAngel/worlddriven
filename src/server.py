@@ -15,6 +15,13 @@ app = Flask(
 api = restful.Api(app)
 
 
+def _add_comment(repo, pull_request, message):
+    token = os.getenv('TOKEN')
+    github_client = github.Github(token)
+    repository = github_client.get_repo(repo)
+    pull_request = repository.get_pull(pull_request)
+    pull_request.create_issue_comment('DCBOT: {}'.format(message))
+
 class PullRequest(object):
     def __init__(self, data):
         self.data = data
@@ -29,13 +36,6 @@ class PullRequest(object):
             return self.execute_edited()
         if self.data['action'] == 'closed':
             return self.execute_closed()
-
-    def _add_comment(self, repo, pull_request, message):
-        token = os.getenv('TOKEN')
-        github_client = github.Github(token)
-        repository = github_client.get_repo(repo)
-        pull_request = repository.get_pull(pull_request)
-        pull_request.create_issue_comment('DCBOT: {}'.format(message))
 
     def execute_opened(self):
         # TODO check PR
@@ -58,14 +58,14 @@ Please review the PR to make a good democratic decision.
 
 This is the placeholder for reviewer summoning :-) (top two + random)
 '''
-        self._add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
+        _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_synchronize(self):
         # TODO check PR
         # print(self.data)
         # print(self.data.keys())
         message = 'Code update recognized, countdown starts fresh.'
-        self._add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
+        _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_edited(self):
         # TODO check PR and add message that this is under voting
@@ -99,10 +99,16 @@ class Github(restful.Resource):
                 # TODO take as last point for countdown
                 get_contributors()
                 return
-            print(data['state'])
+            print(data['review']['state'])
             print(data['review'])
-            print(self.data)
-            print(self.data.keys())
+            print(data)
+            print(data.keys())
+
+            token = os.getenv('TOKEN')
+            github_client = github.Github(token)
+            repository = github_client.get_repo(data['repository']['id'])
+            pull_request = repository.get_pull(data['pull_request']['number'])
+            check_pull_request(pull_request)
 
     def post(self):
         data = request.json
@@ -167,6 +173,57 @@ def mergeable_pull_request(pull_request):
     # TODO check number of commits and messages for 'fixup!'
     return not pull_request.title.startswith('[WIP]')
 
+def check_pull_request(pull_request):
+    if not mergeable_pull_request(pull_request):
+        issue = repository.get_issue(pull_request.number)
+        labels = [item for item in issue.labels if item.name == 'WIP']
+        if not labels:
+            issue.add_to_labels('WIP')
+            issue.create_comment('DCBOT: Adding WIP label, the title is prefixed with [WIP]')
+        continue
+
+    issue = repository.get_issue(pull_request.number)
+    labels = [item for item in issue.labels if item.name == 'WIP']
+    if labels:
+        issue.remove_from_labels(labels[0])
+        issue.create_comment('DCBOT: Removing WIP label, the title is not prefixed with [WIP]')
+
+    author = pull_request.user.login
+    possible_reviewers = {contributor: contributors[contributor] for contributor in contributors if contributor != author}
+
+    # Sum of total contriution without the author of the pull request
+    votes_total = sum(possible_reviewers[possible_reviewer] for possible_reviewer in possible_reviewers)
+    votes = 0
+
+    reviews = get_reviews(False, False, pull_request.number)
+
+    for review in reviews:
+        if review not in possible_reviewers:
+            print('{} not in reviewers'.format(review))
+            continue
+
+        if reviews[review]['state'] == 'APPROVED':
+            votes += possible_reviewers[review]
+            continue
+        votes += possible_reviewers[review]
+
+    print(pull_request.title)
+    percentage = votes
+    if votes > 0:
+        percentage = votes_total / votes
+
+    issue.create_comment('''
+DCBOT: Current status percentage: {} votes: {} total: {}
+    '''.format(percentage, votes, votes_total))
+
+    if percentage > 0.99:
+        print('Would merge now')
+        pull_request.merge()
+
+    # TODO chech vote percentage vs time to last event
+
+    print(votes, votes_total)
+
 def check_pull_requests():
     token = os.getenv('TOKEN')
     github_client = github.Github(token)
@@ -177,50 +234,7 @@ def check_pull_requests():
         contributors = {contributor.author.login: contributor.total for contributor in get_contributors(repository_name)}
 
         for pull_request in repository.get_pulls():
-            if not mergeable_pull_request(pull_request):
-                issue = repository.get_issue(pull_request.number)
-                labels = [item for item in issue.labels if item.name == 'WIP']
-                if not labels:
-                    issue.add_to_labels('WIP')
-                    issue.create_comment('DCBOT: Adding WIP label, the title is prefixed with [WIP]')
-                continue
-
-            issue = repository.get_issue(pull_request.number)
-            labels = [item for item in issue.labels if item.name == 'WIP']
-            if labels:
-                issue.remove_from_labels(labels[0])
-                issue.create_comment('DCBOT: Removing WIP label, the title is not prefixed with [WIP]')
-
-            author = pull_request.user.login
-            possible_reviewers = {contributor: contributors[contributor] for contributor in contributors if contributor != author}
-
-            # Sum of total contriution without the author of the pull request
-            votes_total = sum(possible_reviewers[possible_reviewer] for possible_reviewer in possible_reviewers)
-            votes = 0
-
-            reviews = get_reviews(False, False, pull_request.number)
-
-            for review in reviews:
-                if review not in possible_reviewers:
-                    print('{} not in reviewers'.format(review))
-                    continue
-
-                if reviews[review]['state'] == 'APPROVED':
-                    votes += possible_reviewers[review]
-                    continue
-                votes += possible_reviewers[review]
-
-            print(pull_request.title)
-            percentage = votes
-            if votes > 0:
-                percentage = votes_total / votes
-            if percentage > 0.99:
-                print('Would merge now')
-                pull_request.merge()
-
-            # TODO chech vote percentage vs time to last event
-
-            print(votes, votes_total)
+            check_pull_request(pull_request)
 
 
 if __name__ == '__main__':
