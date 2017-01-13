@@ -174,6 +174,7 @@ def mergeable_pull_request(pull_request):
     return not pull_request.title.startswith('[WIP]')
 
 def check_pull_request(repository, pull_request):
+    contributors = {contributor.author.login: contributor.total for contributor in get_contributors(repository.id)}
     if not mergeable_pull_request(pull_request):
         issue = repository.get_issue(pull_request.number)
         labels = [item for item in issue.labels if item.name == 'WIP']
@@ -231,7 +232,6 @@ def check_pull_requests():
 
     for repository_name in repositories:
         repository = github_client.get_repo(repository_name)
-        contributors = {contributor.author.login: contributor.total for contributor in get_contributors(repository_name)}
 
         for pull_request in repository.get_pulls():
             check_pull_request(repository, pull_request)
