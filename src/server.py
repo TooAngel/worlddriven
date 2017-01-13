@@ -5,6 +5,7 @@ import github
 from apscheduler.schedulers.background import BackgroundScheduler
 import requests
 from datetime import datetime
+import sys
 
 app = Flask(
     __name__,
@@ -115,6 +116,14 @@ class Github(restful.Resource):
             return self.handle_pull_request_review(data)
         print(data)
 
+class Restart(restful.Resource):
+    def get(self):
+        func = request.environ.get('werkzeug.server.shutdown')
+        if func is None:
+            raise RuntimeError('Not running with the Werkzeug Server')
+        func()
+
+api.add_resource(Restart, '/restart/')
 api.add_resource(Github, '/github/')
 
 def get_contributors(repository_name):
