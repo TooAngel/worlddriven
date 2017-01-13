@@ -41,7 +41,22 @@ class PullRequest(object):
         # print(self.data)
         # print(self.data.keys())
         print(self.data['pull_request']['title'])
-        message = 'This repository is under [democratic collaboration](https://github.com/TooAngel/democratic-collaboration) and will be merged automatically.'
+        message = '''
+This repository is under [democratic collaboration](https://github.com/TooAngel/democratic-collaboration) and will be merged automatically.
+
+The merge decision is based on the outcome of the reviews:
+ - `Approve` add the reviewer value (number of commits) to the `metric`
+ - `Request changes` substract the reviewer value from the `metric`
+
+ - `metric > 99%` merge now
+ - `metric > 75%` merge in 1 day
+ - `metric > 50%` merge in 3 days
+ - `metric >= 0%` merge in 7 days
+
+Please review the PR to make a good democratic decision.
+
+This is the placeholder for reviewer summoning :-) (top two + random)
+'''
         self._add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_synchronize(self):
@@ -122,6 +137,8 @@ def get_reviews(owner, repo, number):
     'Authorization': 'token {}'.format(os.getenv('TOKEN'))
     }
     response = requests.get(url, headers=headers)
+    if response.status_code == 404:
+        return {}
     response.raise_for_status()
     data = response.json()
     if 'message' in data and data['message'] == 'Not Found':
@@ -185,9 +202,12 @@ def check_pull_requests():
                 votes += possible_reviewers[review]
 
             print(pull_request.title)
-            if votes == votes_total:
+            percentage = votes
+            if votes > 0:
+                percentage = votes_total / votes
+            if percentage > 0.99:
                 print('Would merge now')
-                # pull_request.merge()
+                pull_request.merge()
 
             # TODO chech vote percentage vs time to last event
 
@@ -198,7 +218,7 @@ if __name__ == '__main__':
     sched = BackgroundScheduler()
     sched.start()
 
-    sched.add_job(check_pull_requests, 'cron', second=0)
+    sched.add_job(check_pull_requests, 'cron', second=0, minute=0)
 
     app.debug = os.getenv('DEBUG', 'false').lower() == 'true'
     app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5001)))
