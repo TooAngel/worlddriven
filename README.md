@@ -6,11 +6,11 @@ Democratic collaboration introduces a contribution based weighted voting system 
 
 Currently it is based on the github Pull Request workflow. If a PR is reviewed with an 'Approve' it is like voting `yes`, 'Request change' is `no`. Review with 'comment' prolongs the time to merge.
 
-Weigted votes are based on the commits (currently). 
+Weighted votes are based on the commits (currently). 
 
 If a PR is ready for merge a voting is started (starting `value` 0):
- - If a reviewer 'Request changes' the `value` descreased by there contribution value.
- - If a reviewer 'Approve' the `value increases by there contribution value.
+ - If a reviewer 'Request changes' the `value` decreases by their contribution value.
+ - If a reviewer 'Approve' the `value` increases by their contribution value.
  - After the last Review interaction with the PR:
    - `value` < 0 - not merged
    - `value` > '50%' of total in 3 days
