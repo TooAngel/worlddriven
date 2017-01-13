@@ -211,15 +211,15 @@ def check_pull_request(repository, pull_request):
             votes -= possible_reviewers[review]
             continue
 
-    percentage = votes
-    if votes > 0:
-        percentage = votes / votes_total
+    coefficient = 0
+    if votes_total > 0:
+        coefficient = votes / votes_total
 
-    message = '''DCBOT: Current status percentage: {} votes: {} total: {}'''.format(percentage, votes, votes_total)
+    message = '''DCBOT: Current status percentage: {} votes: {} total: {}'''.format(coefficient, votes, votes_total)
     print(message)
     # issue.create_comment(message)
 
-    if percentage > 0.99:
+    if coefficient > 0.99:
         print('Would merge now')
         # pull_request.merge()
 
