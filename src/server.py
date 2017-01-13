@@ -141,22 +141,22 @@ def get_contributors(repository_name):
 def toDateTime(value):
     return datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ')
 
-def get_reviews(owner, repo, number):
-    if not owner:
-        owner = 'tooangel'
-    if not repo:
-        repo = 'democratic-collaboration'
-    url = 'https://api.github.com/repos/{}/{}/pulls/{}/reviews'.format(owner, repo, number)
+def get_reviews(repo, number):
+    url = 'https://api.github.com/repos/{}/pulls/{}/reviews'.format(repo.full_name, number)
     headers = {
     'Accept': 'application/vnd.github.black-cat-preview+json',
     'Authorization': 'token {}'.format(os.getenv('TOKEN'))
     }
     response = requests.get(url, headers=headers)
     if response.status_code == 404:
+        print(url)
+        print(response.content)
+        print('Status Code 404')
         return {}
     response.raise_for_status()
     data = response.json()
     if 'message' in data and data['message'] == 'Not Found':
+        print('message: Not Found')
         return {}
     reviews_decided = [review for review in data if review['state'] != 'COMMENTED']
     last_reviews = {}
@@ -174,6 +174,7 @@ def mergeable_pull_request(pull_request):
     return not pull_request.title.startswith('[WIP]')
 
 def check_pull_request(repository, pull_request):
+    print(pull_request.title)
     contributors = {contributor.author.login: contributor.total for contributor in get_contributors(repository.id)}
     if not mergeable_pull_request(pull_request):
         issue = repository.get_issue(pull_request.number)
@@ -196,30 +197,31 @@ def check_pull_request(repository, pull_request):
     votes_total = sum(possible_reviewers[possible_reviewer] for possible_reviewer in possible_reviewers)
     votes = 0
 
-    reviews = get_reviews(False, False, pull_request.number)
-
+    reviews = get_reviews(repository, pull_request.number)
+    print(reviews)
     for review in reviews:
         if review not in possible_reviewers:
             print('{} not in reviewers'.format(review))
             continue
-
+        print(reviews[review]['state'])
         if reviews[review]['state'] == 'APPROVED':
             votes += possible_reviewers[review]
             continue
-        votes += possible_reviewers[review]
+        if reviews[review]['state'] == 'CHANGES_REQUESTEDCHANGES_REQUESTED':
+            votes -= possible_reviewers[review]
+            continue
 
-    print(pull_request.title)
     percentage = votes
     if votes > 0:
-        percentage = votes_total / votes
+        percentage = votes / votes_total
 
-    issue.create_comment('''
-DCBOT: Current status percentage: {} votes: {} total: {}
-    '''.format(percentage, votes, votes_total))
+    message = '''DCBOT: Current status percentage: {} votes: {} total: {}'''.format(percentage, votes, votes_total)
+    print(message)
+    # issue.create_comment(message)
 
     if percentage > 0.99:
         print('Would merge now')
-        pull_request.merge()
+        # pull_request.merge()
 
     # TODO chech vote percentage vs time to last event
 
