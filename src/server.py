@@ -108,7 +108,7 @@ class Github(restful.Resource):
             github_client = github.Github(token)
             repository = github_client.get_repo(data['repository']['id'])
             pull_request = repository.get_pull(data['pull_request']['number'])
-            check_pull_request(pull_request)
+            check_pull_request(repository, pull_request)
 
     def post(self):
         data = request.json
@@ -173,14 +173,14 @@ def mergeable_pull_request(pull_request):
     # TODO check number of commits and messages for 'fixup!'
     return not pull_request.title.startswith('[WIP]')
 
-def check_pull_request(pull_request):
+def check_pull_request(repository, pull_request):
     if not mergeable_pull_request(pull_request):
         issue = repository.get_issue(pull_request.number)
         labels = [item for item in issue.labels if item.name == 'WIP']
         if not labels:
             issue.add_to_labels('WIP')
             issue.create_comment('DCBOT: Adding WIP label, the title is prefixed with [WIP]')
-        continue
+        return
 
     issue = repository.get_issue(pull_request.number)
     labels = [item for item in issue.labels if item.name == 'WIP']
@@ -234,7 +234,7 @@ def check_pull_requests():
         contributors = {contributor.author.login: contributor.total for contributor in get_contributors(repository_name)}
 
         for pull_request in repository.get_pulls():
-            check_pull_request(pull_request)
+            check_pull_request(repository, pull_request)
 
 
 if __name__ == '__main__':
