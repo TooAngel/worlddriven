@@ -96,15 +96,6 @@ class Github(restful.Resource):
                 print(self.data)
                 return
 
-            if data['review']['state'] == 'commented':
-                # TODO take as last point for countdown
-                get_contributors(data['repository']['id'])
-                return
-            print(data['review']['state'])
-            print(data['review'])
-            print(data)
-            print(data.keys())
-
             token = os.getenv('TOKEN')
             github_client = github.Github(token)
             repository = github_client.get_repo(data['repository']['id'])
