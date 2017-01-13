@@ -98,7 +98,7 @@ class Github(restful.Resource):
 
             if data['review']['state'] == 'commented':
                 # TODO take as last point for countdown
-                get_contributors()
+                get_contributors(data['repository']['id'])
                 return
             print(data['review']['state'])
             print(data['review'])
@@ -218,7 +218,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     commits = pull_request.get_commits()
     commit = max(commits, key=lambda commit: commit.commit.author.date)
     age = datetime.now() - commit.commit.author.date
-    message = '''DCBOT: Current status percentage: {} votes: {} total: {} age: {}'''.format(coefficient, votes, votes_total, age.days)
+    message = '''DCBOT: Current status coefficient: {} votes: {} total: {} age: {}'''.format(coefficient, votes, votes_total, age.days)
     print(message)
     if commentOnIssue:
         issue.create_comment(message)
