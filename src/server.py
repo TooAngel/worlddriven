@@ -7,6 +7,7 @@ import requests
 from datetime import datetime
 import sys
 
+
 app = Flask(
     __name__,
     template_folder='../templates',
@@ -108,7 +109,7 @@ class Github(restful.Resource):
             github_client = github.Github(token)
             repository = github_client.get_repo(data['repository']['id'])
             pull_request = repository.get_pull(data['pull_request']['number'])
-            check_pull_request(repository, pull_request)
+            check_pull_request(repository, pull_request, True)
 
     def post(self):
         data = request.json
@@ -173,7 +174,7 @@ def mergeable_pull_request(pull_request):
     # TODO check number of commits and messages for 'fixup!'
     return not pull_request.title.startswith('[WIP]')
 
-def check_pull_request(repository, pull_request):
+def check_pull_request(repository, pull_request, commentOnIssue):
     print(pull_request.title)
     contributors = {contributor.author.login: contributor.total for contributor in get_contributors(repository.id)}
     if not mergeable_pull_request(pull_request):
@@ -214,17 +215,29 @@ def check_pull_request(repository, pull_request):
     if votes_total > 0:
         coefficient = votes / votes_total
 
-    message = '''DCBOT: Current status percentage: {} votes: {} total: {}'''.format(coefficient, votes, votes_total)
+    commits = pull_request.get_commits()
+    commit = max(commits, key=lambda commit: commit.commit.author.date)
+    age = datetime.now() - commit.commit.author.date
+    message = '''DCBOT: Current status percentage: {} votes: {} total: {} age: {}'''.format(coefficient, votes, votes_total, age.days)
     print(message)
-    issue.create_comment(message)
+    if commentOnIssue:
+        issue.create_comment(message)
 
     if coefficient > 0.99:
         print('Would merge now')
-        # pull_request.merge()
+        pull_request.merge()
 
-    # TODO chech vote percentage vs time to last event
+    if coefficient > 0.75 and age.days >= 1:
+        print('Would merge now')
+        pull_request.merge()
 
-    print(votes, votes_total)
+    if coefficient > 0.5 and age.days >= 3:
+        print('Would merge now')
+        pull_request.merge()
+
+    if coefficient >= 0 and age.days >= 7:
+        print('Would merge now')
+        pull_request.merge()
 
 def check_pull_requests():
     token = os.getenv('TOKEN')
@@ -235,7 +248,7 @@ def check_pull_requests():
         repository = github_client.get_repo(repository_name)
 
         for pull_request in repository.get_pulls():
-            check_pull_request(repository, pull_request)
+            check_pull_request(repository, pull_request, False)
 
 
 if __name__ == '__main__':
