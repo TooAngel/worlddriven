@@ -5,6 +5,8 @@ import github
 from apscheduler.schedulers.background import BackgroundScheduler
 import requests
 from datetime import datetime
+import sys
+
 
 app = Flask(
     __name__,
@@ -13,6 +15,13 @@ app = Flask(
 )
 api = restful.Api(app)
 
+
+def _add_comment(repo, pull_request, message):
+    token = os.getenv('TOKEN')
+    github_client = github.Github(token)
+    repository = github_client.get_repo(repo)
+    pull_request = repository.get_pull(pull_request)
+    pull_request.create_issue_comment('DCBOT: {}'.format(message))
 
 class PullRequest(object):
     def __init__(self, data):
@@ -29,27 +38,35 @@ class PullRequest(object):
         if self.data['action'] == 'closed':
             return self.execute_closed()
 
-    def _add_comment(self, repo, pull_request, message):
-        token = os.getenv('TOKEN')
-        github_client = github.Github(token)
-        repository = github_client.get_repo(repo)
-        pull_request = repository.get_pull(pull_request)
-        pull_request.create_issue_comment('DCBOT: {}'.format(message))
-
     def execute_opened(self):
         # TODO check PR
         # print(self.data)
         # print(self.data.keys())
         print(self.data['pull_request']['title'])
-        message = 'This repository is under [democratic collaboration](https://github.com/TooAngel/democratic-collaboration) and will be merged automatically.'
-        self._add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
+        message = '''
+This repository is under [democratic collaboration](https://github.com/TooAngel/democratic-collaboration) and will be merged automatically.
+
+The merge decision is based on the outcome of the reviews:
+ - `Approve` add the reviewer value (number of commits) to the `metric`
+ - `Request changes` substract the reviewer value from the `metric`
+
+ - `metric > 99%` merge now
+ - `metric > 75%` merge in 1 day
+ - `metric > 50%` merge in 3 days
+ - `metric >= 0%` merge in 7 days
+
+Please review the PR to make a good democratic decision.
+
+This is the placeholder for reviewer summoning :-) (top two + random)
+'''
+        _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_synchronize(self):
         # TODO check PR
         # print(self.data)
         # print(self.data.keys())
         message = 'Code update recognized, countdown starts fresh.'
-        self._add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
+        _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_edited(self):
         # TODO check PR and add message that this is under voting
@@ -79,14 +96,11 @@ class Github(restful.Resource):
                 print(self.data)
                 return
 
-            if data['review']['state'] == 'commented':
-                # TODO take as last point for countdown
-                get_contributors()
-                return
-            print(data['state'])
-            print(data['review'])
-            print(self.data)
-            print(self.data.keys())
+            token = os.getenv('TOKEN')
+            github_client = github.Github(token)
+            repository = github_client.get_repo(data['repository']['id'])
+            pull_request = repository.get_pull(data['pull_request']['number'])
+            check_pull_request(repository, pull_request, True)
 
     def post(self):
         data = request.json
@@ -100,6 +114,14 @@ class Github(restful.Resource):
             return self.handle_pull_request_review(data)
         print(data)
 
+class Restart(restful.Resource):
+    def get(self):
+        func = request.environ.get('werkzeug.server.shutdown')
+        if func is None:
+            raise RuntimeError('Not running with the Werkzeug Server')
+        func()
+
+api.add_resource(Restart, '/restart/')
 api.add_resource(Github, '/github/')
 
 def get_contributors(repository_name):
@@ -111,20 +133,22 @@ def get_contributors(repository_name):
 def toDateTime(value):
     return datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ')
 
-def get_reviews(owner, repo, number):
-    if not owner:
-        owner = 'tooangel'
-    if not repo:
-        repo = 'democratic-collaboration'
-    url = 'https://api.github.com/repos/{}/{}/pulls/{}/reviews'.format(owner, repo, number)
+def get_reviews(repo, number):
+    url = 'https://api.github.com/repos/{}/pulls/{}/reviews'.format(repo.full_name, number)
     headers = {
     'Accept': 'application/vnd.github.black-cat-preview+json',
     'Authorization': 'token {}'.format(os.getenv('TOKEN'))
     }
     response = requests.get(url, headers=headers)
+    if response.status_code == 404:
+        print(url)
+        print(response.content)
+        print('Status Code 404')
+        return {}
     response.raise_for_status()
     data = response.json()
     if 'message' in data and data['message'] == 'Not Found':
+        print('message: Not Found')
         return {}
     reviews_decided = [review for review in data if review['state'] != 'COMMENTED']
     last_reviews = {}
@@ -141,6 +165,69 @@ def mergeable_pull_request(pull_request):
     # TODO check number of commits and messages for 'fixup!'
     return not pull_request.title.startswith('[WIP]')
 
+def check_pull_request(repository, pull_request, commentOnIssue):
+    print(pull_request.title)
+    contributors = {contributor.author.login: contributor.total for contributor in get_contributors(repository.id)}
+    if not mergeable_pull_request(pull_request):
+        issue = repository.get_issue(pull_request.number)
+        labels = [item for item in issue.labels if item.name == 'WIP']
+        if not labels:
+            issue.add_to_labels('WIP')
+            issue.create_comment('DCBOT: Adding WIP label, the title is prefixed with [WIP]')
+        return
+
+    issue = repository.get_issue(pull_request.number)
+    labels = [item for item in issue.labels if item.name == 'WIP']
+    if labels:
+        issue.remove_from_labels(labels[0])
+        issue.create_comment('DCBOT: Removing WIP label, the title is not prefixed with [WIP]')
+
+    author = pull_request.user.login
+    possible_reviewers = {contributor: contributors[contributor] for contributor in contributors if contributor != author}
+
+    # Sum of total contriution without the author of the pull request
+    votes_total = sum(possible_reviewers[possible_reviewer] for possible_reviewer in possible_reviewers)
+    votes = 0
+
+    reviews = get_reviews(repository, pull_request.number)
+    for review in reviews:
+        if review not in possible_reviewers:
+            print('{} not in reviewers'.format(review))
+            continue
+        if reviews[review]['state'] == 'APPROVED':
+            votes += possible_reviewers[review]
+            continue
+        if reviews[review]['state'] == 'CHANGES_REQUESTED':
+            votes -= possible_reviewers[review]
+            continue
+        print(reviews[review]['state'])
+
+    coefficient = float(votes) / float(votes_total)
+
+    commits = pull_request.get_commits()
+    commit = max(commits, key=lambda commit: commit.commit.author.date)
+    age = datetime.now() - commit.commit.author.date
+    message = '''DCBOT: Current status coefficient: {} votes: {} total: {} age: {}'''.format(coefficient, votes, votes_total, age.days)
+    print(message)
+    if commentOnIssue:
+        issue.create_comment(message)
+
+    if coefficient > 0.99:
+        print('Would merge now')
+        pull_request.merge()
+
+    if coefficient > 0.75 and age.days >= 1:
+        print('Would merge now')
+        pull_request.merge()
+
+    if coefficient > 0.5 and age.days >= 3:
+        print('Would merge now')
+        pull_request.merge()
+
+    if coefficient >= 0 and age.days >= 7:
+        print('Would merge now')
+        pull_request.merge()
+
 def check_pull_requests():
     token = os.getenv('TOKEN')
     github_client = github.Github(token)
@@ -148,57 +235,16 @@ def check_pull_requests():
 
     for repository_name in repositories:
         repository = github_client.get_repo(repository_name)
-        contributors = {contributor.author.login: contributor.total for contributor in get_contributors(repository_name)}
 
         for pull_request in repository.get_pulls():
-            if not mergeable_pull_request(pull_request):
-                issue = repository.get_issue(pull_request.number)
-                labels = [item for item in issue.labels if item.name == 'WIP']
-                if not labels:
-                    issue.add_to_labels('WIP')
-                    issue.create_comment('DCBOT: Adding WIP label, the title is prefixed with [WIP]')
-                continue
-
-            issue = repository.get_issue(pull_request.number)
-            labels = [item for item in issue.labels if item.name == 'WIP']
-            if labels:
-                issue.remove_from_labels(labels[0])
-                issue.create_comment('DCBOT: Removing WIP label, the title is not prefixed with [WIP]')
-
-            author = pull_request.user.login
-            possible_reviewers = {contributor: contributors[contributor] for contributor in contributors if contributor != author}
-
-            # Sum of total contriution without the author of the pull request
-            votes_total = sum(possible_reviewers[possible_reviewer] for possible_reviewer in possible_reviewers)
-            votes = 0
-
-            reviews = get_reviews(False, False, pull_request.number)
-
-            for review in reviews:
-                if review not in possible_reviewers:
-                    print('{} not in reviewers'.format(review))
-                    continue
-
-                if reviews[review]['state'] == 'APPROVED':
-                    votes += possible_reviewers[review]
-                    continue
-                votes += possible_reviewers[review]
-
-            print(pull_request.title)
-            if votes == votes_total:
-                print('Would merge now')
-                # pull_request.merge()
-
-            # TODO chech vote percentage vs time to last event
-
-            print(votes, votes_total)
+            check_pull_request(repository, pull_request, False)
 
 
 if __name__ == '__main__':
     sched = BackgroundScheduler()
     sched.start()
 
-    sched.add_job(check_pull_requests, 'cron', second=0)
+    sched.add_job(check_pull_requests, 'cron', second=0, minute=0)
 
     app.debug = os.getenv('DEBUG', 'false').lower() == 'true'
     app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5001)))
