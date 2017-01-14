@@ -185,9 +185,9 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     author = pull_request.user.login
     possible_reviewers = {contributor: contributors[contributor] for contributor in contributors if contributor != author}
 
-    # Sum of total contriution without the author of the pull request
-    votes_total = sum(possible_reviewers[possible_reviewer] for possible_reviewer in possible_reviewers)
-    votes = 0
+    # Sum of total number of commits, initialize votes with the authors weight
+    votes_total = sum(commit_activity.total for commit_activity in repository.get_stats_commit_activity())
+    votes = contributors[author]
 
     reviews = get_reviews(repository, pull_request.number)
     for review in reviews:
