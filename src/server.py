@@ -186,7 +186,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     possible_reviewers = {contributor: contributors[contributor] for contributor in contributors if contributor != author}
 
     # Sum of total number of commits, initialize votes with the authors weight
-    votes_total = sum(commit_activity.total for commit_activity in repository.get_stats_commit_activity())
+    votes_total = sum(contributors[contributor] for contributor in contributors)
     votes = contributors[author]
 
     reviews = get_reviews(repository, pull_request.number)
@@ -229,6 +229,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
         pull_request.merge()
 
 def check_pull_requests():
+    print(datetime.now())
     token = os.getenv('TOKEN')
     github_client = github.Github(token)
     repositories = ['tooangel/democratic-collaboration', 'tooangel/screeps']
