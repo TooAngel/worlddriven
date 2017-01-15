@@ -58,7 +58,7 @@ class PullRequest(object):
 
         contributors = {contributor.author.login: contributor.total for contributor in get_contributors(self.data['repository']['id'])}
         author = self.data['pull_request']['user']['login']
-        possible_reviewers = [{name: contributor, total: contributors[contributor]} for contributor in contributors if contributor != author]
+        possible_reviewers = [{'name': contributor, 'total': contributors[contributor]} for contributor in contributors if contributor != author]
         possible_reviewers = sorted(possible_reviewers, key=lambda reviewer: reviewer['total'])
 
         reviewers = []
