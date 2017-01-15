@@ -11,12 +11,8 @@ Weighted votes are based on the commits (currently).
 If a PR is ready for merge a voting is started (starting `value` 0):
  - If a reviewer 'Request changes' the `value` decreases by their contribution value.
  - If a reviewer 'Approve' the `value` increases by their contribution value.
- - After the last Review interaction with the PR:
-   - `value` < 0 - not merged
-   - `value` > '50%' of total in 3 days
-   - `value` > '75%' of total in 1 day
-   - `value` = total now
-   - otherwise in 7 days
+ - Based on the `value` and `total` of votes is `coefficient` is calculated and
+   the PR is merged in `coefficient * 10 days`.
 
 ## Develop
 
