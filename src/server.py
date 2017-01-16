@@ -58,7 +58,9 @@ class PullRequest(object):
 
         contributors = {contributor.author.login: contributor.total for contributor in get_contributors(self.data['repository']['id'])}
         author = self.data['pull_request']['user']['login']
-        possible_reviewers = [{'name': contributor, 'total': contributors[contributor]} for contributor in contributors if contributor != author]
+        possible_reviewers = [{'name': contributor, 'total': contributors[contributor]}
+                              for contributor in contributors
+                              if contributor != author and contributors[contributor] >= 10]
         possible_reviewers = sorted(possible_reviewers, key=lambda reviewer: -1 * reviewer['total'])
 
         reviewers = []
@@ -80,14 +82,14 @@ The merge decision is based on the outcome of the reviews:
 
 Please review the PR to make a good democratic decision.
 
-Summoning some reviewers:
-
 '''
 
-        for reviewer in reviewers:
-            message += ' - @{}: {}\n'.format(reviewer['name'], getReviewerMotivation())
+        if len(reviewers) > 0:
+            message += 'Summoning some reviewers:\n'
+            for reviewer in reviewers:
+                message += ' - @{}: {}\n'.format(reviewer['name'], getReviewerMotivation())
 
-        _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
+            _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_synchronize(self):
         # TODO check PR
