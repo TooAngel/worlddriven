@@ -4,7 +4,7 @@ from flask.ext import restful  # @UnresolvedImport
 import github
 from apscheduler.schedulers.background import BackgroundScheduler
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import sys
 from random import randrange
 
@@ -25,7 +25,8 @@ def getReviewerMotivation():
         'I just want to get this merged ASAP',
         'Not sure why you are here',
         'I always like your reviews',
-        'Who are you?'
+        'Who are you?',
+        'Check out this awesome code change and tell them where they fucked up!'
     ]
     return motivations[randrange(len(motivations) - 1)]
 
@@ -58,7 +59,9 @@ class PullRequest(object):
 
         contributors = {contributor.author.login: contributor.total for contributor in get_contributors(self.data['repository']['id'])}
         author = self.data['pull_request']['user']['login']
-        possible_reviewers = [{'name': contributor, 'total': contributors[contributor]} for contributor in contributors if contributor != author]
+        possible_reviewers = [{'name': contributor, 'total': contributors[contributor]}
+                              for contributor in contributors
+                              if contributor != author and contributors[contributor] >= 10]
         possible_reviewers = sorted(possible_reviewers, key=lambda reviewer: -1 * reviewer['total'])
 
         reviewers = []
@@ -80,14 +83,14 @@ The merge decision is based on the outcome of the reviews:
 
 Please review the PR to make a good democratic decision.
 
-Summoning some reviewers:
-
 '''
 
-        for reviewer in reviewers:
-            message += ' - @{}: {}\n'.format(reviewer['name'], getReviewerMotivation())
+        if len(reviewers) > 0:
+            message += 'Summoning some reviewers:\n'
+            for reviewer in reviewers:
+                message += ' - @{}: {}\n'.format(reviewer['name'], getReviewerMotivation())
 
-        _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
+            _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_synchronize(self):
         # TODO check PR
@@ -201,7 +204,7 @@ def mergeable_pull_request(pull_request):
 
 def check_pull_request(repository, pull_request, commentOnIssue):
     print(pull_request.title)
-    contributors = {contributor.author.login: contributor.total for contributor in get_contributors(repository.id)}
+    contributors = {contributor.author.login: contributor.total for contributor in (get_contributors(repository.id) or {})}
     if not mergeable_pull_request(pull_request):
         issue = repository.get_issue(pull_request.number)
         labels = [item for item in issue.labels if item.name == 'WIP']
@@ -239,24 +242,37 @@ def check_pull_request(repository, pull_request, commentOnIssue):
             continue
         print(reviews[review]['state'])
 
-    coefficient = float(votes) / float(votes_total)
+    coefficient = 0
+    if votes_total != 0:
+        coefficient = float(votes) / float(votes_total)
+
+    if coefficient < 0:
+        print('Negative coefficient')
+        return
 
     commits = pull_request.get_commits()
     commit = max(commits, key=lambda commit: commit.commit.author.date)
     age = datetime.now() - commit.commit.author.date
-    days_to_merge = 10 - coefficient * 10
+
+    pull_request.commits
+
+    # Formular:
+    # 5 days base value
+    # commits in pull request times 5 days
+    # days_to_merge = (1 - coefficient) * calculated days
+    days_to_merge = timedelta(days=(1 - coefficient) * (5 + pull_request.commits * 5))
     message = '''DCBOT: A new review, yeah.
 
     Votes: {}/{}
     Coefficient: {}
-    Days to merge: {}
-    Age: {}'''.format(votes, votes_total, coefficient, days_to_merge, age.days)
+    Hours to merge: {}
+    Age in hours: {}'''.format(votes, votes_total, coefficient, (days_to_merge.seconds - age.seconds) / 3600, age.seconds / 3600)
     if commentOnIssue:
         print(message)
         issue.create_comment(message)
 
-    print(age.days, days_to_merge)
-    if age.days >= days_to_merge:
+    print(age, days_to_merge)
+    if age >= days_to_merge:
         print('Would merge now')
         pull_request.merge()
 
