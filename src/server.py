@@ -6,6 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import requests
 from datetime import datetime
 import sys
+from random import randrange
 
 
 app = Flask(
@@ -16,12 +17,26 @@ app = Flask(
 api = restful.Api(app)
 
 
+def getReviewerMotivation():
+    motivations = [
+        'A proper review is appreciated',
+        'Some warm words would be nice',
+        'Please look at the code',
+        'I just want to get this merged ASAP',
+        'Not sure why you are here',
+        'I always like your reviews',
+        'Who are you?'
+    ]
+    return motivations[randrange(len(motivations) - 1)]
+
+
 def _add_comment(repo, pull_request, message):
     token = os.getenv('TOKEN')
     github_client = github.Github(token)
     repository = github_client.get_repo(repo)
     pull_request = repository.get_pull(pull_request)
     pull_request.create_issue_comment('DCBOT: {}'.format(message))
+
 
 class PullRequest(object):
     def __init__(self, data):
@@ -39,10 +54,21 @@ class PullRequest(object):
             return self.execute_closed()
 
     def execute_opened(self):
-        # TODO check PR
-        # print(self.data)
-        # print(self.data.keys())
         print(self.data['pull_request']['title'])
+
+        contributors = {contributor.author.login: contributor.total for contributor in get_contributors(self.data['repository']['id'])}
+        author = self.data['pull_request']['user']['login']
+        possible_reviewers = [{'name': contributor, 'total': contributors[contributor]} for contributor in contributors if contributor != author]
+        possible_reviewers = sorted(possible_reviewers, key=lambda reviewer: -1 * reviewer['total'])
+
+        reviewers = []
+        for i in range(2):
+            if len(possible_reviewers) == 0:
+                break
+            reviewers.append(possible_reviewers.pop(0))
+        if len(possible_reviewers) > 0:
+            reviewers.append(possible_reviewers[randrange(len(possible_reviewers) - 1)])
+
         message = '''
 This repository is under [democratic collaboration](https://github.com/TooAngel/democratic-collaboration) and will be merged automatically.
 
@@ -50,15 +76,17 @@ The merge decision is based on the outcome of the reviews:
  - `Approve` add the reviewer value (number of commits) to the `metric`
  - `Request changes` substract the reviewer value from the `metric`
 
- - `metric > 99%` merge now
- - `metric > 75%` merge in 1 day
- - `metric > 50%` merge in 3 days
- - `metric >= 0%` merge in 7 days
+ The merge will happen after `metric * 10 days` calculated from the last code change.
 
 Please review the PR to make a good democratic decision.
 
-This is the placeholder for reviewer summoning :-) (top two + random)
+Summoning some reviewers:
+
 '''
+
+        for reviewer in reviewers:
+            message += ' - @{}: {}\n'.format(reviewer['name'], getReviewerMotivation())
+
         _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_synchronize(self):
@@ -96,6 +124,12 @@ class Github(restful.Resource):
                 print(self.data)
                 return
 
+            if data['review']['state'] == 'commented':
+                print('Review comment')
+                return
+            # TODO Fix issue, only proper reviews should trigger the check, comments not
+            import json
+            print(json.dumps(data))
             token = os.getenv('TOKEN')
             github_client = github.Github(token)
             repository = github_client.get_repo(data['repository']['id'])
@@ -180,14 +214,17 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     labels = [item for item in issue.labels if item.name == 'WIP']
     if labels:
         issue.remove_from_labels(labels[0])
-        issue.create_comment('DCBOT: Removing WIP label, the title is not prefixed with [WIP]')
+        # TODO should summon reviewers here or on PR create if the PR is not WIP from the start
+        issue.create_comment('''DCBOT: Removing WIP label, the title is not prefixed with [WIP]''')
 
     author = pull_request.user.login
     possible_reviewers = {contributor: contributors[contributor] for contributor in contributors if contributor != author}
 
     # Sum of total number of commits, initialize votes with the authors weight
     votes_total = sum(contributors[contributor] for contributor in contributors)
-    votes = contributors[author]
+    votes = 0
+    if author in contributors:
+        votes = contributors[author]
 
     reviews = get_reviews(repository, pull_request.number)
     for review in reviews:
@@ -207,26 +244,22 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     commits = pull_request.get_commits()
     commit = max(commits, key=lambda commit: commit.commit.author.date)
     age = datetime.now() - commit.commit.author.date
-    message = '''DCBOT: Current status coefficient: {} votes: {} total: {} age: {}'''.format(coefficient, votes, votes_total, age.days)
-    print(message)
+    days_to_merge = 10 - coefficient * 10
+    message = '''DCBOT: A new review, yeah.
+
+    Votes: {}/{}
+    Coefficient: {}
+    Days to merge: {}
+    Age: {}'''.format(votes, votes_total, coefficient, days_to_merge, age.days)
     if commentOnIssue:
+        print(message)
         issue.create_comment(message)
 
-    if coefficient > 0.99:
+    print(age.days, days_to_merge)
+    if age.days >= days_to_merge:
         print('Would merge now')
         pull_request.merge()
 
-    if coefficient > 0.75 and age.days >= 1:
-        print('Would merge now')
-        pull_request.merge()
-
-    if coefficient > 0.5 and age.days >= 3:
-        print('Would merge now')
-        pull_request.merge()
-
-    if coefficient >= 0 and age.days >= 7:
-        print('Would merge now')
-        pull_request.merge()
 
 def check_pull_requests():
     print(datetime.now())
@@ -245,7 +278,7 @@ if __name__ == '__main__':
     sched = BackgroundScheduler()
     sched.start()
 
-    sched.add_job(check_pull_requests, 'cron', second=0, minute=0)
+    sched.add_job(check_pull_requests, 'cron', hour='*')
 
     app.debug = os.getenv('DEBUG', 'false').lower() == 'true'
     app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5001)))
