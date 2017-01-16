@@ -203,7 +203,7 @@ def mergeable_pull_request(pull_request):
 
 def check_pull_request(repository, pull_request, commentOnIssue):
     print(pull_request.title)
-    contributors = {contributor.author.login: contributor.total for contributor in get_contributors(repository.id)}
+    contributors = {contributor.author.login: contributor.total for contributor in (get_contributors(repository.id) or {})}
     if not mergeable_pull_request(pull_request):
         issue = repository.get_issue(pull_request.number)
         labels = [item for item in issue.labels if item.name == 'WIP']
