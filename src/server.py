@@ -66,7 +66,7 @@ class PullRequest(object):
             if len(possible_reviewers) == 0:
                 break
             reviewers.append(possible_reviewers.pop(0))
-        possible_reviewers = [possible_reviewers['reviewer'] for reviewer in possible_reviewers if possible_reviewers['reviewer']['total'] >= 10]
+        possible_reviewers = [possible_reviewers for reviewer in possible_reviewers if possible_reviewers['total'] >= 10]
         if len(possible_reviewers) > 0:
             reviewers.append(possible_reviewers[randrange(len(possible_reviewers) - 1)])
 
