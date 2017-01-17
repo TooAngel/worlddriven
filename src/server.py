@@ -90,7 +90,7 @@ Please review the PR to make a good democratic decision.
             for reviewer in reviewers:
                 message += ' - @{}: {}\n'.format(reviewer['name'], getReviewerMotivation())
 
-            _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
+        _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_synchronize(self):
         # TODO check PR
