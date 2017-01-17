@@ -79,7 +79,7 @@ The merge decision is based on the outcome of the reviews:
  - `Approve` add the reviewer value (number of commits) to the `metric`
  - `Request changes` substract the reviewer value from the `metric`
 
- The merge will happen after `metric * 10 days` calculated from the last code change.
+ The merge will happen after `(1 - metric/total.votes) * (5 + pull_request.commits * 5))` calculated from the last code change.
 
 Please review the PR to make a good democratic decision.
 
