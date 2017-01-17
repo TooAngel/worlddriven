@@ -265,8 +265,8 @@ def check_pull_request(repository, pull_request, commentOnIssue):
 
     Votes: {}/{}
     Coefficient: {}
-    Hours to merge: {}
-    Age in hours: {}'''.format(votes, votes_total, coefficient, (days_to_merge.seconds - age.seconds) / 3600, age.seconds / 3600)
+    Merging in {} days {} hours
+    Age {} days {} hours'''.format(votes, votes_total, coefficient, (days_to_merge.days - age.days), (days_to_merge.seconds - age.seconds) / 3600, age.days, age.seconds / 3600)
     if commentOnIssue:
         print(message)
         issue.create_comment(message)
