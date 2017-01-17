@@ -79,7 +79,7 @@ The merge decision is based on the outcome of the reviews:
  - `Approve` add the reviewer value (number of commits) to the `metric`
  - `Request changes` substract the reviewer value from the `metric`
 
- The merge will happen after `metric * 10 days` calculated from the last code change.
+ The merge will happen after `(1 - metric/total.votes) * (5 + pull_request.commits * 5))` calculated from the last code change.
 
 Please review the PR to make a good democratic decision.
 
@@ -90,7 +90,7 @@ Please review the PR to make a good democratic decision.
             for reviewer in reviewers:
                 message += ' - @{}: {}\n'.format(reviewer['name'], getReviewerMotivation())
 
-            _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
+        _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_synchronize(self):
         # TODO check PR
@@ -265,8 +265,8 @@ def check_pull_request(repository, pull_request, commentOnIssue):
 
     Votes: {}/{}
     Coefficient: {}
-    Hours to merge: {}
-    Age in hours: {}'''.format(votes, votes_total, coefficient, (days_to_merge.seconds - age.seconds) / 3600, age.seconds / 3600)
+    Merging in {} days {} hours
+    Age {} days {} hours'''.format(votes, votes_total, coefficient, (days_to_merge.days - age.days), (days_to_merge.seconds - age.seconds) / 3600, age.days, age.seconds / 3600)
     if commentOnIssue:
         print(message)
         issue.create_comment(message)
