@@ -93,11 +93,12 @@ Please review the PR to make a good democratic decision.
         _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_synchronize(self):
-        # TODO check PR
-        # print(self.data)
-        # print(self.data.keys())
-        message = 'Code update recognized, countdown starts fresh.'
-        _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
+        repository = github_client.get_repo(self.data['repository']['id'])
+        issue = repository.get_issue(self.data['pull_request']['number'])
+        labels = [item for item in issue.labels if item.name == 'WIP']
+        if labels:
+            message = 'Code update recognized, countdown starts fresh.'
+            _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_edited(self):
         # TODO check PR and add message that this is under voting
