@@ -253,7 +253,10 @@ def check_pull_request(repository, pull_request, commentOnIssue):
 
     commits = pull_request.get_commits()
     commit = max(commits, key=lambda commit: commit.commit.author.date)
-    age = datetime.now() - commit.commit.author.date
+
+    events = [event for event in repository.get_events() if event.type == 'PushEvent']
+    max_date = max(events[0].created_at, commit.commit.author.date)
+    age = datetime.now() - max_date
 
     pull_request.commits
 
