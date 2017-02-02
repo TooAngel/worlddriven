@@ -278,7 +278,11 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     print(age, days_to_merge)
     if age >= days_to_merge:
         print('Would merge now')
-        pull_request.merge()
+        try:
+            pull_request.merge()
+        except Exception as e:
+            # Maybe add a comment that the conflicts should be resolved
+            print(e)
 
 
 def check_pull_requests():
