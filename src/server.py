@@ -36,7 +36,7 @@ def _add_comment(repo, pull_request, message):
     github_client = github.Github(token)
     repository = github_client.get_repo(repo)
     pull_request = repository.get_pull(pull_request)
-    pull_request.create_issue_comment('DCBOT: {}'.format(message))
+    pull_request.create_issue_comment(message)
 
 
 class PullRequest(object):
@@ -72,16 +72,10 @@ class PullRequest(object):
         if len(possible_reviewers) > 0:
             reviewers.append(possible_reviewers[randrange(len(possible_reviewers) - 1)])
 
-        message = '''
-This repository is under [democratic collaboration](https://github.com/TooAngel/democratic-collaboration) and will be merged automatically.
+        message = '''[democratic collaboration](https://github.com/TooAngel/democratic-collaboration)
+Approved reviews will speed up the merge, request changes will slow it down.
 
-The merge decision is based on the outcome of the reviews:
- - `Approve` add the reviewer value (number of commits) to the `metric`
- - `Request changes` substract the reviewer value from the `metric`
-
- The merge will happen after `(1 - metric/total.votes) * (5 + pull_request.commits * 5))` calculated from the last code change.
-
-Please review the PR to make a good democratic decision.
+Please review the PR to help.
 
 '''
 
@@ -102,7 +96,8 @@ Please review the PR to make a good democratic decision.
 
     def execute_edited(self):
         # TODO check PR and add message that this is under voting
-        print(self.data)
+        # print(self.data)
+        print('edited')
         print(self.data.keys())
         print(self.data['changes'])
 
@@ -125,15 +120,12 @@ class Github(restful.Resource):
         if data['action'] == 'submitted':
             if 'state' not in data['review']:
                 print('No state')
-                print(self.data)
+                print(self.data.keys())
                 return
 
             if data['review']['state'] == 'commented':
                 print('Review comment')
                 return
-            # TODO Fix issue, only proper reviews should trigger the check, comments not
-            import json
-            print(json.dumps(data))
             token = os.getenv('TOKEN')
             github_client = github.Github(token)
             repository = github_client.get_repo(data['repository']['id'])
@@ -150,7 +142,8 @@ class Github(restful.Resource):
             return self.handle_pull_request(data)
         if header == 'pull_request_review':
             return self.handle_pull_request_review(data)
-        print(data)
+        print('post not handled')
+        print(data.keys())
 
 class Restart(restful.Resource):
     def get(self):
@@ -254,7 +247,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     commits = pull_request.get_commits()
     commit = max(commits, key=lambda commit: commit.commit.author.date)
 
-    events = [event for event in repository.get_events() if event.type == 'PushEvent']
+    events = [event for event in pull_request.head.repo.get_events() if event.type == 'PushEvent' and event.payload['ref'] == 'refs/heads/{}'.format(pull_request.base.ref)]
     max_date = max(events[0].created_at, commit.commit.author.date)
     age = datetime.now() - max_date
 
@@ -264,13 +257,14 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     # 5 days base value
     # commits in pull request times 5 days
     # days_to_merge = (1 - coefficient) * calculated days
-    days_to_merge = timedelta(days=(1 - coefficient) * (5 + pull_request.commits * 5))
+    merge_duration = timedelta(days=(1 - coefficient) * (5 + pull_request.commits * 5))
+    days_to_merge = merge_duration - age
     message = '''DCBOT: A new review, yeah.
 
     Votes: {}/{}
     Coefficient: {}
     Merging in {} days {} hours
-    Age {} days {} hours'''.format(votes, votes_total, coefficient, (days_to_merge.days - age.days), (days_to_merge.seconds - age.seconds) / 3600, age.days, age.seconds / 3600)
+    Age {} days {} hours'''.format(votes, votes_total, coefficient, days_to_merge.days, days_to_merge.seconds / 3600, age.days, age.seconds / 3600)
     if commentOnIssue:
         print(message)
         issue.create_comment(message)
@@ -293,7 +287,6 @@ def check_pull_requests():
 
     for repository_name in repositories:
         repository = github_client.get_repo(repository_name)
-
         for pull_request in repository.get_pulls():
             check_pull_request(repository, pull_request, False)
 

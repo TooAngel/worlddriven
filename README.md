@@ -12,7 +12,7 @@ If a PR is ready for merge a voting is started (starting `value` 0):
  - If a reviewer 'Request changes' the `value` decreases by their contribution value.
  - If a reviewer 'Approve' the `value` increases by their contribution value.
  - Based on the `value` and `total` of votes is `coefficient` is calculated and
-   the PR is merged in `coefficient * 10 days`.
+   the PR is merged in `coefficient * (5 + pull_request.commits * 5)) days`.
 
 ## Develop
 
