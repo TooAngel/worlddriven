@@ -248,7 +248,9 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     commit = max(commits, key=lambda commit: commit.commit.author.date)
 
     events = [event for event in pull_request.head.repo.get_events() if event.type == 'PushEvent' and event.payload['ref'] == 'refs/heads/{}'.format(pull_request.base.ref)]
-    max_date = max(events[0].created_at, commit.commit.author.date)
+    max_date = commit.commit.author.date
+    if len(events) > 0:
+        max_date = max(events[0].created_at, commit.commit.author.date)
     age = datetime.now() - max_date
 
     pull_request.commits
@@ -259,14 +261,14 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     # days_to_merge = (1 - coefficient) * calculated days
     merge_duration = timedelta(days=(1 - coefficient) * (5 + pull_request.commits * 5))
     days_to_merge = merge_duration - age
-    message = '''DCBOT: A new review, yeah.
+    message = '''A new review, yeah.
 
     Votes: {}/{}
     Coefficient: {}
     Merging in {} days {} hours
     Age {} days {} hours'''.format(votes, votes_total, coefficient, days_to_merge.days, days_to_merge.seconds / 3600, age.days, age.seconds / 3600)
+    print(message)
     if commentOnIssue:
-        print(message)
         issue.create_comment(message)
 
     print(age, days_to_merge)
