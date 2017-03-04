@@ -203,6 +203,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
         issue = repository.get_issue(pull_request.number)
         labels = [item for item in issue.labels if item.name == 'WIP']
         if not labels:
+            print('Set WIP label')
             issue.add_to_labels('WIP')
             issue.create_comment('DCBOT: Adding WIP label, the title is prefixed with [WIP]')
         return
@@ -210,6 +211,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     issue = repository.get_issue(pull_request.number)
     labels = [item for item in issue.labels if item.name == 'WIP']
     if labels:
+        print('Remove label')
         issue.remove_from_labels(labels[0])
         # TODO should summon reviewers here or on PR create if the PR is not WIP from the start
         issue.create_comment('''DCBOT: Removing WIP label, the title is not prefixed with [WIP]''')
@@ -247,13 +249,20 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     commits = pull_request.get_commits()
     commit = max(commits, key=lambda commit: commit.commit.author.date)
 
-    events = [event for event in pull_request.head.repo.get_events() if event.type == 'PushEvent' and event.payload['ref'] == 'refs/heads/{}'.format(pull_request.base.ref)]
-    max_date = commit.commit.author.date
-    if len(events) > 0:
-        max_date = max(events[0].created_at, commit.commit.author.date)
-    age = datetime.now() - max_date
+    issue_events = [event for event in issue.get_events() if event.event == 'unlabeled' and event.raw_data['label']['name'] == 'WIP']
+    issue_events = sorted(issue_events, key=lambda event: event.created_at, reverse=True)
+    last_unlabel_date = issue_events[0].created_at if len(issue_events) > 0 else datetime(1960, 1, 1)
 
-    pull_request.commits
+    events = [event for event in pull_request.head.repo.get_events() if event.type == 'PushEvent' and event.payload['ref'] == 'refs/heads/{}'.format(pull_request.head.ref)]
+    events = sorted(events, key=lambda event: event.created_at, reverse=True)
+    last_push_date = events[0].created_at if len(events) > 0 else datetime(1960, 1, 1)
+    last_commit_date = commit.commit.author.date
+    # print('commit date:', last_commit_date)
+    # print('unlabel date:', last_unlabel_date)
+    # print('push date', last_push_date)
+    max_date = max(last_commit_date, last_unlabel_date, last_push_date)
+    # print('max date', max_date)
+    age = datetime.now() - max_date
 
     # Formular:
     # 5 days base value
@@ -271,7 +280,6 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     if commentOnIssue:
         issue.create_comment(message)
 
-    print(age, days_to_merge)
     if age >= days_to_merge:
         print('Would merge now')
         try:
