@@ -79,10 +79,10 @@ Please review the PR to help.
 
 '''
 
-        if len(reviewers) > 0:
-            message += 'Summoning some reviewers:\n'
-            for reviewer in reviewers:
-                message += ' - @{}: {}\n'.format(reviewer['name'], getReviewerMotivation())
+        # if len(reviewers) > 0:
+        #     message += 'Summoning some reviewers:\n'
+        #     for reviewer in reviewers:
+        #         message += ' - @{}: {}\n'.format(reviewer['name'], getReviewerMotivation())
 
         _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
