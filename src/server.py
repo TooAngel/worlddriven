@@ -205,7 +205,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
         if not labels:
             print('Set WIP label')
             issue.add_to_labels('WIP')
-            issue.create_comment('DCBOT: Adding WIP label, the title is prefixed with [WIP]')
+            issue.create_comment('Adding WIP label, the title is prefixed with [WIP]')
         return
 
     issue = repository.get_issue(pull_request.number)
@@ -214,7 +214,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
         print('Remove label')
         issue.remove_from_labels(labels[0])
         # TODO should summon reviewers here or on PR create if the PR is not WIP from the start
-        issue.create_comment('''DCBOT: Removing WIP label, the title is not prefixed with [WIP]''')
+        issue.create_comment('''Removing WIP label, the title is not prefixed with [WIP]''')
 
     author = pull_request.user.login
     possible_reviewers = {contributor: contributors[contributor] for contributor in contributors if contributor != author}
