@@ -257,10 +257,11 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     events = sorted(events, key=lambda event: event.created_at, reverse=True)
     last_push_date = events[0].created_at if len(events) > 0 else datetime(1960, 1, 1)
     last_commit_date = commit.commit.author.date
+    # print('pull request created', pull_request.created_at)
     # print('commit date:', last_commit_date)
     # print('unlabel date:', last_unlabel_date)
     # print('push date', last_push_date)
-    max_date = max(last_commit_date, last_unlabel_date, last_push_date)
+    max_date = max(last_commit_date, last_unlabel_date, last_push_date, pull_request.created_at)
     # print('max date', max_date)
     age = datetime.now() - max_date
 
