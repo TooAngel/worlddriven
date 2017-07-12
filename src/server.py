@@ -197,7 +197,7 @@ def mergeable_pull_request(pull_request):
     return not pull_request.title.startswith('[WIP]')
 
 def check_pull_request(repository, pull_request, commentOnIssue):
-    print(pull_request.title)
+    print(pull_request.title.encode('utf-8'))
     contributors = {contributor.author.login: contributor.total for contributor in (get_contributors(repository.id) or []) if contributor.author}
     if not mergeable_pull_request(pull_request):
         issue = repository.get_issue(pull_request.number)
