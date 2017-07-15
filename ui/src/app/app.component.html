@@ -1,9 +1,17 @@
 <!--The content below is only a placeholder and can be replaced.-->
-<div style="text-align:center">
-  <h1>
-    Welcome to {{title}}!
-  </h1>
-</div>
-<div>
-    <a href="http://localhost:5001/login"><button md-button>Click me!</button></a>
-</div>
+<md-toolbar color="secondary">
+  <span><md-icon>code</md-icon> {{ title }}</span>
+
+  <!-- This fills the remaining space of the current row -->
+  <span class="toolbar-fill-remaining-space"></span>
+
+  <span *ngIf="userPromise | async as user; else signInBlock">
+      <h1>{{ user.login }}</h1>
+  </span>
+  <ng-template #signInBlock>
+      <span><a md-raised-button color="accent" href="{{ sign_in_url }}">
+          <md-icon>lock_open</md-icon> Sign in with Github
+      </a></span>
+  </ng-template>
+</md-toolbar>
+<router-outlet></router-outlet>

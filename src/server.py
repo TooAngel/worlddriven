@@ -13,6 +13,7 @@ from api import APIPullRequest, APIRepository
 from PullRequest import check_pull_request, check_pull_requests, get_contributors
 from bson.objectid import ObjectId
 from flask_cors import CORS
+import json
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -24,8 +25,11 @@ app = Flask(
 api = restful.Api(app)
 
 app.config['MONGO_URI'] = os.getenv('MONGO_URI', 'mongodb://localhost:27017')
+CORS(
+    app,
+    origins=['http://localhost:5000', 'https://dc.tooangel.de'],
+    supports_credentials=True)
 mongo = PyMongo(app)
-CORS(app)
 
 app.config['GITHUB_CLIENT_ID'] = os.getenv('GITHUB_CLIENT_ID')
 app.config['GITHUB_CLIENT_SECRET'] = os.getenv('GITHUB_CLIENT_SECRET')
@@ -107,7 +111,7 @@ def authorized(oauth_token):
 
 @app.route('/v1/user/')
 def user():
-    return Response(str(github_oauth.get('user')), mimetype='application/json')
+    return Response(json.dumps(github_oauth.get('user')), mimetype='application/json')
 
 def getReviewerMotivation():
     motivations = [
