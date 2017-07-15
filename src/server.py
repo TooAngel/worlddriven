@@ -20,7 +20,10 @@ app = Flask(
     template_folder='../templates',
     static_folder='../static'
 )
+
 api = restful.Api(app)
+
+app.config['MONGO_URI'] = os.getenv('MONGO_URI', 'mongodb://localhost:27017')
 mongo = PyMongo(app)
 
 app.config['GITHUB_CLIENT_ID'] = os.getenv('GITHUB_CLIENT_ID')
@@ -47,10 +50,12 @@ def index():
 
 @app.route('/login')
 def login():
+    referer = request.headers['Referer']
+    session['referer'] = referer
     if session.get('user_id', None) is None:
         return github_oauth.authorize()
     else:
-        return 'Already logged in'
+        return redirect(referer)
 
 @app.route('/logout')
 def logout():
@@ -60,17 +65,19 @@ def logout():
 @app.route('/github-callback')
 @github_oauth.authorized_handler
 def authorized(oauth_token):
-    next_url = request.args.get('next') or url_for('user')
+    redirect_url = session.get('referer', url_for('index'))
     if oauth_token is None:
         logging.info("Authorization failed.")
-        return redirect(next_url)
+        return redirect(redirect_url)
+
     user = mongo.db.users.find_one({'github_access_token': oauth_token})
     if not user:
         insert = mongo.db.users.insert_one({'github_access_token': oauth_token})
         user = mongo.db.users.find_one({'_id': insert.inserted_id})
 
     session['user_id'] = str(user['_id'])
-    return redirect(next_url)
+    session.pop('referer', None)
+    return redirect(redirect_url)
 
 @app.route('/user')
 def user():

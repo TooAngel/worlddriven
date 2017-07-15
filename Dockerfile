@@ -1,5 +1,6 @@
-MAINTAINER tooangel@tooangel.de
 FROM python:3
+
+MAINTAINER tooangel@tooangel.de
 
 RUN mkdir /srv/www
 WORKDIR /srv/www
