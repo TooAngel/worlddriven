@@ -94,6 +94,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
             print('Set WIP label')
             issue.add_to_labels('WIP')
             issue.create_comment('Adding WIP label, the title is prefixed with [WIP]')
+            _set_status(pull_request, 'pending', 'Adding WIP label, the title is prefixed with [WIP]')
         return
 
     issue = repository.get_issue(pull_request.number)
@@ -102,6 +103,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
         print('Remove label')
         issue.remove_from_labels(labels[0])
         issue.create_comment('''Removing WIP label, the title is not prefixed with [WIP]''')
+        _set_status(pull_request, 'pending', 'Removing WIP label, the title is not prefixed with [WIP]')
 
     data_math = get_coefficient_and_votes(repository, pull_request)
     if data_math['coefficient'] < 0:
@@ -142,6 +144,7 @@ def check_for_merge(coefficient, pull_request, issue, age, votes, votes_total, c
     Age {} days {} hours'''.format(votes, votes_total, coefficient, days_to_merge.days, days_to_merge.seconds / 3600, age.days, age.seconds / 3600)
     print(message)
     if commentOnIssue:
+        _set_status(pull_request, 'pending', message)
         issue.create_comment(message)
 
     if age >= days_to_merge:
@@ -163,3 +166,7 @@ def check_pull_requests():
         repository = github_client.get_repo(repository_name)
         for pull_request in repository.get_pulls():
             check_pull_request(repository, pull_request, False)
+
+def _set_status(pull_request, state, message):
+    commit = pull_request.get_commits()[0]
+    commit.create_status(state, "", message)
