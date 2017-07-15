@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, redirect, url_for, session, g
+from flask import Flask, request, redirect, url_for, session, g, Response
 from flask.ext import restful  # @UnresolvedImport
 import github
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -50,21 +50,21 @@ def token_getter():
 def index():
     return 'Alles super'
 
-@app.route('/login')
+@app.route('/login/')
 def login():
-    referer = request.headers['Referer']
+    referer = request.headers.get('Referer', '/')
     session['referer'] = referer
     if session.get('user_id', None) is None:
         return github_oauth.authorize()
     else:
         return redirect(referer)
 
-@app.route('/logout')
+@app.route('/logout/')
 def logout():
     session.pop('user_id', None)
     return redirect(url_for('index'))
 
-@app.route('/github-callback')
+@app.route('/github-callback/')
 @github_oauth.authorized_handler
 def authorized(oauth_token):
     redirect_url = session.get('referer', url_for('index'))
@@ -81,9 +81,9 @@ def authorized(oauth_token):
     session.pop('referer', None)
     return redirect(redirect_url)
 
-@app.route('/user')
+@app.route('/v1/user/')
 def user():
-    return str(github_oauth.get('user'))
+    return Response(str(github_oauth.get('user')), mimetype='application/json')
 
 def getReviewerMotivation():
     motivations = [

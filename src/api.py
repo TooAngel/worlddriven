@@ -1,5 +1,5 @@
 from flask.ext import restful  # @UnresolvedImport
-from PullRequest import mergeable_pull_request, get_coefficient_and_votes
+from PullRequest import mergeable_pull_request, get_coefficient_and_votes, get_contributors, get_reviews
 import github
 from flask import g, abort
 
@@ -16,8 +16,18 @@ class APIPullRequest(restful.Resource):
         data_math = get_coefficient_and_votes(repository, pull_request)
 
         return {
+            'pull_request': {
+                'number': pull_request.number,
+                'title': pull_request.title,
+                'url': pull_request.url,
+                'user': {
+                    'login': pull_request.user.login
+                    }
+            },
             'mergeable': mergeable,
             'coefficient': data_math['coefficient'],
             'votes': data_math['votes'],
-            'votes_total': data_math['votes_total']
+            'votes_total': data_math['votes_total'],
+            'contributors': get_contributors(repository),
+            'reviews': get_reviews(repository, pull_request)
         }

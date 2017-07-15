@@ -4,8 +4,8 @@ import os
 import github
 import requests
 
-def get_reviews(repo, number):
-    url = 'https://api.github.com/repos/{}/pulls/{}/reviews'.format(repo.full_name, number)
+def get_reviews(repo, pull_request):
+    url = 'https://api.github.com/repos/{}/pulls/{}/reviews'.format(repo.full_name, pull_request.number)
     headers = {
     'Accept': 'application/vnd.github.black-cat-preview+json',
     'Authorization': 'token {}'.format(os.getenv('TOKEN'))
@@ -24,11 +24,16 @@ def get_reviews(repo, number):
     reviews_decided = [review for review in data if review['state'] != 'COMMENTED']
     last_reviews = {}
     for review in reviews_decided:
+        value = 0
+        if review['state'] == 'APPROVED':
+            value = 1
+        elif review['state'] == 'CHANGES_REQUESTED':
+            value = -1
         if review['user']['login'] not in last_reviews:
-            last_reviews[review['user']['login']] = review
+            last_reviews[review['user']['login']] = {'value': value, 'date': review['submitted_at']}
             continue
-        if toDateTime(last_reviews[review['user']['login']]['submitted_at']) < toDateTime(review['submitted_at']):
-            last_reviews[review['user']['login']] = review
+        if toDateTime(last_reviews[review['user']['login']]['date']) < toDateTime(review['submitted_at']):
+            last_reviews[review['user']['login']] = {'value': value, 'date': review['submitted_at']}
             continue
     return last_reviews
 
@@ -40,32 +45,25 @@ def toDateTime(value):
 def mergeable_pull_request(pull_request):
     return not pull_request.title.startswith('[WIP]')
 
-def get_contributors(repository_name):
-    token = os.getenv('TOKEN')
-    github_client = github.Github(token)
-    repository = github_client.get_repo(repository_name)
-    return repository.get_stats_contributors()
+def get_contributors(repository):
+    contributors = repository.get_stats_contributors()
+    return {contributor.author.login: contributor.total for contributor in (contributors or []) if contributor.author}
 
 def get_votes_from_reviews(votes, repository, pull_request, possible_reviewers):
-    reviews = get_reviews(repository, pull_request.number)
+    reviews = get_reviews(repository, pull_request)
     for review in reviews:
         if review not in possible_reviewers:
             print('{} not in reviewers'.format(review))
             continue
-        if reviews[review]['state'] == 'APPROVED':
-            votes += possible_reviewers[review]
-            continue
-        if reviews[review]['state'] == 'CHANGES_REQUESTED':
-            votes -= possible_reviewers[review]
-            continue
-        print(reviews[review]['state'])
+        votes += reviews[review]['value'] * possible_reviewers[review]
     return votes
 
 def get_coefficient_and_votes(repository, pull_request):
-    contributors = {contributor.author.login: contributor.total for contributor in (get_contributors(repository.id) or []) if contributor.author}
+    contributors = get_contributors(repository)
     author = pull_request.user.login
+    print(contributors, author)
     possible_reviewers = {contributor: contributors[contributor] for contributor in contributors if contributor != author}
-
+    print(possible_reviewers)
     # Sum of total number of commits, initialize votes with the authors weight
     votes_total = sum(contributors[contributor] for contributor in contributors)
     votes = 0
@@ -86,6 +84,7 @@ def get_last_date(data):
 
 
 def check_pull_request(repository, pull_request, commentOnIssue):
+    print('-' * 20)
     print(pull_request.title.encode('utf-8'))
 
     if not mergeable_pull_request(pull_request):
