@@ -1,7 +1,7 @@
 from flask.ext import restful  # @UnresolvedImport
 from PullRequest import mergeable_pull_request, get_coefficient_and_votes
 import github
-from flask import g
+from flask import g, abort
 
 class APIPullRequest(restful.Resource):
     def get(self, org, repo, pull):
