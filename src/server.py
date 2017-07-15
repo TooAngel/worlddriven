@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request
+from flask import Flask, request, redirect, url_for, session, g
 from flask.ext import restful  # @UnresolvedImport
 import github
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -7,7 +7,11 @@ import requests
 from datetime import datetime, timedelta
 import sys
 from random import randrange
+from flask_pymongo import PyMongo
+from flask.ext.github import GitHub
 import logging
+
+from bson.objectid import ObjectId
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -17,7 +21,60 @@ app = Flask(
     static_folder='../static'
 )
 api = restful.Api(app)
+mongo = PyMongo(app)
 
+app.config['GITHUB_CLIENT_ID'] = os.getenv('GITHUB_CLIENT_ID')
+app.config['GITHUB_CLIENT_SECRET'] = os.getenv('GITHUB_CLIENT_SECRET')
+github_oauth = GitHub(app)
+
+@app.before_request
+def before_request():
+    g.user = None
+    if 'user_id' in session:
+        user = mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
+        g.user = user
+
+@github_oauth.access_token_getter
+def token_getter():
+    user = g.user
+    if user is not None:
+        user = user['github_access_token']
+        return user
+
+@app.route('/')
+def index():
+    return 'Alles super'
+
+@app.route('/login')
+def login():
+    if session.get('user_id', None) is None:
+        return github_oauth.authorize()
+    else:
+        return 'Already logged in'
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    return redirect(url_for('index'))
+
+@app.route('/github-callback')
+@github_oauth.authorized_handler
+def authorized(oauth_token):
+    next_url = request.args.get('next') or url_for('user')
+    if oauth_token is None:
+        logging.info("Authorization failed.")
+        return redirect(next_url)
+    user = mongo.db.users.find_one({'github_access_token': oauth_token})
+    if not user:
+        insert = mongo.db.users.insert_one({'github_access_token': oauth_token})
+        user = mongo.db.users.find_one({'_id': insert.inserted_id})
+
+    session['user_id'] = str(user['_id'])
+    return redirect(next_url)
+
+@app.route('/user')
+def user():
+    return str(github_oauth.get('user'))
 
 def getReviewerMotivation():
     motivations = [
@@ -309,6 +366,8 @@ if __name__ == '__main__':
     sched.start()
 
     sched.add_job(check_pull_requests, 'cron', hour='*', minute='*/5')
+
+    app.secret_key = os.getenv('SESSION_SECRET')
 
     app.debug = os.getenv('DEBUG', 'false').lower() == 'true'
     app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5001)))
