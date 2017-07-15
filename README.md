@@ -1,5 +1,6 @@
 # democratic-collaboration
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3d6f6434e85d4d00a07ff6918edebb5f)](https://www.codacy.com/app/TooAngel/democratic-collaboration?utm_source=github.com&utm_medium=referral&utm_content=TooAngel/democratic-collaboration&utm_campaign=badger)
 [![CircleCI](https://circleci.com/gh/TooAngel/democratic-collaboration.svg?style=svg)](https://circleci.com/gh/TooAngel/democratic-collaboration)
 [![gitter](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/tooangel-democratic-collaboration/Lobby)
 [![Code Climate](https://codeclimate.com/github/TooAngel/democratic-collaboration/badges/gpa.svg)](https://codeclimate.com/github/TooAngel/democratic-collaboration)
