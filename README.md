@@ -10,13 +10,12 @@ can be a bottleneck.
 
 Democratic collaboration introduces a contribution based weighted voting system
 for merging. As soon as you contribute to a project, you get a share or
-responsiblity for the progress of the project.
+responsibility for the progress of the project.
 
-The workflow is based on the github Pull Request. If a PR is reviewed with an
-'Approve' it is like voting `yes`, 'Request change' is `no`. Review with
-'comment' prolongs the time to merge.
+Github Pull Request are the main contact point. Reviewing a PR with an
+'Approve' votes for `yes`, 'Request change' is `no`.
 
-Weighted votes are based on the commits (currently).
+The number of commits on the repository is the weight for the vote.
 
 If a PR is ready for merge a voting is started (starting `value` 0):
  - If a reviewer 'Request changes' the `value` decreases by their contribution value.
@@ -26,6 +25,15 @@ If a PR is ready for merge a voting is started (starting `value` 0):
 
 ## Develop
 
-Set `TOKEN` as environment variable and run `python src/server.py`
-For github oauth feature provide `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`.
-Set Session secret as `SESSION_SECRET`.
+Set `TOKEN` as environment variable and run `python src/server.py`.
+For github oauth feature provide `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`,
+callback url is `/github-callback`.
+Set Session secret as `SESSION_SECRET` initial a random string.
+
+## Production environment
+
+Currently on some random server started in `screen`, with
+`while true; do . .env; pip install -r requirements.txt; git pull; python src/server.py; donewhile true; do . .env; pip install -r requirements.txt; git pull; python src/server.py; done`
+
+Get `GET /restart/` stops the server process and is restarted by the command
+line command. Super ugly I know, just quickly solved somehow.
