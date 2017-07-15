@@ -98,14 +98,9 @@ def getReviewerMotivation():
     ]
     return motivations[randrange(len(motivations) - 1)]
 
-
-def _add_comment(repo, pull_request, message):
-    token = os.getenv('TOKEN')
-    github_client = github.Github(token)
-    repository = github_client.get_repo(repo)
-    pull_request = repository.get_pull(pull_request)
-    pull_request.create_issue_comment(message)
-
+def _set_status(pull_request, state, message):
+    commit = pull_request.get_commits()[0]
+    commit.create_status(state, '', message)
 
 class PullRequest(object):
     def __init__(self, data):
@@ -151,18 +146,22 @@ Please review the PR to help.
         #     message += 'Summoning some reviewers:\n'
         #     for reviewer in reviewers:
         #         message += ' - @{}: {}\n'.format(reviewer['name'], getReviewerMotivation())
-
-        _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
+        token = os.getenv('TOKEN')
+        github_client = github.Github(token)
+        repository = github_client.get_repo(repo)
+        pull_request = repository.get_pull(self.data['pull_request']['number'])
+        _set_status(pull_request, 'pending', message)
 
     def execute_synchronize(self):
         token = os.getenv('TOKEN')
         github_client = github.Github(token)
         repository = github_client.get_repo(self.data['repository']['id'])
+        pull_request = repository.get_pull(self.data['pull_request']['number'])
         issue = repository.get_issue(self.data['pull_request']['number'])
         labels = [item for item in issue.labels if item.name == 'WIP']
         if labels:
             message = 'Code update recognized, countdown starts fresh.'
-            _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
+            _set_status(pull_request, 'pending', message)
 
     def execute_edited(self):
         # TODO check PR and add message that this is under voting
