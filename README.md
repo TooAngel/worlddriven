@@ -18,6 +18,8 @@ Github Pull Request are the main contact point. Reviewing a PR with an
 
 The number of commits on the repository is the weight for the vote.
 
+PRs can be ignore by prefixing the title with `[WIP] `.
+
 If a PR is ready for merge a voting is started (starting `value` 0):
  - If a reviewer 'Request changes' the `value` decreases by their contribution value.
  - If a reviewer 'Approve' the `value` increases by their contribution value.
