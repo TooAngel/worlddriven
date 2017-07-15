@@ -12,6 +12,7 @@ import logging
 from api import APIPullRequest
 from PullRequest import check_pull_request, check_pull_requests, get_contributors
 from bson.objectid import ObjectId
+from flask_cors import CORS
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -25,6 +26,7 @@ api = restful.Api(app)
 
 app.config['MONGO_URI'] = os.getenv('MONGO_URI', 'mongodb://localhost:27017')
 mongo = PyMongo(app)
+CORS(app)
 
 app.config['GITHUB_CLIENT_ID'] = os.getenv('GITHUB_CLIENT_ID')
 app.config['GITHUB_CLIENT_SECRET'] = os.getenv('GITHUB_CLIENT_SECRET')
