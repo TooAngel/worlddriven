@@ -5,3 +5,4 @@ apscheduler
 requests
 GitHub-Flask
 Flask-PyMongo
+flask-cors
