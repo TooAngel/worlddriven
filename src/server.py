@@ -7,7 +7,9 @@ import requests
 from datetime import datetime, timedelta
 import sys
 from random import randrange
+import logging
 
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 app = Flask(
     __name__,
@@ -291,7 +293,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
 
 
 def check_pull_requests():
-    print(datetime.now())
+    logging.info('Check pull requests: {}'.format(datetime.now()))
     token = os.getenv('TOKEN')
     github_client = github.Github(token)
     repositories = ['tooangel/democratic-collaboration', 'tooangel/screeps']
@@ -306,7 +308,7 @@ if __name__ == '__main__':
     sched = BackgroundScheduler()
     sched.start()
 
-    sched.add_job(check_pull_requests, 'cron', hour='*')
+    sched.add_job(check_pull_requests, 'cron', hour='*', minute='*/5')
 
     app.debug = os.getenv('DEBUG', 'false').lower() == 'true'
     app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5001)))
