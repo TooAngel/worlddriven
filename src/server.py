@@ -17,8 +17,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 app = Flask(
     __name__,
-    template_folder='../templates',
-    static_folder='../static'
+    static_folder='../ui/dist'
 )
 
 api = restful.Api(app)
@@ -46,7 +45,32 @@ def token_getter():
 
 @app.route('/')
 def index():
-    return 'Alles super'
+    return app.send_static_file('index.html')
+
+@app.route('/vendor.bundle.js')
+def send_vendor_js():
+    return app.send_static_file('vendor.bundle.js')
+
+@app.route('/main.bundle.js')
+def send_main_js():
+    return app.send_static_file('main.bundle.js')
+
+@app.route('/inline.bundle.js')
+def send_inline_js():
+    return app.send_static_file('inline.bundle.js')
+
+@app.route('/polyfills.bundle.js')
+def send_polyfills_js():
+    return app.send_static_file('polyfills.bundle.js')
+
+@app.route('/styles.bundle.js')
+def send_styles_js():
+    return app.send_static_file('styles.bundle.js')
+
+@app.route('/styles.css')
+def send_styles_css():
+    return app.send_static_file('styles.css')
+
 
 @app.route('/login')
 def login():

@@ -4,6 +4,8 @@
 [![gitter](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/tooangel-democratic-collaboration/Lobby)
 [![Code Climate](https://codeclimate.com/github/TooAngel/democratic-collaboration/badges/gpa.svg)](https://codeclimate.com/github/TooAngel/democratic-collaboration)
 
+Hosted under https://dc.tooangel.de/
+
 In open source projects there is one or more people responsible to merge
 features and fixes in to the master branch. Due lack of time or interest this
 can be a bottleneck.
@@ -47,7 +49,7 @@ Set Session secret as `SESSION_SECRET` initial a random string.
 ## Production environment
 
 Started on some random server in `screen`, with
-`while true; do . .env; pip install -r requirements.txt; git pull; python src/server.py; donewhile true; do . .env; pip install -r requirements.txt; git pull; python src/server.py; done`
+`while true; do bash run.sh; done`
 
 Get `GET /restart/` stops the server process and restarted by the command
 line command. Super ugly I know, just quickly solved somehow.
