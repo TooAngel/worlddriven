@@ -43,9 +43,9 @@ Set Session secret as `SESSION_SECRET` initial a random string.
    Response:
 ```
 {
-    "coefficient": 0.9753086419753086,
+    "coefficient": 0.9764705882352941,
     "contributors": {
-        "TooAngel": 76,
+        "TooAngel": 80,
         "WhiteHalmos": 1,
         "cbek": 1,
         "codacy-badger": 1,
@@ -57,7 +57,36 @@ Set Session secret as `SESSION_SECRET` initial a random string.
         "title": "Add Angular UI",
         "url": "https://api.github.com/repos/TooAngel/democratic-collaboration/pulls/43",
         "user": {
-            "login": "pst"
+            "avatar_url": "https://avatars6.githubusercontent.com/u/253456?v=4",
+            "bio": null,
+            "blog": "https://coreos.com",
+            "company": "@coreos",
+            "created_at": "2010-04-26T20:24:24Z",
+            "email": null,
+            "events_url": "https://api.github.com/users/pst/events{/privacy}",
+            "followers": 8,
+            "followers_url": "https://api.github.com/users/pst/followers",
+            "following": 0,
+            "following_url": "https://api.github.com/users/pst/following{/other_user}",
+            "gists_url": "https://api.github.com/users/pst/gists{/gist_id}",
+            "gravatar_id": "",
+            "hireable": null,
+            "html_url": "https://github.com/pst",
+            "id": 253456,
+            "location": "Berlin, Germany",
+            "login": "pst",
+            "name": "Philipp Strube",
+            "organizations_url": "https://api.github.com/users/pst/orgs",
+            "public_gists": 2,
+            "public_repos": 23,
+            "received_events_url": "https://api.github.com/users/pst/received_events",
+            "repos_url": "https://api.github.com/users/pst/repos",
+            "site_admin": false,
+            "starred_url": "https://api.github.com/users/pst/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/pst/subscriptions",
+            "type": "User",
+            "updated_at": "2017-07-14T16:47:15Z",
+            "url": "https://api.github.com/users/pst"
         }
     },
     "reviews": {
@@ -70,8 +99,8 @@ Set Session secret as `SESSION_SECRET` initial a random string.
             "value": 1
         }
     },
-    "votes": 79,
-    "votes_total": 81
+    "votes": 83,
+    "votes_total": 85
 }
 ```
 

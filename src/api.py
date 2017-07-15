@@ -20,9 +20,7 @@ class APIPullRequest(restful.Resource):
                 'number': pull_request.number,
                 'title': pull_request.title,
                 'url': pull_request.url,
-                'user': {
-                    'login': pull_request.user.login
-                    }
+                'user': pull_request.user.raw_data
             },
             'mergeable': mergeable,
             'coefficient': data_math['coefficient'],
