@@ -9,7 +9,7 @@ from random import randrange
 from flask_pymongo import PyMongo
 from flask.ext.github import GitHub
 import logging
-from api import APIPullRequest
+from api import APIPullRequest, APIRepository
 from PullRequest import check_pull_request, check_pull_requests, get_contributors
 from bson.objectid import ObjectId
 from flask_cors import CORS
@@ -250,6 +250,7 @@ api.add_resource(Restart, '/restart/')
 api.add_resource(Github, '/github/')
 
 api.add_resource(APIPullRequest, '/v1/<string:org>/<string:repo>/pull/<int:pull>/')
+api.add_resource(APIRepository, '/v1/<string:org>/<string:repo>/')
 
 
 if __name__ == '__main__':

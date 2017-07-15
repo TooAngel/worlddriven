@@ -31,3 +31,9 @@ class APIPullRequest(restful.Resource):
             'contributors': get_contributors(repository),
             'reviews': get_reviews(repository, pull_request)
         }
+
+class APIRepository(restful.Resource):
+    def get(self, org, repo):
+        github_client = github.Github(g.user['github_access_token'])
+        repository = github_client.get_repo('{}/{}'.format(org, repo))
+        return repository.raw_data
