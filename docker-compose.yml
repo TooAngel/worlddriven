@@ -7,10 +7,9 @@ services:
     entrypoint:
         - "ng"
         - "serve"
-        - "--host"
-        - "0.0.0.0"
-        - "--port"
-        - "5000"
+        - "--environment=dev"
+        - "--host=0.0.0.0"
+        - "--port=5000"
     restart: on-failure
     volumes:
       - ./ui:/srv/app:z
