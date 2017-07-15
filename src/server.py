@@ -13,6 +13,7 @@ from api import APIPullRequest
 from PullRequest import check_pull_request, check_pull_requests, get_contributors
 from bson.objectid import ObjectId
 from flask_cors import CORS
+import json
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -110,7 +111,7 @@ def authorized(oauth_token):
 
 @app.route('/v1/user/')
 def user():
-    return Response(str(github_oauth.get('user')), mimetype='application/json')
+    return Response(json.dumps(github_oauth.get('user')), mimetype='application/json')
 
 def getReviewerMotivation():
     motivations = [
