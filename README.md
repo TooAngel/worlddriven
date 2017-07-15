@@ -1,6 +1,7 @@
 # democratic-collaboration
 
 [![gitter](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/tooangel-democratic-collaboration/Lobby)
+[![Code Climate](https://codeclimate.com/github/TooAngel/democratic-collaboration/badges/gpa.svg)](https://codeclimate.com/github/TooAngel/democratic-collaboration)
 
 Usually in open source projects there is one or more people responsible to finally merge features and fixes in to the master branch. Due lack of time or interest this can be a bottleneck.
 
