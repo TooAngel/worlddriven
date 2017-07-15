@@ -146,6 +146,8 @@ Please review the PR to help.
         _add_comment(self.data['repository']['id'], self.data['pull_request']['number'], message)
 
     def execute_synchronize(self):
+        token = os.getenv('TOKEN')
+        github_client = github.Github(token)
         repository = github_client.get_repo(self.data['repository']['id'])
         issue = repository.get_issue(self.data['pull_request']['number'])
         labels = [item for item in issue.labels if item.name == 'WIP']
