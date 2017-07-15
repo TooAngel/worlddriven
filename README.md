@@ -39,8 +39,35 @@ Set Session secret as `SESSION_SECRET` initial a random string.
    Response:
 ```
 {
+    "coefficient": 0.9753086419753086,
+    "contributors": {
+        "TooAngel": 76,
+        "WhiteHalmos": 1,
+        "cbek": 1,
+        "codacy-badger": 1,
+        "pst": 2
+    },
     "mergeable": true,
-    "message": "alles super"
+    "pull_request": {
+        "number": 43,
+        "title": "Add Angular UI",
+        "url": "https://api.github.com/repos/TooAngel/democratic-collaboration/pulls/43",
+        "user": {
+            "login": "pst"
+        }
+    },
+    "reviews": {
+        "TooAngel": {
+            "date": "2017-07-15T14:51:10Z",
+            "value": 1
+        },
+        "cbek": {
+            "date": "2017-07-15T14:54:30Z",
+            "value": 1
+        }
+    },
+    "votes": 79,
+    "votes_total": 81
 }
 ```
 
