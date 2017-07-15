@@ -5,6 +5,7 @@ MAINTAINER tooangel@tooangel.de
 # Create app directory
 RUN mkdir -p /srv/app
 WORKDIR /srv/app
+VOLUME /srv/app/node_modules
 
 # Install Angular CLI
 RUN yarn global add @angular/cli
