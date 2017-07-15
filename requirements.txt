@@ -3,3 +3,5 @@ Flask-RESTful==0.3.3
 pygithub
 apscheduler
 requests
+GitHub-Flask
+Flask-PyMongo
