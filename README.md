@@ -1,5 +1,7 @@
 # democratic-collaboration
 
+[![gitter](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/tooangel-democratic-collaboration/Lobby)
+
 Usually in open source projects there is one or more people responsible to finally merge features and fixes in to the master branch. Due lack of time or interest this can be a bottleneck.
 
 Democratic collaboration introduces a contribution based weighted voting system for merging. As soon as you contribute to a project, you get a share or responsiblity for the progress of the project.
