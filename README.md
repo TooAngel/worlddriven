@@ -30,10 +30,24 @@ For github oauth feature provide `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`,
 callback url is `/github-callback`.
 Set Session secret as `SESSION_SECRET` initial a random string.
 
+## Api
+
+ - `/v1/:org/:repo/pull/:number` e.g. `/v1/tooangel/democratic-collaboration/pull/43/`
+   to get info about the pull request
+
+   Response:
+```
+{
+    "mergeable": true,
+    "message": "alles super"
+}
+```
+
+
 ## Production environment
 
-Currently on some random server started in `screen`, with
+Started on some random server in `screen`, with
 `while true; do . .env; pip install -r requirements.txt; git pull; python src/server.py; donewhile true; do . .env; pip install -r requirements.txt; git pull; python src/server.py; done`
 
-Get `GET /restart/` stops the server process and is restarted by the command
+Get `GET /restart/` stops the server process and restarted by the command
 line command. Super ugly I know, just quickly solved somehow.
