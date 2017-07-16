@@ -260,7 +260,7 @@ if __name__ == '__main__':
     sched = BackgroundScheduler()
     sched.start()
 
-    sched.add_job(check_pull_requests, 'cron', hour='*', minute='*/5')
+    sched.add_job(check_pull_requests, 'cron', hour='*', minute='*/51')
 
     app.secret_key = os.getenv('SESSION_SECRET')
 
