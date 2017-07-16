@@ -93,8 +93,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
         if not labels:
             print('Set WIP label')
             issue.add_to_labels('WIP')
-            issue.create_comment('Adding WIP label, the title is prefixed with [WIP]')
-            _set_status(pull_request, 'pending', 'Adding WIP label, the title is prefixed with [WIP]')
+            _set_status(repository, pull_request, 'error', 'The title is prefixed with [WIP]')
         return
 
     issue = repository.get_issue(pull_request.number)
@@ -102,8 +101,7 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     if labels:
         print('Remove label')
         issue.remove_from_labels(labels[0])
-        issue.create_comment('''Removing WIP label, the title is not prefixed with [WIP]''')
-        _set_status(pull_request, 'pending', 'Removing WIP label, the title is not prefixed with [WIP]')
+
 
     data_math = get_coefficient_and_votes(repository, pull_request)
     if data_math['coefficient'] < 0:
@@ -127,9 +125,9 @@ def check_pull_request(repository, pull_request, commentOnIssue):
     max_date = max(last_commit_date, last_unlabel_date, last_push_date, pull_request.created_at)
     # print('max date', max_date)
     age = datetime.now() - max_date
-    check_for_merge(data_math['coefficient'], pull_request, issue, age, data_math['votes'], data_math['votes_total'], commentOnIssue)
+    check_for_merge(data_math['coefficient'], repository, pull_request, issue, age, data_math['votes'], data_math['votes_total'], commentOnIssue)
 
-def check_for_merge(coefficient, pull_request, issue, age, votes, votes_total, commentOnIssue):
+def check_for_merge(coefficient, repository, pull_request, issue, age, votes, votes_total, commentOnIssue):
     # Formular:
     # 5 days base value
     # commits in pull request times 5 days
@@ -143,8 +141,11 @@ def check_for_merge(coefficient, pull_request, issue, age, votes, votes_total, c
     Merging in {} days {} hours
     Age {} days {} hours'''.format(votes, votes_total, coefficient, days_to_merge.days, days_to_merge.seconds / 3600, age.days, age.seconds / 3600)
     print(message)
+
+    status_message = '{}/{} {} Merge in {} days {}'.format(votes, votes_total, round(coefficient, 3) * 100, days_to_merge.days, days_to_merge.seconds / 3600)
+    _set_status(repository, pull_request, 'pending', status_message)
+
     if commentOnIssue:
-        _set_status(pull_request, 'pending', message)
         issue.create_comment(message)
 
     if age >= days_to_merge:
@@ -167,6 +168,7 @@ def check_pull_requests():
         for pull_request in repository.get_pulls():
             check_pull_request(repository, pull_request, False)
 
-def _set_status(pull_request, state, message):
-    commit = pull_request.get_commits()[0]
-    commit.create_status(state, "", message)
+def _set_status(repository, pull_request, state, message):
+    commit = pull_request.get_commits().reversed[0]
+    url = 'https://dc.tooangel.de/{}/pull/{}'.format(repository.full_name, pull_request.number)
+    print(commit.create_status(state, url, message))
