@@ -171,4 +171,4 @@ def check_pull_requests():
 def _set_status(repository, pull_request, state, message):
     commit = pull_request.get_commits().reversed[0]
     url = 'https://dc.tooangel.de/{}/pull/{}'.format(repository.full_name, pull_request.number)
-    print(commit.create_status(state, url, message))
+    print(commit.create_status(state, url, message, 'democratic collaboration'))
