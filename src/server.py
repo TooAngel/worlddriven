@@ -148,8 +148,11 @@ class PullRequest(object):
 
     def execute_opened(self):
         print(self.data['pull_request']['title'])
+        token = os.getenv('TOKEN')
+        github_client = github.Github(token)
+        repository = github_client.get_repo(self.data['repository']['full_name'])
 
-        contributors = {contributor.author.login: contributor.total for contributor in get_contributors(self.data['repository']['id'])}
+        contributors = {contributor.author.login: contributor.total for contributor in get_contributors(repository)}
         author = self.data['pull_request']['user']['login']
         possible_reviewers = [{'name': contributor, 'total': contributors[contributor]}
                               for contributor in contributors
@@ -170,15 +173,6 @@ Approved reviews will speed up the merge, request changes will slow it down.
 Please review the PR to help.
 
 '''
-
-        # if len(reviewers) > 0:
-        #     message += 'Summoning some reviewers:\n'
-        #     for reviewer in reviewers:
-        #         message += ' - @{}: {}\n'.format(reviewer['name'], getReviewerMotivation())
-        token = os.getenv('TOKEN')
-        github_client = github.Github(token)
-        repository = github_client.get_repo(repo)
-        pull_request = repository.get_pull(self.data['pull_request']['number'])
         _set_status(repostiory, pull_request, 'pending', message)
 
     def execute_synchronize(self):
