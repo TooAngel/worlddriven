@@ -143,7 +143,7 @@ def check_for_merge(coefficient, repository, pull_request, issue, age, votes, vo
     print(message)
 
     status_message = '{}/{} {} Merge in {} days {}'.format(votes, votes_total, round(coefficient, 3) * 100, days_to_merge.days, days_to_merge.seconds / 3600)
-    _set_status(repository, pull_request, 'pending', status_message)
+    _set_status(repository, pull_request, 'success', status_message)
 
     if commentOnIssue:
         issue.create_comment(message)
