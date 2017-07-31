@@ -11,7 +11,8 @@ import 'rxjs/add/operator/toPromise';
 })
 export class AppComponent implements OnInit {
   public title = 'Democratic Collaboration';
-  public sign_in_url = environment.api_url + '/login';
+  public sign_in_url = environment.api_url + '/login/';
+  public sign_out_url = environment.api_url + '/logout/';
   public userPromise: object;
 
   constructor(private http: Http) {}

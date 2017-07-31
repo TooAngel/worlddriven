@@ -6,7 +6,10 @@
   <span class="toolbar-fill-remaining-space"></span>
 
   <span *ngIf="userPromise | async as user; else signInBlock">
-      <h1>{{ user.login }}</h1>
+      <button md-button [mdMenuTriggerFor]="userMenu"><img src="{{ user.avatar_url }}" widht="32px" height="32px"> {{ user.login }}</button>
+        <md-menu #userMenu="mdMenu">
+          <a md-menu-item href="{{ sign_out_url }}"><md-icon>close</md-icon> Sign out</a>
+        </md-menu>
   </span>
   <ng-template #signInBlock>
       <span><a md-raised-button color="accent" href="{{ sign_in_url }}">

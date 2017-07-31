@@ -1,6 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MdButtonModule, MdCheckboxModule, MdToolbarModule, MdIconModule, MdProgressSpinnerModule } from '@angular/material';
+import { MdButtonModule, MdToolbarModule, MdIconModule, MdProgressSpinnerModule, MdMenuModule } from '@angular/material';
 import { RouterModule }   from '@angular/router';
 import { HttpModule } from '@angular/http';
 import { NgModule } from '@angular/core';
@@ -16,10 +16,10 @@ import { PullRequestComponent } from './pull-request/pull-request.component';
     BrowserModule,
     BrowserAnimationsModule,
     MdButtonModule,
-    MdCheckboxModule,
     MdToolbarModule,
     MdIconModule,
     MdProgressSpinnerModule,
+    MdMenuModule,
     HttpModule,
     RouterModule.forRoot([
       {
