@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, redirect, url_for, session, g, Response
+from flask import Flask, request, redirect, url_for, session, g, Response, render_template
 from flask.ext import restful  # @UnresolvedImport
 import github
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -10,16 +10,18 @@ from flask_pymongo import PyMongo
 from flask.ext.github import GitHub
 import logging
 from api import APIPullRequest, APIRepository
-from PullRequest import check_pull_request, check_pull_requests, get_contributors
+from PullRequest import check_pull_request, check_pull_requests, get_contributors, get_coefficient_and_votes, get_latest_dates, get_merge_time
 from bson.objectid import ObjectId
 from flask_cors import CORS
 import json
+from datetime import timedelta
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 app = Flask(
     __name__,
-    static_folder='../ui/dist'
+    static_folder='../ui/dist',
+    template_folder='../templates'
 )
 
 api = restful.Api(app)
@@ -52,6 +54,52 @@ def token_getter():
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
+
+@app.route('/<org_name>/<project_name>/pull/<int:pull_request_number>')
+def show_pull_request(org_name, project_name, pull_request_number):
+    token = os.getenv('TOKEN')
+    github_client = github.Github(token)
+    repository_name = '{}/{}'.format(org_name, project_name)
+    repository = github_client.get_repo(repository_name)
+    pull_request = repository.get_pull(pull_request_number)
+    coefficient_and_votes = get_coefficient_and_votes(repository, pull_request)
+    contributors = [ contributor for contributor in coefficient_and_votes['contributors'].values() ]
+
+
+    dates = get_latest_dates(repository, pull_request)
+    times = get_merge_time(pull_request, coefficient_and_votes['coefficient'], dates['age'])
+
+    for contributor in contributors:
+        if 'commits' not in contributor:
+            contributor['commits'] = 0;
+        contributor['time_value'] = timedelta(days=(contributor['commits'] / float(coefficient_and_votes['votes_total'])) * times['total_merge_time'])
+
+    def activeFirst(value):
+        return abs(value['review_value'] + 0.1) * value['commits']
+    contributors = sorted(contributors, key=activeFirst)
+
+    return render_template(
+        'pull_request.html',
+        title=pull_request.title,
+        repository=org_name,
+        project=project_name,
+        pull_request_number=pull_request_number,
+        coefficient=coefficient_and_votes['coefficient'],
+        votes=coefficient_and_votes['votes'],
+        votes_total=coefficient_and_votes['votes_total'],
+        contributors=contributors,
+        max_date=dates['max_date'],
+        unlabel_date=dates['unlabel_date'],
+        push_date=dates['push_date'],
+        commit_date=dates['commit_date'],
+        pull_request_date=dates['pull_request_date'],
+        age=dates['age'],
+        commits=times['commits'],
+        merge_duration=times['merge_duration'],
+        days_to_merge=times['days_to_merge'],
+        total_merge_time=times['total_merge_time'],
+        merge_date=dates['max_date'] + times['merge_duration']
+    )
 
 @app.route('/vendor.bundle.js')
 def send_vendor_js():
@@ -126,7 +174,7 @@ def getReviewerMotivation():
     ]
     return motivations[randrange(len(motivations) - 1)]
 
-def _set_status(repostiory, pull_request, state, message):
+def _set_status(repository, pull_request, state, message):
     commit = pull_request.get_commits()[0]
     url = 'https://dc.tooangel.de/{}/pull/{}'.format(repository.full_name, pull_request.number)
     commit.create_status(state, '', message, 'democratic collaboration')
