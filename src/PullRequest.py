@@ -176,7 +176,7 @@ def check_for_merge(coefficient, repository, pull_request, issue, age, votes, vo
     if commentOnIssue:
         issue.create_comment(message)
 
-    if age >= days_to_merge:
+    if age >= merge_duration:
         print('Would merge now')
         try:
             pull_request.merge()
