@@ -247,7 +247,7 @@ Please review the PR to help.
         # print(self.data.keys())
         pass
 
-class Github(flask_restful.Resource):
+class GithubWebHook(flask_restful.Resource):
     def handle_push(self, data):
         print('push - ignored')
         # print(data)
@@ -257,20 +257,23 @@ class Github(flask_restful.Resource):
         pull_request.execute()
 
     def handle_pull_request_review(self, data):
+        print(data)
         if data['action'] == 'submitted':
             if 'state' not in data['review']:
                 print('No state')
-                print(self.data.keys())
-                return
+                print(data['review'].keys())
+                return {'error': 'No state'}, 503
 
             if data['review']['state'] == 'commented':
                 print('Review comment')
-                return
+                return {'info': 'Only commented'}
             token = os.getenv('TOKEN')
             github_client = github.Github(token)
             repository = github_client.get_repo(data['repository']['id'])
             pull_request = repository.get_pull(data['pull_request']['number'])
+
             check_pull_request(repository, pull_request, True)
+            return {'info': 'All fine, thanks'}
 
     def post(self):
         data = request.json
@@ -293,7 +296,7 @@ class Restart(flask_restful.Resource):
         func()
 
 api.add_resource(Restart, '/restart/')
-api.add_resource(Github, '/github/')
+api.add_resource(GithubWebHook, '/github/')
 
 api.add_resource(APIPullRequest, '/v1/<string:org>/<string:repo>/pull/<int:pull>/')
 api.add_resource(APIRepository, '/v1/<string:org>/<string:repo>/')

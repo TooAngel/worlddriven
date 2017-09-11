@@ -1,6 +1,7 @@
 test:
   override:
-    - echo "test"
+    - pytest --cov=src --cov-report xml
+    - python-codacy-coverage -r coverage.xml
 deployment:
   production:
     branch: master
