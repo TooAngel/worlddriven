@@ -1,13 +1,13 @@
 import os
 from flask import Flask, request, redirect, url_for, session, g, Response, render_template
-from flask.ext import restful  # @UnresolvedImport
+import flask_restful
 import github
 from apscheduler.schedulers.background import BackgroundScheduler
 import requests
 import sys
 from random import randrange
 from flask_pymongo import PyMongo
-from flask.ext.github import GitHub
+from flask_github import GitHub
 import logging
 from api import APIPullRequest, APIRepository
 from PullRequest import check_pull_request, check_pull_requests, get_contributors, get_coefficient_and_votes, get_latest_dates, get_merge_time
@@ -24,7 +24,7 @@ app = Flask(
     template_folder='../templates'
 )
 
-api = restful.Api(app)
+api = flask_restful.Api(app)
 
 app.config['MONGO_URI'] = os.getenv('MONGO_URI', 'mongodb://localhost:27017')
 CORS(
@@ -247,7 +247,7 @@ Please review the PR to help.
         # print(self.data.keys())
         pass
 
-class Github(restful.Resource):
+class Github(flask_restful.Resource):
     def handle_push(self, data):
         print('push - ignored')
         # print(data)
@@ -285,7 +285,7 @@ class Github(restful.Resource):
         print('post not handled')
         print(data.keys())
 
-class Restart(restful.Resource):
+class Restart(flask_restful.Resource):
     def get(self):
         func = request.environ.get('werkzeug.server.shutdown')
         if func is None:
