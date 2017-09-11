@@ -4,8 +4,8 @@ import os
 import github
 import requests
 
-def get_reviews(repo, pull_request):
-    url = 'https://api.github.com/repos/{}/pulls/{}/reviews'.format(repo.full_name, pull_request.number)
+def get_reviews(repository, pull_request, contributors):
+    url = 'https://api.github.com/repos/{}/pulls/{}/reviews'.format(repository.full_name, pull_request.number)
     headers = {
     'Accept': 'application/vnd.github.black-cat-preview+json',
     'Authorization': 'token {}'.format(os.getenv('TOKEN'))
@@ -22,20 +22,23 @@ def get_reviews(repo, pull_request):
         print('message: Not Found')
         return {}
     reviews_decided = [review for review in data if review['state'] != 'COMMENTED']
-    last_reviews = {}
     for review in reviews_decided:
         value = 0
         if review['state'] == 'APPROVED':
             value = 1
         elif review['state'] == 'CHANGES_REQUESTED':
             value = -1
-        if review['user']['login'] not in last_reviews:
-            last_reviews[review['user']['login']] = {'value': value, 'date': review['submitted_at']}
+        if review['user']['login'] not in contributors:
+            contributors[review['user']['login']] = {'name': review['user']['login'], 'review_value': value, 'review_date': review['submitted_at']}
             continue
-        if toDateTime(last_reviews[review['user']['login']]['date']) < toDateTime(review['submitted_at']):
-            last_reviews[review['user']['login']] = {'value': value, 'date': review['submitted_at']}
+        if 'review_date' not in contributors[review['user']['login']] or toDateTime(contributors[review['user']['login']]['review_date']) < toDateTime(review['submitted_at']):
+            contributors[review['user']['login']]['review_value'] = value
+            contributors[review['user']['login']]['review_date'] = review['submitted_at']
             continue
-    return last_reviews
+
+    contributors[pull_request.user.login]['review_value'] = 1
+
+    return contributors
 
 
 def toDateTime(value):
@@ -47,41 +50,69 @@ def mergeable_pull_request(pull_request):
 
 def get_contributors(repository):
     contributors = repository.get_stats_contributors()
-    return {contributor.author.login: contributor.total for contributor in (contributors or []) if contributor.author}
+    return {contributor.author.login: {'review_value': 0, 'name': contributor.author.login, 'commits': contributor.total} for contributor in (contributors or []) if contributor.author}
 
-def get_votes_from_reviews(votes, repository, pull_request, possible_reviewers):
-    reviews = get_reviews(repository, pull_request)
+def get_votes_from_reviews(votes, repository, pull_request, contributors):
+    reviews = get_reviews(repository, pull_request, contributors)
     for review in reviews:
-        if review not in possible_reviewers:
+        if review not in contributors:
             print('{} not in reviewers'.format(review))
             continue
-        votes += reviews[review]['value'] * possible_reviewers[review]
+        votes += reviews[review].get('review_value', 0) * contributors[review].get('commits', 0)
     return votes
 
 def get_coefficient_and_votes(repository, pull_request):
     contributors = get_contributors(repository)
     author = pull_request.user.login
-    print(contributors, author)
-    possible_reviewers = {contributor: contributors[contributor] for contributor in contributors if contributor != author}
-    print(possible_reviewers)
+    contributors = get_reviews(repository, pull_request, contributors)
     # Sum of total number of commits, initialize votes with the authors weight
-    votes_total = sum(contributors[contributor] for contributor in contributors)
+    votes_total = sum(contributors[contributor].get('commits', 0) for contributor in contributors)
     votes = 0
-    if author in contributors:
-        votes = contributors[author]
 
-    votes = get_votes_from_reviews(votes, repository, pull_request, possible_reviewers)
-
+    votes = get_votes_from_reviews(votes, repository, pull_request, contributors)
+    print(votes, votes_total)
     coefficient = 0
     if votes_total != 0:
         coefficient = float(votes) / float(votes_total)
-    return {'coefficient': coefficient, 'votes': votes, 'votes_total': votes_total}
+    return {
+        'coefficient': coefficient,
+        'votes': votes,
+        'votes_total': votes_total,
+        'contributors': contributors
+    }
 
 
 def get_last_date(data):
     data_sorted = sorted(data, key=lambda event: event.created_at, reverse=True)
     return data_sorted[0].created_at if len(data_sorted) > 0 else datetime(1960, 1, 1)
 
+
+def get_latest_dates(repository, pull_request):
+    issue = repository.get_issue(pull_request.number)
+    issue_events = [event for event in issue.get_events() if event.event == 'unlabeled' and event.raw_data['label']['name'] == 'WIP']
+    last_unlabel_date = get_last_date(issue_events)
+
+    events = [event for event in pull_request.head.repo.get_events() if event.type == 'PushEvent' and event.payload['ref'] == 'refs/heads/{}'.format(pull_request.head.ref)]
+    last_push_date = get_last_date(events)
+
+    commits = pull_request.get_commits()
+    commit = max(commits, key=lambda commit: commit.commit.author.date)
+
+    last_commit_date = commit.commit.author.date
+    # print('pull request created', pull_request.created_at)
+    # print('commit date:', last_commit_date)
+    # print('unlabel date:', last_unlabel_date)
+    # print('push date', last_push_date)
+    max_date = max(last_commit_date, last_unlabel_date, last_push_date, pull_request.created_at)
+    age = datetime.now() - max_date
+    return {
+        'max_date': max_date,
+        'unlabel_date': last_unlabel_date,
+        'push_date': last_push_date,
+        'commit_date': last_commit_date,
+        'pull_request_date': pull_request.created_at,
+        'age': age
+    }
 
 def check_pull_request(repository, pull_request, commentOnIssue):
     print('-' * 20)
@@ -108,30 +139,27 @@ def check_pull_request(repository, pull_request, commentOnIssue):
         print('Negative coefficient')
         return
 
-    issue_events = [event for event in issue.get_events() if event.event == 'unlabeled' and event.raw_data['label']['name'] == 'WIP']
-    last_unlabel_date = get_last_date(issue_events)
+    dates = get_latest_dates(repository, pull_request)
+    check_for_merge(data_math['coefficient'], repository, pull_request, issue, dates['age'], data_math['votes'], data_math['votes_total'], commentOnIssue)
 
-    events = [event for event in pull_request.head.repo.get_events() if event.type == 'PushEvent' and event.payload['ref'] == 'refs/heads/{}'.format(pull_request.head.ref)]
-    last_push_date = get_last_date(events)
 
-    commits = pull_request.get_commits()
-    commit = max(commits, key=lambda commit: commit.commit.author.date)
-
-    last_commit_date = commit.commit.author.date
-    # print('pull request created', pull_request.created_at)
-    # print('commit date:', last_commit_date)
-    # print('unlabel date:', last_unlabel_date)
-    # print('push date', last_push_date)
-    max_date = max(last_commit_date, last_unlabel_date, last_push_date, pull_request.created_at)
-    # print('max date', max_date)
-    age = datetime.now() - max_date
-    check_for_merge(data_math['coefficient'], repository, pull_request, issue, age, data_math['votes'], data_math['votes_total'], commentOnIssue)
+def get_merge_time(pull_request, coefficient, age):
+    total_merge_time = (5 + pull_request.commits * 5)
+    merge_duration = timedelta(days=(1 - coefficient) * total_merge_time)
+    days_to_merge = merge_duration - age
+    return {
+        'commits': pull_request.commits,
+        'merge_duration': merge_duration,
+        'days_to_merge': days_to_merge,
+        'total_merge_time': total_merge_time,
+    }
 
 def check_for_merge(coefficient, repository, pull_request, issue, age, votes, votes_total, commentOnIssue):
     # Formular:
     # 5 days base value
     # commits in pull request times 5 days
     # days_to_merge = (1 - coefficient) * calculated days
+    times = get_merge_time(pull_request, coefficient, age)
     merge_duration = timedelta(days=(1 - coefficient) * (5 + pull_request.commits * 5))
     days_to_merge = merge_duration - age
     message = '''A new review, yeah.
@@ -139,7 +167,7 @@ def check_for_merge(coefficient, repository, pull_request, issue, age, votes, vo
     Votes: {}/{}
     Coefficient: {}
     Merging in {} days {} hours
-    Age {} days {} hours'''.format(votes, votes_total, coefficient, days_to_merge.days, days_to_merge.seconds / 3600, age.days, age.seconds / 3600)
+    Age {} days {} hours'''.format(votes, votes_total, coefficient, times['days_to_merge'].days, times['days_to_merge'].seconds / 3600, age.days, age.seconds / 3600)
     print(message)
 
     status_message = '{}/{} {} Merge in {} days {}'.format(votes, votes_total, round(coefficient, 3) * 100, days_to_merge.days, days_to_merge.seconds / 3600)
