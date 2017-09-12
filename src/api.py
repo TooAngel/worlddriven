@@ -1,9 +1,9 @@
-from flask.ext import restful  # @UnresolvedImport
+import flask_restful  # @UnresolvedImport
 from PullRequest import mergeable_pull_request, get_coefficient_and_votes, get_contributors, get_reviews
 import github
 from flask import g, abort
 
-class APIPullRequest(restful.Resource):
+class APIPullRequest(flask_restful.Resource):
     def get(self, org, repo, pull):
         if not g.user:
             abort(401)
@@ -30,7 +30,7 @@ class APIPullRequest(restful.Resource):
             'reviews': get_reviews(repository, pull_request)
         }
 
-class APIRepository(restful.Resource):
+class APIRepository(flask_restful.Resource):
     def get(self, org, repo):
         github_client = github.Github(g.user['github_access_token'])
         repository = github_client.get_repo('{}/{}'.format(org, repo))
