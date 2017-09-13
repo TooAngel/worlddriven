@@ -17,6 +17,7 @@
 </head>
 <body>
 <h1>{{ repository }}/{{ project }} {{ title }} <span style="color: grey;">#{{ pull_request_number }}</span></h1>
+<h2>Stats</h2>
 <table style="width: 50%; float: left">
   <tr><td>commits:</td><td>{{ commits }}</td></tr>
   <tr><td>votes:</td><td>{{ votes }}</td></tr>
@@ -25,7 +26,7 @@
   <tr><td>age:</td><td>{{ age }}</td></tr>
 </table>
 
-<h2>Last action</h2>:
+<h2>Last action</h2>
 <table style="width: 50%">
   <tr><td>unlabel_date:</td><td>{{ unlabel_date }}</td></tr>
   <tr><td>push_date:</td><td>{{ push_date }}</td></tr>

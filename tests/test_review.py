@@ -35,12 +35,12 @@ class ReviewTestCase(unittest.TestCase):
         rv = self.app.post('/github/', data=json.dumps(data), headers=headers)
         self.assertEqual(b'{"info": "Only commented"}', rv.data)
 
+    @patch('server.PR')
     @patch('server.github')
-    @patch('server.check_pull_request')
-    def test_approve(self, check_pull_request, github):
-        def check_pull_request_mock(repository, pull_request, commentOnIssue):
-            print('check_pull_request')
-        check_pull_request = check_pull_request_mock
+    def test_approve(self, github, PR):
+        def PR_mock(token):
+            print('PR')
+        PR = PR_mock
 
         def github_mock(token):
             print('Github')
@@ -54,7 +54,11 @@ class ReviewTestCase(unittest.TestCase):
         data = {
             'action': 'submitted',
             'review': {
-                'state': 'approved'
+                'state': 'approved',
+                "user": {
+                    "login": "user",
+                },
+                'submitted_at': 'submitted_at'
             },
             'repository': {
                 'id': 'id'
