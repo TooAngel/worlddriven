@@ -35,6 +35,8 @@ For github oauth feature provide `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`,
 callback url is `/github-callback`.
 Set Session secret as `SESSION_SECRET` initial a random string.
 
+Run tests with: `pytest`
+
 ## Api
 
 - `/v1/:org/:repo/` e.g. `/v1/tooangel/democratic-collaboration/`
