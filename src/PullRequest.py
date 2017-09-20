@@ -194,9 +194,13 @@ def check_pull_requests():
     for repository_name in repositories:
         repository = github_client.get_repo(repository_name)
         for pull_request in repository.get_pulls():
-            check_pull_request(repository, pull_request, False)
+            try:
+                check_pull_request(repository, pull_request, False)
+            except Exception as e:
+                print(e)
 
 def _set_status(repository, pull_request, state, message):
     commit = pull_request.get_commits().reversed[0]
     url = 'https://dc.tooangel.de/{}/pull/{}'.format(repository.full_name, pull_request.number)
-    print(commit.create_status(state, url, message, 'democratic collaboration'))
+    response = commit.create_status(state, url, message, 'democratic collaboration')
+    print('_set_status', response)
