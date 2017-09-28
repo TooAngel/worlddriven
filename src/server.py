@@ -10,13 +10,17 @@ from flask_pymongo import PyMongo
 from flask_github import GitHub
 import logging
 from api import APIPullRequest, APIRepository
-from PullRequest import check_pull_request, check_pull_requests, get_contributors, get_coefficient_and_votes, get_latest_dates, get_merge_time
+# from PullRequest import check_pull_request, check_pull_requests, get_contributors, get_coefficient_and_votes, get_latest_dates, get_merge_time, handle_review, get_reviews
+from PullRequest import PullRequest as PR, check_pull_requests
 from bson.objectid import ObjectId
 from flask_cors import CORS
 import json
 from datetime import timedelta
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.StreamHandler()])
+
 
 app = Flask(
     __name__,
@@ -62,17 +66,19 @@ def show_pull_request(org_name, project_name, pull_request_number):
     repository_name = '{}/{}'.format(org_name, project_name)
     repository = github_client.get_repo(repository_name)
     pull_request = repository.get_pull(pull_request_number)
-    coefficient_and_votes = get_coefficient_and_votes(repository, pull_request)
-    contributors = [ contributor for contributor in coefficient_and_votes['contributors'].values() ]
 
-
-    dates = get_latest_dates(repository, pull_request)
-    times = get_merge_time(pull_request, coefficient_and_votes['coefficient'], dates['age'])
-
+    pr = PR(repository, pull_request)
+    pr.get_contributors()
+    pr.update_contributors_with_reviews()
+    pr.update_votes()
+    pr.get_latest_dates()
+    pr.get_merge_time()
+    contributors = [ pr.contributors[contributor] for contributor in pr.contributors ]
+    print(contributors)
     for contributor in contributors:
         if 'commits' not in contributor:
             contributor['commits'] = 0;
-        contributor['time_value'] = timedelta(days=(contributor['commits'] / float(coefficient_and_votes['votes_total'])) * times['total_merge_time'])
+        contributor['time_value'] = timedelta(days=(contributor['commits'] / float(pr.votes_total)) * pr.total_merge_time)
 
     def activeFirst(value):
         return abs(value['review_value'] + 0.1) * value['commits']
@@ -84,21 +90,21 @@ def show_pull_request(org_name, project_name, pull_request_number):
         repository=org_name,
         project=project_name,
         pull_request_number=pull_request_number,
-        coefficient=coefficient_and_votes['coefficient'],
-        votes=coefficient_and_votes['votes'],
-        votes_total=coefficient_and_votes['votes_total'],
+        coefficient=pr.coefficient,
+        votes=pr.votes,
+        votes_total=pr.votes_total,
         contributors=contributors,
-        max_date=dates['max_date'],
-        unlabel_date=dates['unlabel_date'],
-        push_date=dates['push_date'],
-        commit_date=dates['commit_date'],
-        pull_request_date=dates['pull_request_date'],
-        age=dates['age'],
-        commits=times['commits'],
-        merge_duration=times['merge_duration'],
-        days_to_merge=times['days_to_merge'],
-        total_merge_time=times['total_merge_time'],
-        merge_date=dates['max_date'] + times['merge_duration']
+        max_date=pr.max_date,
+        unlabel_date=pr.unlabel_date,
+        push_date=pr.push_date,
+        commit_date=pr.commit_date,
+        pull_request_date=pr.pull_request_date,
+        age=pr.age,
+        commits=pr.commits,
+        merge_duration=pr.merge_duration,
+        days_to_merge=pr.days_to_merge,
+        total_merge_time=pr.total_merge_time,
+        merge_date=pr.max_date + pr.merge_duration
     )
 
 @app.route('/vendor.bundle.js')
@@ -272,7 +278,40 @@ class GithubWebHook(flask_restful.Resource):
             repository = github_client.get_repo(data['repository']['id'])
             pull_request = repository.get_pull(data['pull_request']['number'])
 
-            check_pull_request(repository, pull_request, True)
+            pr = PR(repository, pull_request)
+            pr.get_contributors()
+            pr.update_contributors_with_reviews()
+
+            review = data['review']
+            reviewer = review['user']['login']
+            if reviewer not in pr.contributors:
+                pr.contributors[reviewer] = {'name': reviewer, 'review_date': review['submitted_at']}
+
+            value = 0
+            if review['state'] == 'APPROVED':
+                value = 1
+            elif review['state'] == 'CHANGES_REQUESTED':
+                value = -1
+
+            pr.contributors[reviewer]['review_value'] = value
+
+            pr.update_votes()
+            pr.get_latest_dates()
+            pr.get_merge_time()
+
+            message = '''A new review, yeah.
+
+            Votes: {}/{}
+            Coefficient: {}
+            Merging in {} days {} hours
+            Age {} days {} hours'''.format(pr.votes, pr.votes_total, pr.coefficient, pr.days_to_merge.days, pr.days_to_merge.seconds / 3600, pr.age.days, pr.age.seconds / 3600)
+            print(message)
+
+            status_message = '{}/{} {} Merge in {} days {}'.format(pr.votes, pr.votes_total, round(pr.coefficient, 3) * 100, pr.days_to_merge.days, pr.days_to_merge.seconds / 3600)
+            _set_status(repository, pull_request, 'success', status_message)
+            issue = repository.get_issue(pull_request.number)
+            issue.create_comment(message)
+
             return {'info': 'All fine, thanks'}
 
     def post(self):

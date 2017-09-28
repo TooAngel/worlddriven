@@ -1,5 +1,5 @@
 import flask_restful  # @UnresolvedImport
-from PullRequest import mergeable_pull_request, get_coefficient_and_votes, get_contributors, get_reviews
+# from PullRequest import mergeable_pull_request, get_coefficient_and_votes, get_contributors, get_reviews
 import github
 from flask import g, abort
 
@@ -12,8 +12,8 @@ class APIPullRequest(flask_restful.Resource):
         github_client = github.Github(g.user['github_access_token'])
         repository = github_client.get_repo('{}/{}'.format(org, repo))
         pull_request = repository.get_pull(pull)
-        mergeable = mergeable_pull_request(pull_request)
-        data_math = get_coefficient_and_votes(repository, pull_request)
+        # mergeable = mergeable_pull_request(pull_request)
+        # data_math = get_coefficient_and_votes(repository, pull_request)
 
         return {
             'pull_request': {
