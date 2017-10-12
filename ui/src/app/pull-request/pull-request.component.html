@@ -1,6 +1,0 @@
-<div *ngIf="pullPromise | async as pull; else loadingBlock">
-  <h1>{{ pull.pull_request.title }}</h1>
-</div>
-<ng-template #loadingBlock>
-    <md-spinner></md-spinner>
-</ng-template>

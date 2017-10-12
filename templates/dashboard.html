@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>democratic collaboration</title>
+  <meta name="author" content="Tobias Wilken">
+  <meta name="description" content="Community driven pull request automerge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+  <link rel="stylesheet" href="static/font-awesome-4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="static/bootstrap-social-gh-pages/bootstrap-social.css">
+  <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+<h1>{{ user.login }}</h1>
+
+<h2>Repositories</h2>
+<table style="width: 50%; float: left">
+    <tr><td><b>name</b></td></tr>
+    {% for repository in repositories %}
+    <tr>
+      <td>{{ repository.full_name }}</td>
+      <td>
+      {% if repository.configured %}
+        <input type="checkbox" name="{{ repository.full_name }}" checked data-toggle="toggle" data-onstyle="success" data-offstyle="danger">
+      {% else %}
+        <input type="checkbox" name="{{ repository.full_name }}" data-toggle="toggle" data-onstyle="success" data-offstyle="danger">
+      {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+</table>
+
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+
+<script>
+$(function() {
+  $('input:checkbox').change(function() {
+    console.log('Toggle: ' + $(this).prop('checked') + ' ');
+    console.log($(this).prop('name'));
+    var url = '/v1/' + $(this).prop('name') + '/';
+    var data = {'checked': $(this).prop('checked')};
+    var callback = function(result) {};
+    jQuery.ajax({
+      url: url,
+      type: 'PUT',
+      data: data,
+      dataType: 'json',
+      success: callback
+    });
+  })
+})
+</script>
+
+</body>
+</html>

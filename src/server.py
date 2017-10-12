@@ -9,7 +9,7 @@ from random import randrange
 from flask_pymongo import PyMongo
 from flask_github import GitHub
 import logging
-from api import APIPullRequest, APIRepository
+import apiendpoint
 # from PullRequest import check_pull_request, check_pull_requests, get_contributors, get_coefficient_and_votes, get_latest_dates, get_merge_time, handle_review, get_reviews
 from PullRequest import PullRequest as PR, check_pull_requests
 from bson.objectid import ObjectId
@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.INFO,
 
 app = Flask(
     __name__,
-    static_folder='../ui/dist',
+    static_folder='../static',
     template_folder='../templates'
 )
 
@@ -36,6 +36,7 @@ CORS(
     origins=['http://localhost:5000', 'https://dc.tooangel.de'],
     supports_credentials=True)
 mongo = PyMongo(app)
+apiendpoint.mongo = mongo
 
 app.config['GITHUB_CLIENT_ID'] = os.getenv('GITHUB_CLIENT_ID')
 app.config['GITHUB_CLIENT_SECRET'] = os.getenv('GITHUB_CLIENT_SECRET')
@@ -55,9 +56,47 @@ def token_getter():
         user = user['github_access_token']
         return user
 
+@app.route('/favicon.ico')
+def favicon():
+    return app.send_static_file('5fingers_icoline.ico')
+
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
+
+@app.route('/dashboard')
+def dashboard():
+    github_client = github.Github(g.user['github_access_token'])
+    user = github_client.get_user()
+    github_repositories = user.get_repos(type='public')
+    repositories = []
+    for repository in github_repositories:
+        hooks = repository.get_hooks()
+
+        configured = False
+        for hook in hooks:
+            if not hook.active:
+                continue
+
+            if 'url' not in hook.config:
+                continue
+
+            if hook.config['url'] == 'https://dc.tooangel.de/github/':
+                configured = True
+                break
+
+        repositories.append({
+            'full_name': repository.full_name,
+            'configured': configured
+        })
+
+        break
+
+    return render_template(
+        'dashboard.html',
+        repositories=repositories,
+        user=user
+    )
 
 @app.route('/<org_name>/<project_name>/pull/<int:pull_request_number>')
 def show_pull_request(org_name, project_name, pull_request_number):
@@ -107,39 +146,14 @@ def show_pull_request(org_name, project_name, pull_request_number):
         merge_date=pr.max_date + pr.merge_duration
     )
 
-@app.route('/vendor.bundle.js')
-def send_vendor_js():
-    return app.send_static_file('vendor.bundle.js')
-
-@app.route('/main.bundle.js')
-def send_main_js():
-    return app.send_static_file('main.bundle.js')
-
-@app.route('/inline.bundle.js')
-def send_inline_js():
-    return app.send_static_file('inline.bundle.js')
-
-@app.route('/polyfills.bundle.js')
-def send_polyfills_js():
-    return app.send_static_file('polyfills.bundle.js')
-
-@app.route('/styles.bundle.js')
-def send_styles_js():
-    return app.send_static_file('styles.bundle.js')
-
-@app.route('/styles.css')
-def send_styles_css():
-    return app.send_static_file('styles.css')
-
-
 @app.route('/login/')
 def login():
     referer = request.headers.get('Referer', '/')
     session['referer'] = referer
     if session.get('user_id', None) is None:
-        return github_oauth.authorize()
+        return github_oauth.authorize(scope='public_repo,admin:repo_hook')
     else:
-        return redirect(referer)
+        return redirect('/dashboard')
 
 @app.route('/logout/')
 def logout():
@@ -337,8 +351,8 @@ class Restart(flask_restful.Resource):
 api.add_resource(Restart, '/restart/')
 api.add_resource(GithubWebHook, '/github/')
 
-api.add_resource(APIPullRequest, '/v1/<string:org>/<string:repo>/pull/<int:pull>/')
-api.add_resource(APIRepository, '/v1/<string:org>/<string:repo>/')
+api.add_resource(apiendpoint.APIPullRequest, '/v1/<string:org>/<string:repo>/pull/<int:pull>/')
+api.add_resource(apiendpoint.APIRepository, '/v1/<string:org>/<string:repo>/')
 
 
 if __name__ == '__main__':

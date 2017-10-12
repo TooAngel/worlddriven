@@ -7,12 +7,8 @@
 
 Hosted under https://dc.tooangel.de/
 
-In open source projects there is one or more people responsible to merge
-features and fixes in to the master branch. Due lack of time or interest this
-can be a bottleneck.
-
 Democratic collaboration introduces a contribution based weighted voting system
-for merging. As soon as you contribute to a project, you get a share or
+for merging of pull requests. As soon as you contribute to a project, you get a share or
 responsibility for the progress of the project.
 
 Github Pull Request are the main contact point. Reviewing a PR with an
