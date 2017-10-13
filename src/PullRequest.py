@@ -110,13 +110,13 @@ class PullRequest(object):
         return False
 
     def check_for_merge(self):
-        if self.coefficient > 0:
+        if self.coefficient >= 0:
             status_message = '{} Merge at {}'.format(round(self.coefficient, 2), self.max_date + self.merge_duration)
             _set_status(self.pull_request, self.repository, 'success', status_message)
         else:
             status_message = '{} Will not merge'.format(round(self.coefficient, 2))
             _set_status(self.pull_request, self.repository, 'error', status_message)
-
+            return
 
         if self.max_date + self.merge_duration < datetime.utcnow() :
             logging.info('Would merge now')
