@@ -48,7 +48,7 @@
 <h2>Contributors</h2>
 <table style="width: 50%; float: left">
     <tr><td><b>name</b></td><td>commits</td><td>merge boost</td></tr>
-    {% for contributor in contributors | sort(reverse=True) %}
+    {% for contributor in contributors %}
     <tr class="review_value{{ contributor['review_value'] }}">
       <td>{{ contributor['name'] }}</td>
       <td>{{ contributor['commits'] }}</td>

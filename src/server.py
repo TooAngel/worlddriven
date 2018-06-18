@@ -121,7 +121,7 @@ def show_pull_request(org_name, project_name, pull_request_number):
 
     def activeFirst(value):
         return abs(value['review_value'] + 0.1) * value['commits']
-    contributors = sorted(contributors, key=activeFirst)
+    contributors = sorted(contributors, key=activeFirst, reverse=True)
 
     return render_template(
         'pull_request.html',
