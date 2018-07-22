@@ -6,6 +6,7 @@ requests
 GitHub-Flask
 Flask-PyMongo
 flask-cors
+Flask-SSLify
 pytest
 pytest-pythonpath
 mock
