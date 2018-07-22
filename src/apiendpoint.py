@@ -3,6 +3,7 @@ import github
 from flask import g, abort, request
 
 mongo = None
+DOMAIN = 'https://www.worlddriven.org'
 
 class APIPullRequest(flask_restful.Resource):
     def get(self, org, repo, pull):
@@ -43,7 +44,7 @@ class APIRepository(flask_restful.Resource):
         github_client = github.Github(g.user['github_access_token'])
         repository = github_client.get_repo('{}/{}'.format(org, repo))
         config = {
-            'url': 'https://dc.tooangel.de/github/',
+            'url': '{}/github/'.format(DOMAIN),
             'insecure_ssl': '0',
             'content_type': 'json'
         }
@@ -56,7 +57,7 @@ class APIRepository(flask_restful.Resource):
                 insert = mongo.db.repositories.insert_one({'full_name': full_name, 'github_access_token': g.user['github_access_token']})
         else:
             for hook in repository.get_hooks():
-                if hook.config['url'] == 'https://dc.tooangel.de/github/':
+                if hook.config['url'] == '{}/github/'.format(DOMAIN):
                     hook.delete()
             repo_db = mongo.db.repositories.delete_many({'full_name': full_name})
         return {}

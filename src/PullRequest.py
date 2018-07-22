@@ -5,12 +5,14 @@ import github
 import requests
 from GithubReviews import fetch_reviews
 
+DOMAIN = 'https://www.worlddriven.org'
+
 def toDateTime(value):
     return datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ')
 
 def _set_status(pull_request, repository, state, message):
     commit = pull_request.get_commits().reversed[0]
-    url = 'https://dc.tooangel.de/{}/pull/{}'.format(repository.full_name, pull_request.number)
+    url = '{}/{}/pull/{}'.format(DOMAIN, repository.full_name, pull_request.number)
     statuses = commit.get_statuses()
     for status in statuses:
         if status.context == 'democratic collaboration' and status.description == message:
