@@ -222,8 +222,10 @@ class PullRequest(object):
         token = os.getenv('TOKEN')
         github_client = github.Github(token)
         repository = github_client.get_repo(self.data['repository']['full_name'])
+        pull_request = repository.get_pull(self.data['pull_request']['number'])
+        pr = PR(repository, pull_request)
 
-        contributors = {contributor.author.login: contributor.total for contributor in get_contributors(repository)}
+        contributors = {contributor.author.login: contributor.total for contributor in pr.get_contributors()}
         author = self.data['pull_request']['user']['login']
         possible_reviewers = [{'name': contributor, 'total': contributors[contributor]}
                               for contributor in contributors
