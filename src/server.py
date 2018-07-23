@@ -30,7 +30,7 @@ app = Flask(
 
 api = flask_restful.Api(app)
 
-app.config['MONGO_URI'] = os.getenv('MONGO_URI', 'mongodb://localhost:27017')
+app.config['MONGO_URI'] = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')
 CORS(
     app,
     origins=['http://localhost:5000', 'https://dc.tooangel.de'],
@@ -89,8 +89,6 @@ def dashboard():
             'full_name': repository.full_name,
             'configured': configured
         })
-
-        break
 
     return render_template(
         'dashboard.html',
