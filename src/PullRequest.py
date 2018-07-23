@@ -155,7 +155,7 @@ def check_pull_requests():
     token = os.getenv('TOKEN')
     github_client = github.Github(token)
 
-    mongo_url = os.getenv('MONGO_URI', 'mongodb://localhost:27017/server')
+    mongo_url = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/server')
     mongo = MongoClient(mongo_url)
     database = mongo.get_database()
     mongo_repositories = database.repositories.find()
