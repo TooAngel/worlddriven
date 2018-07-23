@@ -19,8 +19,11 @@ def _set_status(pull_request, repository, state, message):
     for status in statuses:
         if status.context == 'democratic collaboration' and status.description == message:
             return
-    logging.info('Set Status message: {}'.format(message))
-    commit.create_status(state, url, message, 'democratic collaboration')
+    logging.info('Set Status message: {} {} {}'.format(state, url, message))
+    try:
+        commit.create_status(state, url, message, 'democratic collaboration')
+    except Exception as e:
+        logging.exception('PullRequest._set_status exception')
 
 def _get_last_date(data):
     data_sorted = sorted(data, key=lambda event: event.created_at, reverse=True)
