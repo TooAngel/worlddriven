@@ -5,7 +5,7 @@
 [![gitter](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/tooangel-democratic-collaboration/Lobby)
 [![Code Climate](https://codeclimate.com/github/TooAngel/democratic-collaboration/badges/gpa.svg)](https://codeclimate.com/github/TooAngel/democratic-collaboration)
 
-Hosted under https://dc.tooangel.de/
+Hosted under https://www.worlddriven.org
 
 Democratic collaboration introduces a contribution based weighted voting system
 for merging of pull requests. As soon as you contribute to a project, you get a share or

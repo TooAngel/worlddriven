@@ -17,6 +17,8 @@ from flask_cors import CORS
 import json
 from datetime import timedelta
 
+DOMAIN = 'https://www.worlddriven.org'
+
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(message)s',
                     handlers=[logging.StreamHandler()])
@@ -33,7 +35,7 @@ api = flask_restful.Api(app)
 app.config['MONGO_URI'] = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')
 CORS(
     app,
-    origins=['http://localhost:5000', 'https://dc.tooangel.de'],
+    origins=['http://localhost:5000', DOMAIN],
     supports_credentials=True)
 mongo = PyMongo(app)
 apiendpoint.mongo = mongo
@@ -81,7 +83,7 @@ def dashboard():
             if 'url' not in hook.config:
                 continue
 
-            if hook.config['url'] == 'https://dc.tooangel.de/github/':
+            if hook.config['url'] == '{}/github/'.format(DOMAIN):
                 configured = True
                 break
 
@@ -194,7 +196,6 @@ def getReviewerMotivation():
 
 def _set_status(repository, pull_request, state, message):
     commit = pull_request.get_commits()[0]
-    url = 'https://dc.tooangel.de/{}/pull/{}'.format(repository.full_name, pull_request.number)
     commit.create_status(state, '', message, 'democratic collaboration')
 
 class PullRequest(object):
