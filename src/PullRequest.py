@@ -4,6 +4,8 @@ import os
 import github
 import requests
 from GithubReviews import fetch_reviews
+from pymongo import MongoClient
+import sys
 
 def toDateTime(value):
     return datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ')
@@ -75,7 +77,6 @@ class PullRequest(object):
         self.push_date = _get_last_date(events)
 
         commits = self.pull_request.get_commits().reversed
-        print(commits)
         commit = max(commits, key=lambda commit: commit.commit.author.date)
         self.commit_date = commit.commit.author.date
         self.pull_request_date = self.pull_request.created_at
@@ -151,9 +152,18 @@ def check_pull_requests():
     logging.info('Check pull requests: {}'.format(datetime.utcnow()))
     token = os.getenv('TOKEN')
     github_client = github.Github(token)
-    repositories = ['tooangel/democratic-collaboration', 'tooangel/screeps']
+
+    mongo_url = os.getenv('MONGO_URI', 'mongodb://localhost:27017/server')
+    mongo = MongoClient(mongo_url)
+    database = mongo.get_database()
+    mongo_repositories = database.repositories.find()
+    repositories = [mongo_repository['full_name'] for mongo_repository in mongo_repositories]
 
     for repository_name in repositories:
         repository = github_client.get_repo(repository_name)
         for pull_request in repository.get_pulls():
             check_pull_request(repository, pull_request, False)
+
+if __name__ == '__main__':
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    check_pull_requests()
