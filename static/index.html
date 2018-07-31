@@ -2,17 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>World driven - contribution based weighted voting system
-  for merging of pull requests</title>
+  <title>World driven - pull request auto merge</title>
+
   <meta name="author" content="Tobias Wilken">
   <meta name="description" content="World driven introduces a contribution based weighted voting system
   for automatic merging of pull requests. As soon as you contribute to a project, you get a share or
   responsibility for the progress of the project.">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="canonical" href="https://www.worlddriven.org">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
-  <link rel="stylesheet" href="static/font-awesome-4.7.0/css/font-awesome.min.css">
-  <link rel="stylesheet" href="static/bootstrap-social-gh-pages/bootstrap-social.css">
   <meta property="og:type" content="website">
   <meta property="og:title" content="World driven">
   <meta property="og:description" content="World driven introduces a contribution based weighted voting system
@@ -27,11 +23,16 @@
     responsibility for the progress of the project.">
   <meta name="twitter:image" content="https://www.worlddriven.org/static/logo.png">
   <meta name="twitter:image:alt" content="World driven logo">
+
+  <link rel="canonical" href="https://www.worlddriven.org">
+
+  <link rel="stylesheet" href="static/font-awesome-4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="static/bootstrap-social-gh-pages/bootstrap-social.css">
 </head>
 
 <body>
-  <div class="container">
-    <div class="text-center">
+  <div class="container" style="width: 50%; margin-left: 25%;">
+    <div style="display: flex; align-items: center; justify-content: center; margin-top: 50px">
       <img src="/static/logo.png" style="width:100px;">
       <h1>World driven</h1>
     </div>
@@ -40,14 +41,29 @@
       for merging of pull requests. As soon as you contribute to a project, you get a share or
       responsibility for the progress of the project.
     </div>
+    <div>
+      The rules:
+      <ul>
+        <li>A Pull Request gets automatic merged after some time. The default configuration
+          is 10 days/commit.</li>
+        <li>Contributors of the project can vote by reviewing the Pull Request. The votes
+          are weighted by the number of commits on the repository. The according share is
+          added or subtracted from the overall time. If it exceeds the time, so more votes
+          against the merge, the merge is not executed.
+        </li>
+      </ul>
+      This way a review can speed up the merge process. Or can prolog or stop it
+      to discuss further the concerns.
+    </div>
 
-    <a class="btn btn-block btn-social btn-lg btn-github col-md-3" href="/login">
-      <span class="fa fa-github"></span> Sign in with GitHub
-    </a>
-
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+    <div style="display: flex; align-items: center; justify-content: center; margin-top: 50px">
+      <a class="btn btn-block btn-social btn-lg btn-github col-md-3" style="width: 150px; height: 50px;" href="/login">
+        <div>
+          <span class="fa fa-github" style="font-size: 21px"></span>
+          <span style="font-size: 21px">Sign in with GitHub</span>
+        </div>
+      </a>
+    </div>
   </div>
 </body>
 </html>

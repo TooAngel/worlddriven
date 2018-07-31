@@ -23,7 +23,7 @@ def _set_status(pull_request, repository, state, message):
     try:
         commit.create_status(state, url, message, 'democratic collaboration')
     except Exception as e:
-        logging.exception('PullRequest._set_status exception')
+        logging.exception('PullRequest._set_status exception {}'.format(commit))
 
 def _get_last_date(data):
     data_sorted = sorted(data, key=lambda event: event.created_at, reverse=True)
@@ -130,7 +130,7 @@ class PullRequest(object):
                 self.pull_request.merge()
             except Exception as e:
                 # Maybe add a comment that the conflicts should be resolved
-                logging.error(e)
+                logging.exception(self.pull_request)
 
 
 

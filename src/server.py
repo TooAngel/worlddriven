@@ -69,9 +69,16 @@ def favicon():
 def robotstxt():
     return app.send_static_file('robots.txt')
 
+@app.route('/sitemap.xml')
+def sitemapxml():
+    return app.send_static_file('sitemap.xml')
+
 @app.route('/')
 def index():
-    return app.send_static_file('index.html')
+    response = app.send_static_file('index.html')
+    response.headers['server'] = None
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
 
 @app.route('/dashboard')
 def dashboard():
