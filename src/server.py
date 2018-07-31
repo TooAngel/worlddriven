@@ -1,6 +1,7 @@
 import os
 from flask import Flask, request, redirect, url_for, session, g, Response, render_template
 import flask_restful
+from flask_compress import Compress
 from flask_sslify import SSLify
 import github
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -32,6 +33,8 @@ app = Flask(
 )
 if not os.getenv('DEBUG'):
     sslify = SSLify(app)
+
+Compress(app)
 
 api = flask_restful.Api(app)
 

@@ -26,14 +26,17 @@
 
   <link rel="canonical" href="https://www.worlddriven.org">
 
+  <link rel="stylesheet" type="text/css" href="static/style.css">
   <link rel="stylesheet" href="static/font-awesome-4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="static/bootstrap-social-gh-pages/bootstrap-social.css">
+
+  <link rel="alternate" hreflang="x-default" href="http://www.worlddriven.org">
 </head>
 
 <body>
-  <div class="container" style="width: 50%; margin-left: 25%;">
+  <div class="container">
     <div style="display: flex; align-items: center; justify-content: center; margin-top: 50px">
-      <img src="/static/logo.png" style="width:100px;">
+      <img src="/static/logo-100px.png" style="width:100px;" alt="World driven logo">
       <h1>World driven</h1>
     </div>
     <div>
@@ -56,13 +59,43 @@
       to discuss further the concerns.
     </div>
 
-    <div style="display: flex; align-items: center; justify-content: center; margin-top: 50px">
-      <a class="btn btn-block btn-social btn-lg btn-github col-md-3" style="width: 150px; height: 50px;" href="/login">
+    <div class="github-button-frame">
+      <a class="github-button btn btn-block btn-social btn-lg btn-github col-md-3" href="/login">
         <div>
-          <span class="fa fa-github" style="font-size: 21px"></span>
-          <span style="font-size: 21px">Sign in with GitHub</span>
+          <span class="fa fa-github main"></span>
+          <span class="main">Sign in with GitHub</span>
         </div>
       </a>
+    </div>
+
+    <div>
+      Why can it make sense?
+      <ul>
+        <li>10 days, well more then a week, should give everyone enough time to look into</li>
+        <li>per commit: If a PR has multiple commits the time is increased for each commit.
+          Having multiple commits on a PR means the feature reaches a certain complexity,
+          hence reviewers should have enough time to review it.</li>
+        <li>Voting via review: Github reviewing functionality is the perfect place to
+          discuss the PR and express the preference.</li>
+        <li>Weighting the votes enables the main contributors the most power to
+          stale or block bad PRs or speed things up. On the other hand it can
+          motivate to contribute to increase their own weight.</li>
+        <li>Some open source projects struggle with their maintainer. This way others
+          can still drive the project forward.</li>
+        <li>Due to the clear rules it is easy to see what happens with your PR and
+          when it will be merged.</li>
+        <li>One fundamental question is the ownership. Currently the owner of the
+          project has anyway full control and can stop or speed up everything. It
+          would be nice if they don't have to.
+      </ul>
+      I'm pretty sure the system can be tricked with certain behavior, that's not the idea.
+      Working on an open source project is collaborating, so most of the tricking
+      can easily solved by communication.
+
+      This project is `world driven` itself, if you like jump in and be part of
+      <a href="https://github.com/tooangel/worlddriven">world driven</a>.
+
+      Or simply say hello to <a href="mailto:tooangel@tooangel.de">Tobias Wilken</a>
     </div>
   </div>
 </body>
