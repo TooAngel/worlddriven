@@ -12,3 +12,4 @@ pytest-pythonpath
 mock
 codacy-coverage
 pytest-cov
+flask-compress
