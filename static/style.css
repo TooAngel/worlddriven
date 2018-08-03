@@ -9,6 +9,17 @@
    margin-left: 25%;
 }
 
+.logo {
+  width:100px;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 50px;
+}
+
 .main {
   font-size: 21px;
 }
