@@ -1,3 +1,2 @@
 User-agent: *
-Disallow:
-Sitemap: https://www.worlddriven.org/sitemap.xml
+Sitemap: https://www.relocation.rocks/sitemap.xml
