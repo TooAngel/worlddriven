@@ -3,7 +3,7 @@ import unittest
 import json
 from mock import patch
 
-class ReviewTestCase(unittest.TestCase):
+class FrontendTestCase(unittest.TestCase):
 
     def setUp(self):
         server.app.testing = True
@@ -18,7 +18,12 @@ class ReviewTestCase(unittest.TestCase):
             'action': 'submitted',
             'review': {}
         }
-        rv = self.app.post('/github/', data=json.dumps(data), headers=headers)
+        rv = self.app.post(
+            '/github/',
+            data=json.dumps(data),
+            headers=headers,
+            base_url='https://localhost'
+        )
         self.assertEqual(b'{"error": "No state"}', rv.data)
 
     @patch('server.PR')
@@ -32,7 +37,7 @@ class ReviewTestCase(unittest.TestCase):
             print('PR')
         PR = PR_mock
 
-        rv = self.app.get('/tooangel/democratic-collaboration/pull/2')
+        rv = self.app.get('/tooangel/democratic-collaboration/pull/2', base_url='https://localhost')
         self.assertEqual(b'200 OK', rv.status)
 
 if __name__ == '__main__':

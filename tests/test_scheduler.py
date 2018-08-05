@@ -4,10 +4,18 @@ from mock import patch, MagicMock
 
 class SchedulerTestCase(unittest.TestCase):
 
+    @patch('PullRequest.MongoClient')
     @patch('PullRequest.logging')
     @patch('PullRequest.fetch_reviews')
     @patch('PullRequest.github')
-    def test_get_pull(self, github, fetch_reviews, logging):
+    def test_get_pull(self, github, fetch_reviews, logging, mongoClient):
+        database = MagicMock()
+        database.repositories.find.return_value = [{'full_name': 'test'}]
+
+        mongo = MagicMock()
+        mongo.get_database.return_value = database
+        mongoClient.return_value = mongo
+
         user = MagicMock()
         user.login = 'login'
         user.date = 5
@@ -47,8 +55,10 @@ class SchedulerTestCase(unittest.TestCase):
         fetch_reviews = fetch_reviews_mock
 
         PullRequest.check_pull_requests()
-
-        self.assertEqual(logging.info.call_args, (('Would merge now',),))
+        print(logging.info.call_args)
+        self.assertEqual(logging.info.call_args_list[1], (('--------------------',),))
+        self.assertEqual(logging.info.call_args_list[2], (('title',),))
+        self.assertEqual(logging.info.call_args_list[4], (('Would merge now',),))
 
 
 if __name__ == '__main__':

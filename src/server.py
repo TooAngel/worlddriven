@@ -38,7 +38,7 @@ Compress(app)
 
 api = flask_restful.Api(app)
 
-app.config['MONGO_URI'] = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')
+app.config['MONGO_URI'] = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/worlddriven')
 CORS(
     app,
     origins=['http://localhost:5000', DOMAIN],
