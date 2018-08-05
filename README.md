@@ -1,9 +1,9 @@
-# democratic-collaboration
+# world driven
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3d6f6434e85d4d00a07ff6918edebb5f)](https://www.codacy.com/app/TooAngel/democratic-collaboration?utm_source=github.com&utm_medium=referral&utm_content=TooAngel/democratic-collaboration&utm_campaign=badger)
-[![CircleCI](https://circleci.com/gh/TooAngel/democratic-collaboration.svg?style=svg)](https://circleci.com/gh/TooAngel/democratic-collaboration)
-[![gitter](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/tooangel-democratic-collaboration/Lobby)
-[![Code Climate](https://codeclimate.com/github/TooAngel/democratic-collaboration/badges/gpa.svg)](https://codeclimate.com/github/TooAngel/democratic-collaboration)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a3385a0433a649be95639b8a59fcb6fe)](https://www.codacy.com/app/TooAngel/worlddriven?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=TooAngel/worlddriven&amp;utm_campaign=Badge_Grade)
+[![CircleCI](https://circleci.com/gh/TooAngel/worlddriven.svg?style=svg)](https://circleci.com/gh/TooAngel/worlddriven)
+[![gitter](https://badges.gitter.im/worlddriven/Lobby.svg)](https://gitter.im/worlddriven/Lobby)
+[![Code climate](https://api.codeclimate.com/v1/badges/ec4136b6d2eeff72f192/maintainability)](https://codeclimate.com/github/TooAngel/worlddriven/maintainability)
 
 Hosted under https://www.worlddriven.org
 
@@ -35,60 +35,60 @@ Run tests with: `pytest`
 
 ## Api
 
-- `/v1/:org/:repo/` e.g. `/v1/tooangel/democratic-collaboration/`
+- `/v1/:org/:repo/` e.g. `/v1/tooangel/worlddriven/`
   to get info about the repository
 
   Response:
 ```
 {
-    "archive_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/{archive_format}{/ref}",
-    "assignees_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/assignees{/user}",
-    "blobs_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/git/blobs{/sha}",
-    "branches_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/branches{/branch}",
-    "clone_url": "https://github.com/TooAngel/democratic-collaboration.git",
-    "collaborators_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/collaborators{/collaborator}",
-    "comments_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/comments{/number}",
-    "commits_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/commits{/sha}",
-    "compare_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/compare/{base}...{head}",
-    "contents_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/contents/{+path}",
-    "contributors_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/contributors",
+    "archive_url": "https://api.github.com/repos/TooAngel/worlddriven/{archive_format}{/ref}",
+    "assignees_url": "https://api.github.com/repos/TooAngel/worlddriven/assignees{/user}",
+    "blobs_url": "https://api.github.com/repos/TooAngel/worlddriven/git/blobs{/sha}",
+    "branches_url": "https://api.github.com/repos/TooAngel/worlddriven/branches{/branch}",
+    "clone_url": "https://github.com/TooAngel/worlddriven.git",
+    "collaborators_url": "https://api.github.com/repos/TooAngel/worlddriven/collaborators{/collaborator}",
+    "comments_url": "https://api.github.com/repos/TooAngel/worlddriven/comments{/number}",
+    "commits_url": "https://api.github.com/repos/TooAngel/worlddriven/commits{/sha}",
+    "compare_url": "https://api.github.com/repos/TooAngel/worlddriven/compare/{base}...{head}",
+    "contents_url": "https://api.github.com/repos/TooAngel/worlddriven/contents/{+path}",
+    "contributors_url": "https://api.github.com/repos/TooAngel/worlddriven/contributors",
     "created_at": "2017-01-11T08:59:45Z",
     "default_branch": "master",
-    "deployments_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/deployments",
+    "deployments_url": "https://api.github.com/repos/TooAngel/worlddriven/deployments",
     "description": "Reviewer based weighted automatic pull request merging",
-    "downloads_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/downloads",
-    "events_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/events",
+    "downloads_url": "https://api.github.com/repos/TooAngel/worlddriven/downloads",
+    "events_url": "https://api.github.com/repos/TooAngel/worlddriven/events",
     "fork": false,
     "forks": 5,
     "forks_count": 5,
-    "forks_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/forks",
-    "full_name": "TooAngel/democratic-collaboration",
-    "git_commits_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/git/commits{/sha}",
-    "git_refs_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/git/refs{/sha}",
-    "git_tags_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/git/tags{/sha}",
-    "git_url": "git://github.com/TooAngel/democratic-collaboration.git",
+    "forks_url": "https://api.github.com/repos/TooAngel/worlddriven/forks",
+    "full_name": "TooAngel/worlddriven",
+    "git_commits_url": "https://api.github.com/repos/TooAngel/worlddriven/git/commits{/sha}",
+    "git_refs_url": "https://api.github.com/repos/TooAngel/worlddriven/git/refs{/sha}",
+    "git_tags_url": "https://api.github.com/repos/TooAngel/worlddriven/git/tags{/sha}",
+    "git_url": "git://github.com/TooAngel/worlddriven.git",
     "has_downloads": true,
     "has_issues": true,
     "has_pages": true,
     "has_projects": true,
     "has_wiki": false,
     "homepage": "",
-    "hooks_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/hooks",
-    "html_url": "https://github.com/TooAngel/democratic-collaboration",
+    "hooks_url": "https://api.github.com/repos/TooAngel/worlddriven/hooks",
+    "html_url": "https://github.com/TooAngel/worlddriven",
     "id": 78621052,
-    "issue_comment_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/issues/comments{/number}",
-    "issue_events_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/issues/events{/number}",
-    "issues_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/issues{/number}",
-    "keys_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/keys{/key_id}",
-    "labels_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/labels{/name}",
+    "issue_comment_url": "https://api.github.com/repos/TooAngel/worlddriven/issues/comments{/number}",
+    "issue_events_url": "https://api.github.com/repos/TooAngel/worlddriven/issues/events{/number}",
+    "issues_url": "https://api.github.com/repos/TooAngel/worlddriven/issues{/number}",
+    "keys_url": "https://api.github.com/repos/TooAngel/worlddriven/keys{/key_id}",
+    "labels_url": "https://api.github.com/repos/TooAngel/worlddriven/labels{/name}",
     "language": "Python",
-    "languages_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/languages",
-    "merges_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/merges",
-    "milestones_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/milestones{/number}",
+    "languages_url": "https://api.github.com/repos/TooAngel/worlddriven/languages",
+    "merges_url": "https://api.github.com/repos/TooAngel/worlddriven/merges",
+    "milestones_url": "https://api.github.com/repos/TooAngel/worlddriven/milestones{/number}",
     "mirror_url": null,
-    "name": "democratic-collaboration",
+    "name": "worlddriven",
     "network_count": 5,
-    "notifications_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/notifications{?since,all,participating}",
+    "notifications_url": "https://api.github.com/repos/TooAngel/worlddriven/notifications{?since,all,participating}",
     "open_issues": 5,
     "open_issues_count": 5,
     "owner": {
@@ -116,29 +116,29 @@ Run tests with: `pytest`
         "push": true
     },
     "private": false,
-    "pulls_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/pulls{/number}",
+    "pulls_url": "https://api.github.com/repos/TooAngel/worlddriven/pulls{/number}",
     "pushed_at": "2017-07-15T20:13:36Z",
-    "releases_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/releases{/id}",
+    "releases_url": "https://api.github.com/repos/TooAngel/worlddriven/releases{/id}",
     "size": 154,
-    "ssh_url": "git@github.com:TooAngel/democratic-collaboration.git",
+    "ssh_url": "git@github.com:TooAngel/worlddriven.git",
     "stargazers_count": 10,
-    "stargazers_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/stargazers",
-    "statuses_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/statuses/{sha}",
+    "stargazers_url": "https://api.github.com/repos/TooAngel/worlddriven/stargazers",
+    "statuses_url": "https://api.github.com/repos/TooAngel/worlddriven/statuses/{sha}",
     "subscribers_count": 1,
-    "subscribers_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/subscribers",
-    "subscription_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/subscription",
-    "svn_url": "https://github.com/TooAngel/democratic-collaboration",
-    "tags_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/tags",
-    "teams_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/teams",
-    "trees_url": "https://api.github.com/repos/TooAngel/democratic-collaboration/git/trees{/sha}",
+    "subscribers_url": "https://api.github.com/repos/TooAngel/worlddriven/subscribers",
+    "subscription_url": "https://api.github.com/repos/TooAngel/worlddriven/subscription",
+    "svn_url": "https://github.com/TooAngel/worlddriven",
+    "tags_url": "https://api.github.com/repos/TooAngel/worlddriven/tags",
+    "teams_url": "https://api.github.com/repos/TooAngel/worlddriven/teams",
+    "trees_url": "https://api.github.com/repos/TooAngel/worlddriven/git/trees{/sha}",
     "updated_at": "2017-07-15T13:15:53Z",
-    "url": "https://api.github.com/repos/TooAngel/democratic-collaboration",
+    "url": "https://api.github.com/repos/TooAngel/worlddriven",
     "watchers": 10,
     "watchers_count": 10
 }
 ```
 
- - `/v1/:org/:repo/pull/:number` e.g. `/v1/tooangel/democratic-collaboration/pull/43/`
+ - `/v1/:org/:repo/pull/:number` e.g. `/v1/tooangel/worlddriven/pull/43/`
    to get info about the pull request
 
    Response:
@@ -156,7 +156,7 @@ Run tests with: `pytest`
     "pull_request": {
         "number": 43,
         "title": "Add Angular UI",
-        "url": "https://api.github.com/repos/TooAngel/democratic-collaboration/pulls/43",
+        "url": "https://api.github.com/repos/TooAngel/worlddriven/pulls/43",
         "user": {
             "avatar_url": "https://avatars6.githubusercontent.com/u/253456?v=4",
             "bio": null,
