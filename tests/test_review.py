@@ -18,7 +18,12 @@ class ReviewTestCase(unittest.TestCase):
             'action': 'submitted',
             'review': {}
         }
-        rv = self.app.post('/github/', data=json.dumps(data), headers=headers)
+        rv = self.app.post(
+            '/github/',
+            data=json.dumps(data),
+            headers=headers,
+            base_url='https://localhost'
+        )
         self.assertEqual(b'{"error": "No state"}', rv.data)
 
     def test_commented(self):
@@ -32,7 +37,12 @@ class ReviewTestCase(unittest.TestCase):
                 'state': 'commented'
             }
         }
-        rv = self.app.post('/github/', data=json.dumps(data), headers=headers)
+        rv = self.app.post(
+            '/github/',
+            data=json.dumps(data),
+            headers=headers,
+            base_url='https://localhost'
+        )
         self.assertEqual(b'{"info": "Only commented"}', rv.data)
 
     @patch('server.PR')
@@ -67,7 +77,12 @@ class ReviewTestCase(unittest.TestCase):
                 'number': 42
             }
         }
-        rv = self.app.post('/github/', data=json.dumps(data), headers=headers)
+        rv = self.app.post(
+            '/github/',
+            data=json.dumps(data),
+            headers=headers,
+            base_url='https://localhost'
+        )
         self.assertEqual(b'{"info": "All fine, thanks"}', rv.data)
 
 if __name__ == '__main__':
