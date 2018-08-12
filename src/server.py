@@ -32,7 +32,7 @@ app = Flask(
     template_folder='../templates'
 )
 if not os.getenv('DEBUG'):
-    sslify = SSLify(app)
+    sslify = SSLify(app, permanent=True)
 
 Compress(app)
 
