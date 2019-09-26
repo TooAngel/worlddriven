@@ -83,8 +83,14 @@ class PullRequest(object):
 
         commits = self.pull_request.get_commits().reversed
         commit = max(commits, key=lambda commit: commit.commit.author.date)
+        # TODO is this correct? `author.date`
         self.commit_date = commit.commit.author.date
         self.pull_request_date = self.pull_request.created_at
+
+        print(self.commit_date)
+        print(self.unlabel_date)
+        print(self.push_date)
+        print(self.pull_request.created_at)
 
         self.max_date = max(self.commit_date, self.unlabel_date, self.push_date, self.pull_request.created_at)
         self.age = datetime.utcnow() - self.max_date
@@ -155,16 +161,15 @@ def check_pull_request(repository, pull_request, commentOnIssue):
 
 def check_pull_requests():
     logging.info('Check pull requests: {}'.format(datetime.utcnow()))
-    token = os.getenv('TOKEN')
-    github_client = github.Github(token)
 
-    mongo_url = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/server')
+    mongo_url = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/worlddriven')
     mongo = MongoClient(mongo_url)
     database = mongo.get_database()
     mongo_repositories = database.repositories.find()
-    repositories = [mongo_repository['full_name'] for mongo_repository in mongo_repositories]
-
-    for repository_name in repositories:
+    for mongo_repository in mongo_repositories:
+        repository_name = mongo_repository['full_name']
+        github_client = github.Github(mongo_repository['github_access_token'])
+        logging.info('Repository: {}'.format(repository_name))
         repository = github_client.get_repo(repository_name)
         for pull_request in repository.get_pulls():
             check_pull_request(repository, pull_request, False)

@@ -24,7 +24,7 @@ class FrontendTestCase(unittest.TestCase):
             headers=headers,
             base_url='https://localhost'
         )
-        self.assertEqual(b'{"error": "No state"}', rv.data)
+        self.assertEqual(b'{"error": "No state"}\n', rv.data)
 
     @patch('server.PR')
     @patch('server.github')
@@ -38,7 +38,7 @@ class FrontendTestCase(unittest.TestCase):
         PR = PR_mock
 
         rv = self.app.get('/tooangel/democratic-collaboration/pull/2', base_url='https://localhost')
-        self.assertEqual(b'200 OK', rv.status)
+        self.assertEqual('200 OK', rv.status)
 
 if __name__ == '__main__':
     unittest.main()
