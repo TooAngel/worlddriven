@@ -1,6 +1,7 @@
 import flask_restful  # @UnresolvedImport
 import github
 from flask import g, abort, request
+import logging
 
 mongo = None
 DOMAIN = 'https://www.worlddriven.org'
@@ -49,15 +50,18 @@ class APIRepository(flask_restful.Resource):
             'content_type': 'json'
         }
         events = [u'commit_comment', u'pull_request', u'pull_request_review', u'push']
-        print(checked)
         if checked:
-            repository.create_hook('web', config, events=events, active=True)
+            try:
+                repository.create_hook('web', config, events=events, active=True)
+            except github.GithubException as e:
+                logging.error(e)
+
             repo_db = mongo.db.repositories.find_one({'full_name': full_name})
             if not repo_db:
                 insert = mongo.db.repositories.insert_one({'full_name': full_name, 'github_access_token': g.user['github_access_token']})
         else:
             for hook in repository.get_hooks():
-                if hook.config['url'] == '{}/github/'.format(DOMAIN):
+                if hook.url == '{}/github/'.format(DOMAIN):
                     hook.delete()
             repo_db = mongo.db.repositories.delete_many({'full_name': full_name})
         return {}
