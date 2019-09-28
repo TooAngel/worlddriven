@@ -87,11 +87,6 @@ class PullRequest(object):
         self.commit_date = commit.commit.author.date
         self.pull_request_date = self.pull_request.created_at
 
-        print(self.commit_date)
-        print(self.unlabel_date)
-        print(self.push_date)
-        print(self.pull_request.created_at)
-
         self.max_date = max(self.commit_date, self.unlabel_date, self.push_date, self.pull_request.created_at)
         self.age = datetime.utcnow() - self.max_date
 
