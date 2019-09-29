@@ -12,7 +12,6 @@ from flask_pymongo import PyMongo
 from flask_github import GitHub
 import logging
 import apiendpoint
-# from PullRequest import check_pull_request, check_pull_requests, get_contributors, get_coefficient_and_votes, get_latest_dates, get_merge_time, handle_review, get_reviews
 from PullRequest import PullRequest as PR, check_pull_requests
 from bson.objectid import ObjectId
 from flask_cors import CORS
@@ -117,8 +116,9 @@ def dashboard():
 
 @app.route('/<org_name>/<project_name>/pull/<int:pull_request_number>')
 def show_pull_request(org_name, project_name, pull_request_number):
-    token = os.getenv('TOKEN')
-    github_client = github.Github(token)
+    if not g.user:
+        return redirect('/')
+    github_client = github.Github(g.user['github_access_token'])
     repository_name = '{}/{}'.format(org_name, project_name)
     repository = github_client.get_repo(repository_name)
     pull_request = repository.get_pull(pull_request_number)
@@ -229,8 +229,8 @@ class PullRequest(object):
             return self.execute_closed()
 
     def execute_opened(self):
-        token = os.getenv('TOKEN')
-        github_client = github.Github(token)
+        mongo_repository = mongo.db.repositories.find_one({'full_name': self.data['repository']['full_name']})
+        github_client = github.Github(mongo_repository['github_access_token'])
         repository = github_client.get_repo(self.data['repository']['full_name'])
         pull_request = repository.get_pull(self.data['pull_request']['number'])
         pr = PR(repository, pull_request)
@@ -259,8 +259,8 @@ Please review the PR to help.
         _set_status(repostiory, pull_request, 'pending', message)
 
     def execute_synchronize(self):
-        token = os.getenv('TOKEN')
-        github_client = github.Github(token)
+        mongo_repository = mongo.db.repositories.find_one({'full_name': self.data['repository']['full_name']})
+        github_client = github.Github(mongo_repository['github_access_token'])
         repository = github_client.get_repo(self.data['repository']['id'])
         pull_request = repository.get_pull(self.data['pull_request']['number'])
         issue = repository.get_issue(self.data['pull_request']['number'])
@@ -305,6 +305,8 @@ class GithubWebHook(flask_restful.Resource):
             if data['review']['state'] == 'commented':
                 # print('Review comment')
                 return {'info': 'Only commented'}
+
+            logging.info('Need repository name: {}'.format(data))
             token = os.getenv('TOKEN')
             github_client = github.Github(token)
             repository = github_client.get_repo(data['repository']['id'])
