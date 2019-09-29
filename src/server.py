@@ -130,7 +130,6 @@ def show_pull_request(org_name, project_name, pull_request_number):
     pr.get_latest_dates()
     pr.get_merge_time()
     contributors = [ pr.contributors[contributor] for contributor in pr.contributors ]
-    print(contributors)
     for contributor in contributors:
         if 'commits' not in contributor:
             contributor['commits'] = 0;
@@ -220,7 +219,6 @@ class PullRequest(object):
         self.data = data
 
     def execute(self):
-        print(self.data['action'])
         if self.data['action'] == 'opened':
             return self.execute_opened()
         if self.data['action'] == 'synchronize':
@@ -231,7 +229,6 @@ class PullRequest(object):
             return self.execute_closed()
 
     def execute_opened(self):
-        print(self.data['pull_request']['title'])
         token = os.getenv('TOKEN')
         github_client = github.Github(token)
         repository = github_client.get_repo(self.data['repository']['full_name'])
@@ -275,9 +272,10 @@ Please review the PR to help.
     def execute_edited(self):
         # TODO check PR and add message that this is under voting
         # print(self.data)
-        print('edited')
-        print(self.data.keys())
-        print(self.data['changes'])
+        # print('edited')
+        # print(self.data.keys())
+        # print(self.data['changes'])
+        pass
 
     def execute_closed(self):
         # TODO Anything to do here?
@@ -287,8 +285,9 @@ Please review the PR to help.
 
 class GithubWebHook(flask_restful.Resource):
     def handle_push(self, data):
-        print('push - ignored')
+        # print('push - ignored')
         # print(data)
+        pass
 
     def handle_pull_request(self, data):
         pull_request = PullRequest(data)
@@ -296,15 +295,15 @@ class GithubWebHook(flask_restful.Resource):
         return {'info': 'All fine, thanks'}
 
     def handle_pull_request_review(self, data):
-        print(data)
+        # print(data)
         if data['action'] == 'submitted':
             if 'state' not in data['review']:
-                print('No state')
-                print(data['review'].keys())
+                # print('No state')
+                # print(data['review'].keys())
                 return {'error': 'No state'}, 503
 
             if data['review']['state'] == 'commented':
-                print('Review comment')
+                # print('Review comment')
                 return {'info': 'Only commented'}
             token = os.getenv('TOKEN')
             github_client = github.Github(token)
@@ -338,7 +337,6 @@ class GithubWebHook(flask_restful.Resource):
             Coefficient: {}
             Merging in {} days {} hours
             Age {} days {} hours'''.format(pr.votes, pr.votes_total, pr.coefficient, pr.days_to_merge.days, pr.days_to_merge.seconds / 3600, pr.age.days, pr.age.seconds / 3600)
-            print(message)
 
             status_message = '{}/{} {} Merge in {} days {}'.format(pr.votes, pr.votes_total, round(pr.coefficient, 3) * 100, pr.days_to_merge.days, pr.days_to_merge.seconds / 3600)
             _set_status(repository, pull_request, 'success', status_message)
@@ -350,15 +348,12 @@ class GithubWebHook(flask_restful.Resource):
     def post(self):
         data = request.json
         header = request.headers['X-GitHub-Event']
-        print(header)
         if header == 'push':
             return self.handle_push(data)
         if header == 'pull_request':
             return self.handle_pull_request(data)
         if header == 'pull_request_review':
             return self.handle_pull_request_review(data)
-        print('post not handled')
-        print(data.keys())
 
 class Restart(flask_restful.Resource):
     def get(self):

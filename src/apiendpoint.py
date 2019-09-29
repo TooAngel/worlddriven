@@ -11,7 +11,6 @@ class APIPullRequest(flask_restful.Resource):
         if not g.user:
             abort(401)
             return
-        print(g.user)
         github_client = github.Github(g.user['github_access_token'])
         repository = github_client.get_repo('{}/{}'.format(org, repo))
         pull_request = repository.get_pull(pull)
