@@ -26,7 +26,7 @@ If a PR is ready for merge a voting is started (starting `value` 0):
 
 ## Develop
 
-Set `TOKEN` as environment variable and run `python src/server.py`.
+Run `python src/server.py`.
 For github oauth feature provide `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`,
 callback url is `/github-callback`.
 Set Session secret as `SESSION_SECRET` initial a random string.
