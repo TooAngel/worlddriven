@@ -45,9 +45,14 @@ class ReviewTestCase(unittest.TestCase):
         )
         self.assertEqual(b'{"info": "Only commented"}\n', rv.data)
 
+    @patch('server.mongo')
     @patch('server.PR')
     @patch('server.github')
-    def test_approve(self, github, PR):
+    def test_approve(self, github, PR, mongo):
+        def PyMongo_mock(app):
+            print('PyMongo_mock')
+        PyMongo = PyMongo_mock
+
         def PR_mock(token):
             print('PR')
         PR = PR_mock

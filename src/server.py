@@ -212,7 +212,7 @@ def getReviewerMotivation():
 
 def _set_status(repository, pull_request, state, message):
     commit = pull_request.get_commits()[0]
-    commit.create_status(state, '', message, 'democratic collaboration')
+    commit.create_status(state, '', message, 'worlddriven')
 
 class PullRequest(object):
     def __init__(self, data):
@@ -251,7 +251,7 @@ class PullRequest(object):
             reviewers.append(possible_reviewers[randrange(len(possible_reviewers) - 1)])
 
         message = '''[democratic collaboration](https://github.com/TooAngel/democratic-collaboration)
-Approved reviews will speed up the merge, request changes will slow it down.
+`Approved` reviews will speed up the merge, `request changes` will slow it down.
 
 Please review the PR to help.
 
@@ -307,7 +307,9 @@ class GithubWebHook(flask_restful.Resource):
                 return {'info': 'Only commented'}
 
             logging.info('Need repository name: {}'.format(data))
-            token = os.getenv('TOKEN')
+            logging.info(mongo);
+            mongo_repository = mongo.db.repositories.find_one({'full_name': data['repository']['id']})
+            token = mongo_repository['github_access_token']
             github_client = github.Github(token)
             repository = github_client.get_repo(data['repository']['id'])
             pull_request = repository.get_pull(data['pull_request']['number'])

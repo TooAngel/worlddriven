@@ -30,9 +30,10 @@ def _get_last_date(data):
     return data_sorted[0].created_at if len(data_sorted) > 0 else datetime(1960, 1, 1)
 
 class PullRequest(object):
-    def __init__(self, repository, pull_request):
+    def __init__(self, repository, pull_request, token):
         self.repository = repository
         self.pull_request = pull_request
+        self.token = token
 
     def get_contributors(self):
         contributors = self.repository.get_stats_contributors()
@@ -41,7 +42,7 @@ class PullRequest(object):
             self.contributors[self.pull_request.user.login] = {'review_value': 0, 'name': self.pull_request.user.login, 'commits': 0}
 
     def update_contributors_with_reviews(self):
-        data = fetch_reviews(self.repository.full_name, self.pull_request.number)
+        data = fetch_reviews(self.repository.full_name, self.pull_request.number, self.token)
 
         reviews_decided = [review for review in data if review['state'] != 'COMMENTED']
         for review in reviews_decided:
@@ -146,11 +147,11 @@ class PullRequest(object):
         self.check_for_merge()
 
 
-def check_pull_request(repository, pull_request, commentOnIssue):
+def check_pull_request(repository, pull_request, commentOnIssue, token):
     logging.info('-' * 20)
     logging.info(pull_request.title.encode('utf-8'))
 
-    pr = PullRequest(repository, pull_request)
+    pr = PullRequest(repository, pull_request, token)
     pr.execute()
 
 
@@ -167,7 +168,7 @@ def check_pull_requests():
         logging.info('Repository: {}'.format(repository_name))
         repository = github_client.get_repo(repository_name)
         for pull_request in repository.get_pulls():
-            check_pull_request(repository, pull_request, False)
+            check_pull_request(repository, pull_request, False, mongo_repository['github_access_token'])
 
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
