@@ -1,11 +1,11 @@
 import requests
 import os
 
-def fetch_reviews(repository_full_name, pull_request_number):
+def fetch_reviews(repository_full_name, pull_request_number, token):
     url = 'https://api.github.com/repos/{}/pulls/{}/reviews'.format(repository_full_name, pull_request_number)
     headers = {
     'Accept': 'application/vnd.github.black-cat-preview+json',
-    'Authorization': 'token {}'.format(os.getenv('TOKEN'))
+    'Authorization': 'token {}'.format(token)
     }
     response = requests.get(url, headers=headers)
     if response.status_code == 404:
