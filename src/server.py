@@ -123,7 +123,8 @@ def show_pull_request(org_name, project_name, pull_request_number):
     repository = github_client.get_repo(repository_name)
     pull_request = repository.get_pull(pull_request_number)
 
-    pr = PR(repository, pull_request)
+
+    pr = PR(repository, pull_request, g.user['github_access_token'])
     pr.get_contributors()
     pr.update_contributors_with_reviews()
     pr.update_votes()
@@ -307,7 +308,6 @@ class GithubWebHook(flask_restful.Resource):
                 return {'info': 'Only commented'}
 
             logging.info('Need repository name: {}'.format(data))
-            logging.info(mongo);
             mongo_repository = mongo.db.repositories.find_one({'full_name': data['repository']['id']})
             token = mongo_repository['github_access_token']
             github_client = github.Github(token)
