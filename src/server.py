@@ -165,8 +165,6 @@ def show_pull_request(org_name, project_name, pull_request_number):
 
 @app.route('/login/')
 def login():
-    referer = request.headers.get('Referer', '/')
-    session['referer'] = referer
     if session.get('user_id', None) is None:
         return github_oauth.authorize(scope='public_repo,admin:repo_hook')
     else:
@@ -180,7 +178,6 @@ def logout():
 @app.route('/github-callback/')
 @github_oauth.authorized_handler
 def authorized(oauth_token):
-    redirect_url = session.get('referer', url_for('index'))
     if oauth_token is None:
         logging.info("Authorization failed.")
         return redirect(redirect_url)
@@ -191,8 +188,7 @@ def authorized(oauth_token):
         user = mongo.db.users.find_one({'_id': insert.inserted_id})
 
     session['user_id'] = str(user['_id'])
-    session.pop('referer', None)
-    return redirect(redirect_url)
+    return redirect('/dashboard')
 
 @app.route('/v1/user/')
 def user():
@@ -251,7 +247,7 @@ class PullRequest(object):
         if len(possible_reviewers) > 0:
             reviewers.append(possible_reviewers[randrange(len(possible_reviewers) - 1)])
 
-        message = '''[democratic collaboration](https://github.com/TooAngel/democratic-collaboration)
+        message = '''[World driven](https://github.com/tooangel/worlddriven)
 `Approved` reviews will speed up the merge, `request changes` will slow it down.
 
 Please review the PR to help.
