@@ -17,11 +17,11 @@ def _set_status(pull_request, repository, state, message):
     url = '{}/{}/pull/{}'.format(DOMAIN, repository.full_name, pull_request.number)
     statuses = commit.get_statuses()
     for status in statuses:
-        if status.context == 'democratic collaboration' and status.description == message:
+        if status.context == 'World driven' and status.description == message:
             return
     logging.info('Set Status message: {} {} {}'.format(state, url, message))
     try:
-        commit.create_status(state, url, message, 'democratic collaboration')
+        commit.create_status(state, url, message, 'World driven')
     except Exception as e:
         logging.exception('PullRequest._set_status exception {}'.format(commit))
 

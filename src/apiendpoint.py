@@ -60,7 +60,10 @@ class APIRepository(flask_restful.Resource):
                 insert = mongo.db.repositories.insert_one({'full_name': full_name, 'github_access_token': g.user['github_access_token']})
         else:
             for hook in repository.get_hooks():
-                if hook.url == '{}/github/'.format(DOMAIN):
+                if 'url' not in hook.config:
+                    continue
+
+                if hook.config['url'] == '{}/github/'.format(DOMAIN):
                     hook.delete()
             repo_db = mongo.db.repositories.delete_many({'full_name': full_name})
         return {}

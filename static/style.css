@@ -48,21 +48,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 50px;
 }
 
 .main {
   font-size: 21px;
 }
 
-.github-button {
-  width: 150px;
+.top {
   height: 50px;
+  width: 100%;
 }
 
-.github-button-frame {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 50px;
+.login {
+  float: right;
 }

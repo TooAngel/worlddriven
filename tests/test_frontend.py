@@ -39,7 +39,7 @@ class FrontendTestCase(unittest.TestCase):
             print('PR')
         PR = PR_mock
 
-        rv = self.app.get('/tooangel/democratic-collaboration/pull/2', base_url='https://localhost')
+        rv = self.app.get('/tooangel/worlddriven/pull/2', base_url='https://localhost')
         self.assertEqual('302 FOUND', rv.status)
 
     @patch('server.mongo')
@@ -62,7 +62,7 @@ class FrontendTestCase(unittest.TestCase):
         with self.app as c:
             with c.session_transaction() as sess:
                 sess['user_id'] = '1234567890AB1234567890AB'
-            rv = c.get('/tooangel/democratic-collaboration/pull/2', base_url='https://localhost')
+            rv = c.get('/tooangel/worlddriven/pull/2', base_url='https://localhost')
         self.assertEqual('200 OK', rv.status)
 
 if __name__ == '__main__':
