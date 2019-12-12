@@ -230,7 +230,7 @@ class PullRequest(object):
         github_client = github.Github(mongo_repository['github_access_token'])
         repository = github_client.get_repo(self.data['repository']['full_name'])
         pull_request = repository.get_pull(self.data['pull_request']['number'])
-        pr = PR(repository, pull_request)
+        pr = PR(repository, pull_request, mongo_repository['github_access_token'])
 
         contributors = {contributor.author.login: contributor.total for contributor in pr.get_contributors()}
         author = self.data['pull_request']['user']['login']
