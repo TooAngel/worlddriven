@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, redirect, url_for, session, g, Response, render_template
+from flask import Flask, request, redirect, url_for, session, g, Response, render_template, send_file
 import flask_restful
 from flask_compress import Compress
 from flask_sslify import SSLify
@@ -71,6 +71,15 @@ def favicon():
 def robotstxt():
     return app.send_static_file('robots.txt')
 
+@app.route('/static/js/main.js')
+def main_js():
+    return send_file('../dist/main.js')
+
+@app.route('/static/css/style.css')
+def style_css():
+    return send_file('../static/style.css')
+
+
 @app.route('/sitemap.xml')
 def sitemapxml():
     return app.send_static_file('sitemap.xml')
@@ -82,12 +91,14 @@ def index():
     response.headers['X-XSS-Protection'] = '1; mode=block'
     return response
 
-@app.route('/dashboard')
-def dashboard():
+@app.route('/v1/repositories')
+def repositories():
     github_client = github.Github(g.user['github_access_token'])
     user = github_client.get_user()
     github_repositories = user.get_repos(type='public')
     repositories = []
+
+    # This should be compared with the database instead of the hooks
     for repository in github_repositories:
         hooks = repository.get_hooks()
 
@@ -108,11 +119,11 @@ def dashboard():
             'configured': configured
         })
 
-    return render_template(
-        'dashboard.html',
-        repositories=repositories,
-        user=user
-    )
+    return Response(json.dumps(repositories),  mimetype='application/json')
+
+@app.route('/dashboard')
+def dashboard():
+    return app.send_static_file('dashboard.html')
 
 @app.route('/<org_name>/<project_name>/pull/<int:pull_request_number>')
 def show_pull_request(org_name, project_name, pull_request_number):
@@ -337,7 +348,6 @@ class GithubWebHook(flask_restful.Resource):
             Coefficient: {}
             Merging in {} days {} hours
             Age {} days {} hours'''.format(pr.votes, pr.votes_total, pr.coefficient, pr.days_to_merge.days, pr.days_to_merge.seconds / 3600, pr.age.days, pr.age.seconds / 3600)
-
             status_message = '{}/{} {} Merge in {} days {}'.format(pr.votes, pr.votes_total, round(pr.coefficient, 3) * 100, pr.days_to_merge.days, pr.days_to_merge.seconds / 3600)
             _set_status(repository, pull_request, 'success', status_message)
             issue = repository.get_issue(pull_request.number)
