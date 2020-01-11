@@ -213,3 +213,7 @@ Started on some random server in `screen`, with
 
 Get `GET /restart/` stops the server process and restarted by the command
 line command. Super ugly I know, just quickly solved somehow.
+
+## Links
+
+- https://www.w3schools.com/howto/howto_css_switch.asp
