@@ -98,25 +98,16 @@ def repositories():
     github_repositories = user.get_repos(type='public')
     repositories = []
 
-    # This should be compared with the database instead of the hooks
+    existing_repositories = {}
+    # Better fetch via the names, but how (efficiently)
+    mongo_repositories = mongo.db.repositories.find({'github_access_token': g.user['github_access_token']})
+    for mongo_repository in mongo_repositories:
+        existing_repositories[mongo_repository['full_name']] = True
+
     for repository in github_repositories:
-        hooks = repository.get_hooks()
-
-        configured = False
-        for hook in hooks:
-            if not hook.active:
-                continue
-
-            if 'url' not in hook.config:
-                continue
-
-            if hook.config['url'] == '{}/github/'.format(DOMAIN):
-                configured = True
-                break
-
         repositories.append({
             'full_name': repository.full_name,
-            'configured': configured
+            'configured': existing_repositories.get(repository.full_name)
         })
 
     return Response(json.dumps(repositories),  mimetype='application/json')
