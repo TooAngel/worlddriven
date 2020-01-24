@@ -11,7 +11,7 @@ import {Application} from './application'; // eslint-disable-line no-unused-vars
 function main() {
   ReactDOM.render(
     <Application />,
-    document.getElementById('app')
+    document.getElementById('app'),
   );
 }
 

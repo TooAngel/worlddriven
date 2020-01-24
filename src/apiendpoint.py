@@ -39,7 +39,7 @@ class APIRepository(flask_restful.Resource):
         return repository.raw_data
 
     def put(self, org, repo):
-        checked = request.json['checked'] == 'true'
+        checked = request.json['checked']
         full_name = '{}/{}'.format(org, repo)
         github_client = github.Github(g.user['github_access_token'])
         repository = github_client.get_repo('{}/{}'.format(org, repo))

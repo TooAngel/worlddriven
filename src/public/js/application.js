@@ -19,6 +19,11 @@ export class Application extends React.Component { // eslint-disable-line no-unu
     this.handleChange = this.handleChange.bind(this);
   }
 
+  /**
+   * componentDidMount - after component mount
+   *
+   * @return {void}
+   **/
   componentDidMount() {
     const getUser = new Request(`/v1/user`, {
       method: 'GET',
@@ -26,10 +31,10 @@ export class Application extends React.Component { // eslint-disable-line no-unu
     fetch(getUser)
       .then((res) => res.json())
       .then((result) => {
-          this.setState({
-            user: result.name,
-          });
+        this.setState({
+          user: result.name,
         });
+      });
 
     const getRepositories = new Request(`/v1/repositories`, {
       method: 'GET',
@@ -37,16 +42,16 @@ export class Application extends React.Component { // eslint-disable-line no-unu
     fetch(getRepositories)
       .then((res) => res.json())
       .then((result) => {
-          this.setState({
-            repositories: result,
-          });
+        this.setState({
+          repositories: result,
         });
+      });
   }
 
   /**
    * handleChange - handles changes
    *
-   * @param {object} item - The item
+   * @param {object} event - The event
    * @return {void}
    **/
   handleChange(event) {
@@ -55,8 +60,7 @@ export class Application extends React.Component { // eslint-disable-line no-unu
       headers: {'content-type': 'application/json'},
       body: JSON.stringify({'checked': event.target.checked}),
     });
-    fetch(updateRepository)
-      .then((res) => console.log(res))
+    fetch(updateRepository);
   }
 
   /**
@@ -79,7 +83,7 @@ export class Application extends React.Component { // eslint-disable-line no-unu
               <span className="slider round"></span>
             </label>
           </td>
-        </tr>
+        </tr>,
       );
     }
 
@@ -89,8 +93,8 @@ export class Application extends React.Component { // eslint-disable-line no-unu
         <div className="main-content">
           <h2>Repositories</h2>
           <table>
-              <thead><tr><td><b>name</b></td></tr></thead>
-              <tbody>{ repositories }</tbody>
+            <thead><tr><td><b>name</b></td></tr></thead>
+            <tbody>{ repositories }</tbody>
           </table>
         </div>
       </div>
