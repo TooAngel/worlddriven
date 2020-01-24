@@ -129,3 +129,15 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+.review_value0 {
+  color: grey;
+}
+
+.review_value1 {
+  color: green;
+}
+
+.review_value-1 {
+  color: red;
+}

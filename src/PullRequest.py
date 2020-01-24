@@ -73,7 +73,6 @@ class PullRequest(object):
         if self.votes_total != 0:
             self.coefficient = float(self.votes) / float(self.votes_total)
 
-
     def get_latest_dates(self):
         issue = self.repository.get_issue(self.pull_request.number)
         issue_events = [event for event in issue.get_events() if event.event == 'unlabeled' and event.raw_data['label']['name'] == 'WIP']
@@ -134,14 +133,13 @@ class PullRequest(object):
                 # Maybe add a comment that the conflicts should be resolved
                 logging.exception(self.pull_request)
 
-
-
     def execute(self):
         self.get_contributors()
         self.update_contributors_with_reviews()
         self.update_votes()
         self.get_latest_dates()
         self.get_merge_time()
+
         if self.isWIP():
             return
         self.check_for_merge()

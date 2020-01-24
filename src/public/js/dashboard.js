@@ -3,7 +3,7 @@ import React from 'react';
 /**
  * Application class
  **/
-export class Application extends React.Component { // eslint-disable-line no-unused-vars
+export class Dashboard extends React.Component { // eslint-disable-line no-unused-vars
   /**
    * contructor - The constructor
    *
