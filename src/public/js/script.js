@@ -1,7 +1,8 @@
 import React from 'react'; // eslint-disable-line no-unused-vars
 import ReactDOM from 'react-dom';
 
-import {Application} from './application'; // eslint-disable-line no-unused-vars
+import {Dashboard} from './dashboard'; // eslint-disable-line no-unused-vars
+import {PullRequest} from './pullrequest'; // eslint-disable-line no-unused-vars
 
 /**
  * main - The main method
@@ -9,8 +10,12 @@ import {Application} from './application'; // eslint-disable-line no-unused-vars
  * @return {void}
  **/
 function main() {
+  let tag = <PullRequest />;
+  if (window.location.pathname === '/dashboard') {
+    tag = <Dashboard />;
+  }
   ReactDOM.render(
-    <Application />,
+    tag,
     document.getElementById('app'),
   );
 }

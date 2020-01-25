@@ -118,52 +118,7 @@ def dashboard():
 
 @app.route('/<org_name>/<project_name>/pull/<int:pull_request_number>')
 def show_pull_request(org_name, project_name, pull_request_number):
-    if not g.user:
-        return redirect('/')
-    github_client = github.Github(g.user['github_access_token'])
-    repository_name = '{}/{}'.format(org_name, project_name)
-    repository = github_client.get_repo(repository_name)
-    pull_request = repository.get_pull(pull_request_number)
-
-
-    pr = PR(repository, pull_request, g.user['github_access_token'])
-    pr.get_contributors()
-    pr.update_contributors_with_reviews()
-    pr.update_votes()
-    pr.get_latest_dates()
-    pr.get_merge_time()
-    contributors = [ pr.contributors[contributor] for contributor in pr.contributors ]
-    for contributor in contributors:
-        if 'commits' not in contributor:
-            contributor['commits'] = 0;
-        contributor['time_value'] = timedelta(days=(contributor['commits'] / float(pr.votes_total)) * pr.total_merge_time)
-
-    def activeFirst(value):
-        return abs(value['review_value'] + 0.1) * value['commits']
-    contributors = sorted(contributors, key=activeFirst, reverse=True)
-
-    return render_template(
-        'pull_request.html',
-        title=pull_request.title,
-        repository=org_name,
-        project=project_name,
-        pull_request_number=pull_request_number,
-        coefficient=pr.coefficient,
-        votes=pr.votes,
-        votes_total=pr.votes_total,
-        contributors=contributors,
-        max_date=pr.max_date,
-        unlabel_date=pr.unlabel_date,
-        push_date=pr.push_date,
-        commit_date=pr.commit_date,
-        pull_request_date=pr.pull_request_date,
-        age=pr.age,
-        commits=pr.commits,
-        merge_duration=pr.merge_duration,
-        days_to_merge=pr.days_to_merge,
-        total_merge_time=pr.total_merge_time,
-        merge_date=pr.max_date + pr.merge_duration
-    )
+    return app.send_static_file('pull_request.html')
 
 @app.route('/login/')
 def login():

@@ -40,7 +40,7 @@ class FrontendTestCase(unittest.TestCase):
         PR = PR_mock
 
         rv = self.app.get('/tooangel/worlddriven/pull/2', base_url='https://localhost')
-        self.assertEqual('302 FOUND', rv.status)
+        self.assertEqual('200 OK', rv.status)
 
     @patch('server.mongo')
     @patch('server.PR')
