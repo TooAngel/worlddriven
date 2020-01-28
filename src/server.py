@@ -151,19 +151,6 @@ def authorized(oauth_token):
 def user():
     return Response(json.dumps(github_oauth.get('user')), mimetype='application/json')
 
-def getReviewerMotivation():
-    motivations = [
-        'A proper review is appreciated',
-        'Some warm words would be nice',
-        'Please look at the code',
-        'I just want to get this merged ASAP',
-        'Not sure why you are here',
-        'I always like your reviews',
-        'Who are you?',
-        'Check out this awesome code change and tell them where they fucked up!'
-    ]
-    return motivations[randrange(len(motivations) - 1)]
-
 def _set_status(repository, pull_request, state, message):
     commit = pull_request.get_commits()[0]
     commit.create_status(state, '', message, 'worlddriven')
