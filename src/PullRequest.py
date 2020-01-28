@@ -132,6 +132,12 @@ class PullRequest(object):
             except Exception as e:
                 # Maybe add a comment that the conflicts should be resolved
                 logging.exception(self.pull_request)
+                return
+            try:
+                self.pull_request.create_issue_comment('This pull request was merged by [worlddriven](https://www.worlddriven.org).')
+            except Exception as e:
+                logging.exception(self.pull_request)
+                return
 
     def execute(self):
         self.get_contributors()
