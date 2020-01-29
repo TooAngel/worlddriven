@@ -33,7 +33,7 @@ export class PullRequest extends React.Component { // eslint-disable-line no-unu
    * @return {void}
    **/
   componentDidMount() {
-    const getPullRequest = new Request(`/v1${window.location.pathname}`, {
+    const getPullRequest = new Request(`/v1${window.location.pathname}/`, {
       method: 'GET',
     });
     fetch(getPullRequest)
