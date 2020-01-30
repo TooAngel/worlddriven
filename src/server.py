@@ -151,6 +151,27 @@ def authorized(oauth_token):
 def user():
     return Response(json.dumps(github_oauth.get('user')), mimetype='application/json')
 
+@app.route('/admin/logs')
+def admin_logs():
+    url = 'https://api.heroku.com/apps/worlddriven/log-sessions'
+    headers = {
+        'accept': 'application/vnd.heroku+json; version=3',
+    }
+    data = {
+        'tail': True,
+    }
+    auth = (os.environ['HEROKU_EMAIL'], os.environ['HEROKU_TOKEN'])
+    session_response = requests.post(url, headers=headers, auth=auth, data=data)
+    log_session = session_response.json()
+    print(log_session['logplex_url'])
+    log = requests.get(log_session['logplex_url'], headers=headers, auth=auth, stream=True)
+    def generate():
+        for line in log.iter_lines():
+            if line:
+                decoded_line = line.decode('utf-8')
+                yield decoded_line + '\n'
+    return Response(generate(), mimetype='text/csv')
+
 def _set_status(repository, pull_request, state, message):
     commit = pull_request.get_commits()[0]
     commit.create_status(state, '', message, 'worlddriven')
