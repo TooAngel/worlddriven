@@ -1,1 +1,1 @@
-web: python src/server.py
+web: gunicorn server:app --chdir src
