@@ -1,1 +1,1 @@
-web: gunicorn server:app --chdir src
+web: gunicorn -k flask_sockets.worker server:app --chdir src

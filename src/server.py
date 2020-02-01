@@ -308,10 +308,6 @@ api.add_resource(apiendpoint.APIRepository, '/v1/<string:org>/<string:repo>/')
 
 @sockets.route('/admin/logs')
 def ws_admin_logs(ws):
-    # while not ws.closed:
-        # message = ws.receive()
-        # print(message)
-        # ws.send(message)
     url = 'https://api.heroku.com/apps/worlddriven/log-sessions'
     headers = {
         'accept': 'application/vnd.heroku+json; version=3',
@@ -322,7 +318,6 @@ def ws_admin_logs(ws):
     auth = (os.environ['HEROKU_EMAIL'], os.environ['HEROKU_TOKEN'])
     session_response = requests.post(url, headers=headers, auth=auth, data=data)
     log_session = session_response.json()
-    print(log_session['logplex_url'])
     log = requests.get(log_session['logplex_url'], headers=headers, auth=auth, stream=True)
     for line in log.iter_lines():
         if line:
