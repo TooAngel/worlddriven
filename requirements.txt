@@ -6,8 +6,8 @@ requests==2.22.0
 GitHub-Flask==3.2.0
 Flask-PyMongo==2.3.0
 Flask-Compress==1.4.0
-Flask-Cors==3.0.8
 Flask-SSLify==0.1.5
+Flask-Sockets==0.2.1
 pytest==5.3.2
 pytest-pythonpath==0.7.3
 mock==3.0.5

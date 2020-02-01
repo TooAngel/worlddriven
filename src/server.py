@@ -14,34 +14,29 @@ import logging
 import apiendpoint
 from PullRequest import PullRequest as PR, check_pull_requests
 from bson.objectid import ObjectId
-from flask_cors import CORS
 import json
 from datetime import timedelta
-
-DOMAIN = 'https://www.worlddriven.org'
+from flask_sockets import Sockets
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(message)s',
                     handlers=[logging.StreamHandler()])
-
 
 app = Flask(
     __name__,
     static_folder='../static',
     template_folder='../templates'
 )
+
 if not os.getenv('DEBUG'):
     sslify = SSLify(app, permanent=True)
 
+sockets = Sockets(app)
 Compress(app)
 
 api = flask_restful.Api(app)
 
 app.config['MONGO_URI'] = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/worlddriven')
-CORS(
-    app,
-    origins=['http://localhost:5000', DOMAIN],
-    supports_credentials=True)
 mongo = PyMongo(app)
 apiendpoint.mongo = mongo
 
@@ -150,27 +145,6 @@ def authorized(oauth_token):
 @app.route('/v1/user/')
 def user():
     return Response(json.dumps(github_oauth.get('user')), mimetype='application/json')
-
-@app.route('/admin/logs')
-def admin_logs():
-    url = 'https://api.heroku.com/apps/worlddriven/log-sessions'
-    headers = {
-        'accept': 'application/vnd.heroku+json; version=3',
-    }
-    data = {
-        'tail': True,
-    }
-    auth = (os.environ['HEROKU_EMAIL'], os.environ['HEROKU_TOKEN'])
-    session_response = requests.post(url, headers=headers, auth=auth, data=data)
-    log_session = session_response.json()
-    print(log_session['logplex_url'])
-    log = requests.get(log_session['logplex_url'], headers=headers, auth=auth, stream=True)
-    def generate():
-        for line in log.iter_lines():
-            if line:
-                decoded_line = line.decode('utf-8')
-                yield decoded_line + '\n'
-    return Response(generate(), mimetype='text/csv')
 
 def _set_status(repository, pull_request, state, message):
     commit = pull_request.get_commits()[0]
@@ -332,6 +306,56 @@ api.add_resource(GithubWebHook, '/github/')
 api.add_resource(apiendpoint.APIPullRequest, '/v1/<string:org>/<string:repo>/pull/<int:pull>/')
 api.add_resource(apiendpoint.APIRepository, '/v1/<string:org>/<string:repo>/')
 
+@sockets.route('/admin/logs')
+def ws_admin_logs(ws):
+    # while not ws.closed:
+        # message = ws.receive()
+        # print(message)
+        # ws.send(message)
+    url = 'https://api.heroku.com/apps/worlddriven/log-sessions'
+    headers = {
+        'accept': 'application/vnd.heroku+json; version=3',
+    }
+    data = {
+        'tail': True,
+    }
+    auth = (os.environ['HEROKU_EMAIL'], os.environ['HEROKU_TOKEN'])
+    session_response = requests.post(url, headers=headers, auth=auth, data=data)
+    log_session = session_response.json()
+    print(log_session['logplex_url'])
+    log = requests.get(log_session['logplex_url'], headers=headers, auth=auth, stream=True)
+    for line in log.iter_lines():
+        if line:
+            decoded_line = line.decode('utf-8')
+            print(decoded_line)
+            ws.send(decoded_line + '\n')
+    print('end')
+
+@app.route('/admin')
+def admin():
+    return app.send_static_file('admin.html')
+
+@app.route('/admin/logs')
+def admin_logs():
+    url = 'https://api.heroku.com/apps/worlddriven/log-sessions'
+    headers = {
+        'accept': 'application/vnd.heroku+json; version=3',
+    }
+    data = {
+        'tail': True,
+    }
+    auth = (os.environ['HEROKU_EMAIL'], os.environ['HEROKU_TOKEN'])
+    session_response = requests.post(url, headers=headers, auth=auth, data=data)
+    log_session = session_response.json()
+    print(log_session['logplex_url'])
+    log = requests.get(log_session['logplex_url'], headers=headers, auth=auth, stream=True)
+    def generate():
+        for line in log.iter_lines():
+            if line:
+                decoded_line = line.decode('utf-8')
+                yield decoded_line + '\n'
+    return Response(generate(), mimetype='text/plain')
+
 
 if __name__ == '__main__':
     sched = BackgroundScheduler()
@@ -342,4 +366,8 @@ if __name__ == '__main__':
     app.secret_key = os.getenv('SESSION_SECRET')
 
     app.debug = os.getenv('DEBUG', 'false').lower() == 'true'
-    app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5001)))
+    # app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5001)))
+    from gevent import pywsgi
+    from geventwebsocket.handler import WebSocketHandler
+    server = pywsgi.WSGIServer(('', 5000), app, handler_class=WebSocketHandler)
+    server.serve_forever()
