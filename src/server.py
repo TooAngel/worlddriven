@@ -322,7 +322,6 @@ def ws_admin_logs(ws):
     for line in log.iter_lines():
         if line:
             decoded_line = line.decode('utf-8')
-            print(decoded_line)
             ws.send(decoded_line + '\n')
     print('end')
 
@@ -337,12 +336,12 @@ def admin_logs():
         'accept': 'application/vnd.heroku+json; version=3',
     }
     data = {
+        'source': 'app',
         'tail': True,
     }
     auth = (os.environ['HEROKU_EMAIL'], os.environ['HEROKU_TOKEN'])
     session_response = requests.post(url, headers=headers, auth=auth, data=data)
     log_session = session_response.json()
-    print(log_session['logplex_url'])
     log = requests.get(log_session['logplex_url'], headers=headers, auth=auth, stream=True)
     def generate():
         for line in log.iter_lines():
@@ -352,15 +351,16 @@ def admin_logs():
     return Response(generate(), mimetype='text/plain')
 
 
+sched = BackgroundScheduler()
+sched.start()
+
+sched.add_job(check_pull_requests, 'cron', hour='*', minute='*/51')
+
+app.secret_key = os.getenv('SESSION_SECRET')
+
+app.debug = os.getenv('DEBUG', 'false').lower() == 'true'
+
 if __name__ == '__main__':
-    sched = BackgroundScheduler()
-    sched.start()
-
-    sched.add_job(check_pull_requests, 'cron', hour='*', minute='*/51')
-
-    app.secret_key = os.getenv('SESSION_SECRET')
-
-    app.debug = os.getenv('DEBUG', 'false').lower() == 'true'
     # app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5001)))
     from gevent import pywsgi
     from geventwebsocket.handler import WebSocketHandler
