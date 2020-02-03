@@ -308,6 +308,7 @@ api.add_resource(apiendpoint.APIRepository, '/v1/<string:org>/<string:repo>/')
 
 @sockets.route('/admin/logs')
 def ws_admin_logs(ws):
+    logging.info('websocket connection started')
     url = 'https://api.heroku.com/apps/worlddriven/log-sessions'
     headers = {
         'accept': 'application/vnd.heroku+json; version=3',
@@ -322,8 +323,15 @@ def ws_admin_logs(ws):
     for line in log.iter_lines():
         if line:
             decoded_line = line.decode('utf-8')
-            ws.send(decoded_line + '\n')
-    print('end')
+            if ws.closed:
+                break
+            try:
+                ws.send(decoded_line + '\n')
+            except Exception as e:
+                logger.exception(e)
+                break
+
+    logging.info('websocket connection ended')
 
 @app.route('/admin')
 def admin():
