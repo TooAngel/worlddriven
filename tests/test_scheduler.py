@@ -3,6 +3,7 @@ import unittest
 from mock import patch, MagicMock
 from datetime import datetime, timedelta
 
+
 class SchedulerTestCase(unittest.TestCase):
 
     @patch('PullRequest.MongoClient')
@@ -11,7 +12,9 @@ class SchedulerTestCase(unittest.TestCase):
     @patch('PullRequest.github')
     def test_get_pull(self, github, fetch_reviews, logging, mongoClient):
         database = MagicMock()
-        database.repositories.find.return_value = [{'full_name': 'test', 'github_access_token': 'github_access_token'}]
+        database.repositories.find.return_value = [
+            {'full_name': 'test', 'github_access_token': 'github_access_token'}
+        ]
 
         mongo = MagicMock()
         mongo.get_database.return_value = database
@@ -59,10 +62,22 @@ class SchedulerTestCase(unittest.TestCase):
 
         PullRequest.check_pull_requests()
         print(logging.info.call_args)
-        self.assertEqual(logging.info.call_args_list[1], (('Repository: test',),))
-        self.assertEqual(logging.info.call_args_list[2], (('--------------------',),))
-        self.assertEqual(logging.info.call_args_list[3], ((b'title',),))
-        self.assertEqual(logging.info.call_args_list[5], (('Would merge now',),))
+        self.assertEqual(
+            logging.info.call_args_list[1],
+            (('Repository: test',),)
+        )
+        self.assertEqual(
+            logging.info.call_args_list[2],
+            (('--------------------',),)
+        )
+        self.assertEqual(
+            logging.info.call_args_list[3],
+            ((b'title',),)
+        )
+        self.assertEqual(
+            logging.info.call_args_list[5],
+            (('Would merge now',),)
+        )
 
 
 if __name__ == '__main__':

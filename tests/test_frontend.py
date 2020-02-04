@@ -4,6 +4,7 @@ import json
 import base64
 from mock import patch, MagicMock
 
+
 class FrontendTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -26,7 +27,7 @@ class FrontendTestCase(unittest.TestCase):
             headers=headers,
             base_url='https://localhost'
         )
-        self.assertEqual(b'{\n    "error": "No state"\n}\n', rv.data)
+        self.assertEqual(b'{"error": "No state"}\n', rv.data)
 
     @patch('server.PR')
     @patch('server.github')
@@ -39,7 +40,10 @@ class FrontendTestCase(unittest.TestCase):
             print('PR')
         PR = PR_mock
 
-        rv = self.app.get('/tooangel/worlddriven/pull/2', base_url='https://localhost')
+        rv = self.app.get(
+            '/tooangel/worlddriven/pull/2',
+            base_url='https://localhost'
+        )
         self.assertEqual('200 OK', rv.status)
 
     @patch('server.mongo')
@@ -48,7 +52,9 @@ class FrontendTestCase(unittest.TestCase):
     def test_get_pull_logged_in(self, github, PR, mongoClient):
 
         find_one = MagicMock()
-        find_one.return_value = [{'full_name': 'test', 'github_access_token': 'github_access_token'}]
+        find_one.return_value = [
+            {'full_name': 'test', 'github_access_token': 'github_access_token'}
+        ]
         mongoClient.mongo.db.users.find_one = find_one
 
         def github_mock(token):
@@ -62,7 +68,10 @@ class FrontendTestCase(unittest.TestCase):
         with self.app as c:
             with c.session_transaction() as sess:
                 sess['user_id'] = '1234567890AB1234567890AB'
-            rv = c.get('/tooangel/worlddriven/pull/2', base_url='https://localhost')
+            rv = c.get(
+                '/tooangel/worlddriven/pull/2',
+                base_url='https://localhost'
+            )
         self.assertEqual('200 OK', rv.status)
 
 if __name__ == '__main__':
