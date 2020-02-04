@@ -26,7 +26,7 @@ class FrontendTestCase(unittest.TestCase):
             headers=headers,
             base_url='https://localhost'
         )
-        self.assertEqual(b'{"error": "No state"}\n', rv.data)
+        self.assertEqual(b'{\n    "error": "No state"\n}\n', rv.data)
 
     @patch('server.PR')
     @patch('server.github')

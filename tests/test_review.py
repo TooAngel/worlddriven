@@ -25,7 +25,7 @@ class ReviewTestCase(unittest.TestCase):
             headers=headers,
             base_url='https://localhost'
         )
-        self.assertEqual(b'{"error": "No state"}\n', rv.data)
+        self.assertEqual(b'{\n    "error": "No state"\n}\n', rv.data)
 
     def test_commented(self):
         headers = {
@@ -44,7 +44,7 @@ class ReviewTestCase(unittest.TestCase):
             headers=headers,
             base_url='https://localhost'
         )
-        self.assertEqual(b'{"info": "Only commented"}\n', rv.data)
+        self.assertEqual(b'{\n    "info": "Only commented"\n}\n', rv.data)
 
     @patch('server.mongo')
     @patch('server.PR')
@@ -89,7 +89,7 @@ class ReviewTestCase(unittest.TestCase):
             headers=headers,
             base_url='https://localhost'
         )
-        self.assertEqual(b'{"info": "All fine, thanks"}\n', rv.data)
+        self.assertEqual(b'{\n    "info": "All fine, thanks"\n}\n', rv.data)
 
 if __name__ == '__main__':
     unittest.main()
