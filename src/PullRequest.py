@@ -152,7 +152,6 @@ class PullRequest(object):
 
 
 def check_pull_request(repository, pull_request, commentOnIssue, token):
-    logging.info('-' * 20)
     logging.info(pull_request.title.encode('utf-8'))
 
     pr = PullRequest(repository, pull_request, token)
@@ -168,8 +167,8 @@ def check_pull_requests():
     mongo_repositories = database.repositories.find()
     for mongo_repository in mongo_repositories:
         repository_name = mongo_repository['full_name']
+        logging.info('Repository: {} {}'.format(repository_name, mongo_repository['_id']))
         github_client = github.Github(mongo_repository['github_access_token'])
-        logging.info('Repository: {}'.format(repository_name))
         repository = github_client.get_repo(repository_name)
         for pull_request in repository.get_pulls():
             check_pull_request(repository, pull_request, False, mongo_repository['github_access_token'])

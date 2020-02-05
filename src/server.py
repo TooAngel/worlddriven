@@ -293,6 +293,7 @@ class GithubWebHook(flask_restful.Resource):
         if header == 'pull_request_review':
             return self.handle_pull_request_review(data)
 
+
 class Restart(flask_restful.Resource):
     def get(self):
         func = request.environ.get('werkzeug.server.shutdown')
@@ -303,8 +304,15 @@ class Restart(flask_restful.Resource):
 api.add_resource(Restart, '/restart/')
 api.add_resource(GithubWebHook, '/github/')
 
-api.add_resource(apiendpoint.APIPullRequest, '/v1/<string:org>/<string:repo>/pull/<int:pull>/')
-api.add_resource(apiendpoint.APIRepository, '/v1/<string:org>/<string:repo>/')
+api.add_resource(
+    apiendpoint.APIPullRequest,
+    '/v1/<string:org>/<string:repo>/pull/<int:pull>/'
+)
+api.add_resource(
+    apiendpoint.APIRepository,
+    '/v1/<string:org>/<string:repo>/'
+)
+
 
 @sockets.route('/admin/logs')
 def ws_admin_logs(ws):
@@ -317,9 +325,19 @@ def ws_admin_logs(ws):
         'tail': True,
     }
     auth = (os.environ['HEROKU_EMAIL'], os.environ['HEROKU_TOKEN'])
-    session_response = requests.post(url, headers=headers, auth=auth, data=data)
+    session_response = requests.post(
+        url,
+        headers=headers,
+        auth=auth,
+        data=data
+    )
     log_session = session_response.json()
-    log = requests.get(log_session['logplex_url'], headers=headers, auth=auth, stream=True)
+    log = requests.get(
+        log_session['logplex_url'],
+        headers=headers,
+        auth=auth,
+        stream=True
+    )
     for line in log.iter_lines():
         if line:
             decoded_line = line.decode('utf-8')
@@ -328,14 +346,16 @@ def ws_admin_logs(ws):
             try:
                 ws.send(decoded_line + '\n')
             except Exception as e:
-                logger.exception(e)
+                logging.exception(e)
                 break
 
     logging.info('websocket connection ended')
 
+
 @app.route('/admin')
 def admin():
     return app.send_static_file('admin.html')
+
 
 @app.route('/admin/logs')
 def admin_logs():
@@ -348,9 +368,20 @@ def admin_logs():
         'tail': True,
     }
     auth = (os.environ['HEROKU_EMAIL'], os.environ['HEROKU_TOKEN'])
-    session_response = requests.post(url, headers=headers, auth=auth, data=data)
+    session_response = requests.post(
+        url,
+        headers=headers,
+        auth=auth,
+        data=data
+    )
     log_session = session_response.json()
-    log = requests.get(log_session['logplex_url'], headers=headers, auth=auth, stream=True)
+    log = requests.get(
+        log_session['logplex_url'],
+        headers=headers,
+        auth=auth,
+        stream=True
+    )
+
     def generate():
         for line in log.iter_lines():
             if line:
