@@ -13,7 +13,7 @@ class SchedulerTestCase(unittest.TestCase):
     def test_get_pull(self, github, fetch_reviews, logging, mongoClient):
         database = MagicMock()
         database.repositories.find.return_value = [
-            {'full_name': 'test', 'github_access_token': 'github_access_token'}
+            {'_id': '4', 'full_name': 'test', 'github_access_token': 'github_access_token'}
         ]
 
         mongo = MagicMock()
@@ -64,18 +64,14 @@ class SchedulerTestCase(unittest.TestCase):
         print(logging.info.call_args)
         self.assertEqual(
             logging.info.call_args_list[1],
-            (('Repository: test',),)
+            (('Repository: test 4',),)
         )
         self.assertEqual(
             logging.info.call_args_list[2],
-            (('--------------------',),)
-        )
-        self.assertEqual(
-            logging.info.call_args_list[3],
             ((b'title',),)
         )
         self.assertEqual(
-            logging.info.call_args_list[5],
+            logging.info.call_args_list[4],
             (('Would merge now',),)
         )
 
