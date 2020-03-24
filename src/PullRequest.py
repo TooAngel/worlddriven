@@ -77,7 +77,6 @@ class PullRequest(object):
         issue = self.repository.get_issue(self.pull_request.number)
         issue_events = [event for event in issue.get_events() if event.event == 'unlabeled' and event.raw_data['label']['name'] == 'WIP']
         self.unlabel_date = _get_last_date(issue_events)
-
         events = [event for event in self.pull_request.head.repo.get_events() if event.type == 'PushEvent' and event.payload['ref'] == 'refs/heads/{}'.format(self.pull_request.head.ref)]
         self.push_date = _get_last_date(events)
 
@@ -140,6 +139,11 @@ class PullRequest(object):
                 return
 
     def execute(self):
+        if not self.pull_request.head.repo:
+            logging.info('Pull Request head repository deleted, delete Pull Request')
+            self.pull_request.edit(status="closed")
+            return
+
         self.get_contributors()
         self.update_contributors_with_reviews()
         self.update_votes()
