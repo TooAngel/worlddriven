@@ -101,24 +101,32 @@ def index():
 def repositories():
     github_client = github.Github(g.user['github_access_token'])
     user = github_client.get_user()
-    github_repositories = user.get_repos(type='public')
-    repositories = []
+    github_repositories = user.get_repos(type='owner')
 
-    existing_repositories = {}
-    # Better fetch via the names, but how (efficiently)
-    mongo_repositories = mongo.db.repositories.find({
-        'github_access_token': g.user['github_access_token']
-    })
-    for mongo_repository in mongo_repositories:
-        existing_repositories[mongo_repository['full_name']] = True
-
+    query = {'$or': []}
+    repositories = {}
     for repository in github_repositories:
-        repositories.append({
-            'full_name': repository.full_name,
-            'configured': existing_repositories.get(repository.full_name)
-        })
+        repositories[repository.full_name] = False
+        query['$or'].append({'full_name': repository.full_name})
 
-    return Response(json.dumps(repositories),  mimetype='application/json')
+    organizations = user.get_orgs()
+    for organization in organizations:
+        for repository in organization.get_repos('public'):
+            repositories[repository.full_name] = False
+            query['$or'].append({'full_name': repository.full_name})
+
+    mongo_repositories = mongo.db.repositories.find(query)
+    for mongo_repository in mongo_repositories:
+        repositories[mongo_repository['full_name']] = True
+
+    response = []
+    for key, value in repositories.items():
+        response.append({
+            'full_name': key,
+            'configured': value
+        })
+    response = sorted(response, key = lambda i: i['full_name']) 
+    return Response(json.dumps(response),  mimetype='application/json')
 
 
 @app.route('/dashboard')
@@ -134,7 +142,7 @@ def show_pull_request(org_name, project_name, pull_request_number):
 @app.route('/login/')
 def login():
     if session.get('user_id', None) is None:
-        return github_oauth.authorize(scope='public_repo,admin:repo_hook')
+        return github_oauth.authorize(scope='public_repo,read:org,admin:repo_hook')
     else:
         return redirect('/dashboard')
 
