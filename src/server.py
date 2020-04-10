@@ -36,10 +36,11 @@ Compress(app)
 
 api = flask_restful.Api(app)
 
-app.config['MONGO_URI'] = os.getenv(
+mongo_uri = os.getenv(
     'MONGODB_URI',
     'mongodb://localhost:27017/worlddriven'
-)
+) + '?retryWrites=false'
+app.config['MONGO_URI'] = mongo_uri
 mongo = PyMongo(app)
 apiendpoint.mongo = mongo
 
@@ -125,7 +126,7 @@ def repositories():
             'full_name': key,
             'configured': value
         })
-    response = sorted(response, key = lambda i: i['full_name']) 
+    response = sorted(response, key = lambda i: i['full_name'])
     return Response(json.dumps(response),  mimetype='application/json')
 
 
