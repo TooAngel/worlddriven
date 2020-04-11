@@ -141,7 +141,7 @@ class PullRequest(object):
     def execute(self):
         if not self.pull_request.head.repo:
             logging.info('Pull Request head repository deleted, delete Pull Request')
-            self.pull_request.edit(status="closed")
+            self.pull_request.edit(state="closed")
             return
 
         self.get_contributors()
