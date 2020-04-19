@@ -4,20 +4,27 @@ from flask import g, abort, request
 import logging
 from PullRequest import PullRequest
 from datetime import datetime, timedelta
+import os
+from pymongo import MongoClient
 
 mongo = None
 DOMAIN = 'https://www.worlddriven.org'
 
 class APIPullRequest(flask_restful.Resource):
     def get(self, org, repo, pull):
-        if not g.user:
+        full_name = '{}/{}'.format(org, repo)
+        mongo_url = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/worlddriven')
+        mongo = MongoClient(mongo_url)
+        database = mongo.get_database()
+        mongo_repository = database.repositories.find_one({'full_name': full_name})
+        if not mongo_repository:
             abort(401)
             return
-        github_client = github.Github(g.user['github_access_token'])
-        repository = github_client.get_repo('{}/{}'.format(org, repo))
+        github_client = github.Github(mongo_repository['github_access_token'])
+        repository = github_client.get_repo(full_name)
         pull_request = repository.get_pull(pull)
 
-        pr = PullRequest(repository, pull_request, g.user['github_access_token'])
+        pr = PullRequest(repository, pull_request, mongo_repository['github_access_token'])
         pr.get_contributors()
         pr.update_contributors_with_reviews()
         pr.update_votes()
