@@ -48,6 +48,7 @@ class APIPullRequest(flask_restful.Resource):
                 'title': pull_request.title,
                 'url': pull_request.url,
                 'user': pull_request.user.raw_data,
+                'state': pull_request.state,
                 'stats': {
                     'mergeable': pr.mergeable_pull_request(),
                     'coefficient': pr.coefficient,
