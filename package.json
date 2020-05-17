@@ -2,7 +2,7 @@
   "name": "worlddriven",
   "version": "1.0.0",
   "description": "World driven introduces a contribution based weighted voting system",
-  "main": "index.js",
+  "main": "",
   "directories": {
     "test": "tests"
   },

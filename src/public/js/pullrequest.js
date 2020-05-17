@@ -24,6 +24,7 @@ export class PullRequest extends React.Component { // eslint-disable-line no-unu
           days_to_merge: {},
         },
       },
+      fetched: false,
     };
   }
 
@@ -41,6 +42,7 @@ export class PullRequest extends React.Component { // eslint-disable-line no-unu
       .then((result) => {
         this.setState({
           pullRequest: result.pull_request,
+          fetched: true,
         });
       });
   }
@@ -65,22 +67,14 @@ export class PullRequest extends React.Component { // eslint-disable-line no-unu
    * @return {object} - The element to be renderd
    **/
   render() {
+    if (!this.state.fetched) {
+      return <div class="loader"></div>;
+    }
     const style = {
       height: '100%',
     };
 
     const headerStyle = {color: 'grey'};
-    const statsStyle = {
-      width: '50%',
-      float: 'left',
-    };
-    const actionStyle = {
-      width: '50%',
-    };
-    const contributorStyle = {
-      width: '50%',
-      float: 'left',
-    };
 
     const contributors = [];
     for (const contributor of this.state.pullRequest.stats.contributors) {
@@ -91,48 +85,56 @@ export class PullRequest extends React.Component { // eslint-disable-line no-unu
       </tr>);
     }
 
+    const githubPullRequestLink = `https://github.com/${this.state.pullRequest.org}/${this.state.pullRequest.repo}/pull/${this.state.pullRequest.number}`;
+
     return (
       <div style={style}>
-        <h1>{ this.state.pullRequest.org }/{ this.state.pullRequest.repo } { this.state.pullRequest.title } <span style={headerStyle}>#{ this.state.pullRequest.number }</span></h1>
-        <h2>Stats</h2>
-        <table style={ statsStyle }>
-          <tbody>
-            <tr><td>commits:</td><td>{ this.state.pullRequest.stats.commits }</td></tr>
-            <tr><td>votes:</td><td>{ this.state.pullRequest.stats.votes }</td></tr>
-            <tr><td>votes_total:</td><td>{ this.state.pullRequest.stats.votes_total }</td></tr>
-            <tr><td>coefficient:</td><td>{ this.state.pullRequest.stats.coefficient }</td></tr>
-            <tr><td>age:</td><td>{this.getTimeDeltaString(this.state.pullRequest.stats.age.total_seconds)}</td></tr>
-          </tbody>
-        </table>
-        <h2>Last action</h2>
-        <table style={ actionStyle }>
-          <tbody>
-            <tr><td>unlabel_date:</td><td>{ new Date(this.state.pullRequest.dates.unlabel * 1000 || 0).toISOString() }</td></tr>
-            <tr><td>push_date:</td><td>{ new Date(this.state.pullRequest.dates.push * 1000 || 0).toISOString() }</td></tr>
-            <tr><td>commit_date:</td><td>{ new Date(this.state.pullRequest.dates.commit * 1000 || 0).toISOString() }</td></tr>
-            <tr><td>pull_request_date:</td><td>{ new Date(this.state.pullRequest.dates.created * 1000 || 0).toISOString() }</td></tr>
-            <tr><td><hr/></td><td><hr/></td></tr>
-            <tr><td>max_date:</td><td>{ new Date(this.state.pullRequest.dates.max * 1000 || 0).toISOString() }</td></tr>
-          </tbody>
-        </table>
+        <h1>{ this.state.pullRequest.org }/{ this.state.pullRequest.repo } <a href={githubPullRequestLink}>{ this.state.pullRequest.title } <span style={headerStyle}>#{ this.state.pullRequest.number }</span></a> <span style={headerStyle}>{ this.state.pullRequest.state }</span></h1>
 
-        <h2>Contributors</h2>
-        <table style={ contributorStyle }>
-          <tbody>
-            <tr><td><b>name</b></td><td>commits</td><td>merge boost</td></tr>
-            { contributors }
-          </tbody>
-        </table>
+        <details>
+          <summary className="PullRequestSummary"><span title="The point in time when the countdown starts">Start date: { new Date(this.state.pullRequest.dates.max * 1000 || 0).toISOString() }</span></summary>
+          <table>
+            <tbody>
+              <tr title="The date when the labels changed"><td>Unlabel date:</td><td>{ new Date(this.state.pullRequest.dates.unlabel * 1000 || 0).toISOString() }</td></tr>
+              <tr title="The last date it was pushed"><td>Push date:</td><td>{ new Date(this.state.pullRequest.dates.push * 1000 || 0).toISOString() }</td></tr>
+              <tr title="The last date of the commits"><td>Commit date:</td><td>{ new Date(this.state.pullRequest.dates.commit * 1000 || 0).toISOString() }</td></tr>
+              <tr title="The date when the pull request was opened"><td>Pull Request date:</td><td>{ new Date(this.state.pullRequest.dates.created * 1000 || 0).toISOString() }</td></tr>
+              <tr><td><hr/></td><td><hr/></td></tr>
+              <tr title="The start date is the most recent one from the above"><td>Start date:</td><td>{ new Date(this.state.pullRequest.dates.max * 1000 || 0).toISOString() }</td></tr>
+            </tbody>
+          </table>
+        </details>
 
-        <h2>Dates</h2>
-        <table>
-          <tbody>
-            <tr><td>Total merge days</td><td>{ this.state.pullRequest.times.total_merge_time }</td></tr>
-            <tr><td>Reduce dued to coefficient</td><td>{this.getTimeDeltaString(this.state.pullRequest.times.merge_duration.total_seconds)}</td></tr>
-            <tr><td>Countdown</td><td>{this.getTimeDeltaString(this.state.pullRequest.times.days_to_merge.total_seconds)}</td></tr>
-            <tr><td>Merge Date</td><td>{ new Date(this.state.pullRequest.times.merge_date * 1000 || 0).toISOString() }</td></tr>
-          </tbody>
-        </table>
+        <details>
+          <summary className="PullRequestSummary">Positive votes: { this.state.pullRequest.stats.votes }/{ this.state.pullRequest.stats.votes_total }</summary>
+          <table>
+            <tbody>
+              <tr><td title="Number of votes due to pull request reviews">votes:</td><td>{ this.state.pullRequest.stats.votes }</td></tr>
+              <tr><td title="The total number of votes (commits)">votes_total:</td><td>{ this.state.pullRequest.stats.votes_total }</td></tr>
+              <tr><td title="The factor by which the total merge days are reduced">coefficient:</td><td>{ this.state.pullRequest.stats.coefficient }</td></tr>
+              </tbody>
+          </table>
+          <table>
+            <tbody>
+              <tr><td><b>name</b></td><td>commits</td><td>merge boost</td></tr>
+              { contributors }
+            </tbody>
+          </table>
+        </details>
+
+        <details>
+          <summary className="PullRequestSummary">
+            Time to merge: {this.getTimeDeltaString(this.state.pullRequest.times.days_to_merge.total_seconds)} ({ new Date(this.state.pullRequest.times.merge_date * 1000 || 0).toISOString() })
+          </summary>
+          <table>
+            <tbody>
+              <tr><td title="For each commit the duration is extended by 5 days">Commits:</td><td>{ this.state.pullRequest.stats.commits }</td></tr>
+              <tr><td title="The total time until the Pull Request is merged. 5 days + commit days">Total duration:</td><td>{ this.state.pullRequest.times.total_merge_time }</td></tr>
+              <tr><td title="Total merge days multiplied by the voting coefficient to get the actual duration.">Reduce to:</td><td>{this.getTimeDeltaString(this.state.pullRequest.times.merge_duration.total_seconds)}</td></tr>
+              <tr><td title="How old is the pull request, based on max date">Age:</td><td>{this.getTimeDeltaString(this.state.pullRequest.stats.age.total_seconds)}</td></tr>
+            </tbody>
+          </table>
+        </details>
 
       </div>
     );
