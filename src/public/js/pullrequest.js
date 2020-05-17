@@ -68,7 +68,7 @@ export class PullRequest extends React.Component { // eslint-disable-line no-unu
    **/
   render() {
     if (!this.state.fetched) {
-      return <div class="loader"></div>;
+      return <div className="loader"></div>;
     }
     const style = {
       height: '100%',
@@ -89,7 +89,9 @@ export class PullRequest extends React.Component { // eslint-disable-line no-unu
 
     return (
       <div style={style}>
-        <h1>{ this.state.pullRequest.org }/{ this.state.pullRequest.repo } <a href={githubPullRequestLink}>{ this.state.pullRequest.title } <span style={headerStyle}>#{ this.state.pullRequest.number }</span></a> <span style={headerStyle}>{ this.state.pullRequest.state }</span></h1>
+        <h1><a href={githubPullRequestLink}>{ this.state.pullRequest.title } <span style={headerStyle}>#{ this.state.pullRequest.number }</span></a></h1>
+        <span className="PullRequestSummary">repository: { this.state.pullRequest.org }/{ this.state.pullRequest.repo }</span> <br />
+        <span className="PullRequestSummary">state: { this.state.pullRequest.state }</span>
 
         <details>
           <summary className="PullRequestSummary"><span title="The point in time when the countdown starts">Start date: { new Date(this.state.pullRequest.dates.max * 1000 || 0).toISOString() }</span></summary>
@@ -106,13 +108,13 @@ export class PullRequest extends React.Component { // eslint-disable-line no-unu
         </details>
 
         <details>
-          <summary className="PullRequestSummary">Positive votes: { this.state.pullRequest.stats.votes }/{ this.state.pullRequest.stats.votes_total }</summary>
+          <summary className="PullRequestSummary"><span title="Pull Request reviews counted as votes">Positive votes: { this.state.pullRequest.stats.votes }/{ this.state.pullRequest.stats.votes_total }</span></summary>
           <table>
             <tbody>
               <tr><td title="Number of votes due to pull request reviews">votes:</td><td>{ this.state.pullRequest.stats.votes }</td></tr>
               <tr><td title="The total number of votes (commits)">votes_total:</td><td>{ this.state.pullRequest.stats.votes_total }</td></tr>
               <tr><td title="The factor by which the total merge days are reduced">coefficient:</td><td>{ this.state.pullRequest.stats.coefficient }</td></tr>
-              </tbody>
+            </tbody>
           </table>
           <table>
             <tbody>
@@ -124,7 +126,7 @@ export class PullRequest extends React.Component { // eslint-disable-line no-unu
 
         <details>
           <summary className="PullRequestSummary">
-            Time to merge: {this.getTimeDeltaString(this.state.pullRequest.times.days_to_merge.total_seconds)} ({ new Date(this.state.pullRequest.times.merge_date * 1000 || 0).toISOString() })
+            <span title="The Pull Request will be automatically merged in">Time to merge: {this.getTimeDeltaString(this.state.pullRequest.times.days_to_merge.total_seconds)} ({ new Date(this.state.pullRequest.times.merge_date * 1000 || 0).toISOString() })</span>
           </summary>
           <table>
             <tbody>
