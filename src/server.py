@@ -67,7 +67,7 @@ def token_getter():
 
 @app.route('/favicon.ico')
 def favicon():
-    return app.send_static_file('logo.ico')
+    return app.send_static_file('images/favicon.png')
 
 
 @app.route('/robots.txt')

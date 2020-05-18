@@ -1,5 +1,3 @@
-const path = require('path');
-
 module.exports = {
   mode: 'development',
   entry: './src/public/js/script.js',
