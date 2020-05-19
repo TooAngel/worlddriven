@@ -15,6 +15,7 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
     this.state = {
       user: '',
       repositories: [],
+      fetched: false,
     };
     this.handleChange = this.handleChange.bind(this);
   }
@@ -44,6 +45,7 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
       .then((result) => {
         this.setState({
           repositories: result,
+          fetched: true,
         });
       });
   }
@@ -68,6 +70,10 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
    * @return {object} - The element to be renderd
    **/
   render() {
+    if (!this.state.fetched) {
+      return <div className="loader"></div>;
+    }
+
     const style = {
       height: '100%',
     };
@@ -90,6 +96,9 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
     return (
       <div style={style}>
         <h1>{ this.state.user }</h1>
+        Here you can enable world driven for each of your repositories. When
+        enabled pull requests are watched and automatically emerged based on the
+        reviews.
         <div className="main-content">
           <h2>Repositories</h2>
           <table>
