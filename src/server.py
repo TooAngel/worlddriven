@@ -11,12 +11,15 @@ from random import randrange
 from flask_pymongo import PyMongo
 from flask_github import GitHub
 import logging
-import apiendpoint
 from PullRequest import PullRequest as PR, check_pull_requests
 from bson.objectid import ObjectId
 import json
 from datetime import timedelta
 from flask_sockets import Sockets
+
+from routes.static import static
+import apiendpoint
+import routes.githubWebHook
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(message)s',
@@ -27,6 +30,7 @@ app = Flask(
     static_folder='../static',
     template_folder='../templates'
 )
+app.register_blueprint(static)
 
 if not os.getenv('DEBUG'):
     sslify = SSLify(app, permanent=True)
@@ -43,6 +47,7 @@ mongo_uri = os.getenv(
 app.config['MONGO_URI'] = mongo_uri
 mongo = PyMongo(app)
 apiendpoint.mongo = mongo
+routes.githubWebHook.mongo = mongo
 
 app.config['GITHUB_CLIENT_ID'] = os.getenv('GITHUB_CLIENT_ID')
 app.config['GITHUB_CLIENT_SECRET'] = os.getenv('GITHUB_CLIENT_SECRET')
@@ -63,40 +68,6 @@ def token_getter():
     if user is not None:
         user = user['github_access_token']
         return user
-
-
-@app.route('/favicon.ico')
-def favicon():
-    return app.send_static_file('images/favicon.png')
-
-
-@app.route('/robots.txt')
-def robotstxt():
-    return app.send_static_file('robots.txt')
-
-
-@app.route('/static/js/main.js')
-def main_js():
-    return send_file('../dist/main.js')
-
-
-@app.route('/static/css/style.css')
-def style_css():
-    return send_file('../static/style.css')
-
-
-@app.route('/sitemap.xml')
-def sitemapxml():
-    return app.send_static_file('sitemap.xml')
-
-
-@app.route('/')
-def index():
-    response = app.send_static_file('index.html')
-    response.headers['server'] = None
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-    return response
-
 
 @app.route('/v1/repositories')
 def repositories():
@@ -128,11 +99,6 @@ def repositories():
         })
     response = sorted(response, key = lambda i: i['full_name'])
     return Response(json.dumps(response),  mimetype='application/json')
-
-
-@app.route('/dashboard')
-def dashboard():
-    return app.send_static_file('dashboard.html')
 
 
 @app.route('/<org_name>/<project_name>/pull/<int:pull_request_number>')
@@ -179,148 +145,7 @@ def user():
         mimetype='application/json'
     )
 
-
-def _set_status(repository, pull_request, state, message):
-    commit = pull_request.get_commits()[0]
-    commit.create_status(state, '', message, 'worlddriven')
-
-
-class PullRequest(object):
-    def __init__(self, data):
-        self.data = data
-
-    def execute(self):
-        if self.data['action'] == 'opened':
-            return self.execute_opened()
-        if self.data['action'] == 'synchronize':
-            return self.execute_synchronize()
-        if self.data['action'] == 'edited':
-            return self.execute_edited()
-        if self.data['action'] == 'closed':
-            return self.execute_closed()
-
-    def execute_opened(self):
-        mongo_repository = mongo.db.repositories.find_one({
-            'full_name': self.data['repository']['full_name']
-        })
-        token = mongo_repository['github_access_token']
-        github_client = github.Github(token)
-        repository = github_client.get_repo(data['repository']['id'])
-        pull_request = repository.get_pull(data['pull_request']['number'])
-
-        pr = PR(repository, pull_request)
-        pr.get_contributors()
-        pr.update_contributors_with_reviews()
-        pr.update_votes()
-        pr.get_latest_dates()
-        pr.get_merge_time()
-
-        status_message = '{}/{} {} Merge in {} days {}'.format(
-            pr.votes,
-            pr.votes_total,
-            round(pr.coefficient, 3) * 100,
-            pr.days_to_merge.days,
-            pr.days_to_merge.seconds / 3600
-        )
-        _set_status(repository, pull_request, 'success', status_message)
-
-    def execute_synchronize(self):
-        logging.info('execute_synchronize {}'.format(self.data))
-
-    def execute_edited(self):
-        logging.info('execute_edited {}'.format(self.data))
-
-    def execute_closed(self):
-        logging.info('execute_closed {}'.format(self.data))
-
-
-class GithubWebHook(flask_restful.Resource):
-    def handle_push(self, data):
-        # print('push - ignored')
-        # print(data)
-        pass
-
-    def handle_pull_request(self, data):
-        pull_request = PullRequest(data)
-        pull_request.execute()
-        return {'info': 'All fine, thanks'}
-
-    def handle_pull_request_review(self, data):
-        # print(data)
-        if data['action'] == 'submitted':
-            if 'state' not in data['review']:
-                # print('No state')
-                # print(data['review'].keys())
-                return {'error': 'No state'}, 503
-
-            if data['review']['state'] == 'commented':
-                # print('Review comment')
-                return {'info': 'Only commented'}
-
-            logging.info('Need repository name: {}'.format(data))
-            mongo_repository = mongo.db.repositories.find_one(
-                {'full_name': data['repository']['id']}
-            )
-            token = mongo_repository['github_access_token']
-            github_client = github.Github(token)
-            repository = github_client.get_repo(data['repository']['id'])
-            pull_request = repository.get_pull(data['pull_request']['number'])
-
-            pr = PR(repository, pull_request)
-            pr.get_contributors()
-            pr.update_contributors_with_reviews()
-
-            review = data['review']
-            reviewer = review['user']['login']
-            if reviewer not in pr.contributors:
-                pr.contributors[reviewer] = {
-                    'name': reviewer,
-                    'review_date': review['submitted_at']
-                }
-
-            value = 0
-            if review['state'] == 'APPROVED':
-                value = 1
-            elif review['state'] == 'CHANGES_REQUESTED':
-                value = -1
-
-            pr.contributors[reviewer]['review_value'] = value
-
-            pr.update_votes()
-            pr.get_latest_dates()
-            pr.get_merge_time()
-
-            status_message = '{}/{} {} Merge in {} days {}'.format(
-                pr.votes,
-                pr.votes_total,
-                round(pr.coefficient, 3) * 100,
-                pr.days_to_merge.days,
-                pr.days_to_merge.seconds / 3600
-            )
-            _set_status(repository, pull_request, 'success', status_message)
-
-            return {'info': 'All fine, thanks'}
-
-    def post(self):
-        data = request.json
-        header = request.headers['X-GitHub-Event']
-        if header == 'push':
-            return self.handle_push(data)
-        if header == 'pull_request':
-            return self.handle_pull_request(data)
-        if header == 'pull_request_review':
-            return self.handle_pull_request_review(data)
-
-
-class Restart(flask_restful.Resource):
-    def get(self):
-        func = request.environ.get('werkzeug.server.shutdown')
-        if func is None:
-            raise RuntimeError('Not running with the Werkzeug Server')
-        func()
-
-api.add_resource(Restart, '/restart/')
-api.add_resource(GithubWebHook, '/github/')
+api.add_resource(routes.githubWebHook.GithubWebHook, '/github/')
 
 api.add_resource(
     apiendpoint.APIPullRequest,

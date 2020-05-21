@@ -26,7 +26,8 @@ class ReviewTestCase(unittest.TestCase):
             headers=headers,
             base_url='https://localhost'
         )
-        self.assertEqual(b'{"error": "No state"}\n', rv.data)
+        data = json.loads(rv.data.decode('utf-8'))
+        self.assertEqual('No state', data['error'])
 
     def test_commented(self):
         headers = {
@@ -45,11 +46,12 @@ class ReviewTestCase(unittest.TestCase):
             headers=headers,
             base_url='https://localhost'
         )
-        self.assertEqual(b'{"info": "Only commented"}\n', rv.data)
+        data = json.loads(rv.data.decode('utf-8'))
+        self.assertEqual('Only commented', data['info'])
 
-    @patch('server.mongo')
-    @patch('server.PR')
-    @patch('server.github')
+    @patch('routes.githubWebHook.mongo')
+    @patch('routes.githubWebHook.PR')
+    @patch('routes.githubWebHook.github')
     def test_approve(self, github, PR, mongo):
         def PyMongo_mock(app):
             print('PyMongo_mock')
@@ -89,7 +91,8 @@ class ReviewTestCase(unittest.TestCase):
             headers=headers,
             base_url='https://localhost'
         )
-        self.assertEqual(b'{"info": "All fine, thanks"}\n', rv.data)
+        data = json.loads(rv.data.decode('utf-8'))
+        self.assertEqual('All fine, thanks', data['info'])
 
 if __name__ == '__main__':
     unittest.main()
