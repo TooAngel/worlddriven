@@ -4,6 +4,7 @@ Flask==1.1.2
 Flask-Compress==1.5.0
 Flask-PyMongo==2.3.0
 Flask-RESTful==0.3.8
+Flask-Session==0.3.2
 Flask-SSLify==0.1.5
 Flask-Sockets==0.2.1
 GitHub-Flask==3.2.0
