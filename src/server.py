@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, redirect, url_for, session, g, Response, render_template, send_file
 import flask_restful
 from flask_compress import Compress
+from flask_session import Session
 from flask_sslify import SSLify
 import github
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -30,6 +31,25 @@ app = Flask(
     static_folder='../static',
     template_folder='../templates'
 )
+
+mongo_uri = os.getenv(
+    'MONGODB_URI',
+    'mongodb://localhost:27017/worlddriven'
+) + '?retryWrites=false'
+app.config['MONGO_URI'] = mongo_uri
+mongo = PyMongo(app)
+
+mongo_parts = mongo_uri.split('/')
+mongo_db = mongo_parts.pop().split('?')[0   ]
+
+SESSION_TYPE = 'mongodb'
+SESSION_MONGODB = mongo.cx
+SESSION_MONGODB_DB = mongo_db
+SESSION_MONGODB_COLLECT = 'sessions'
+
+app.config.from_object(__name__)
+Session(app)
+
 app.register_blueprint(static)
 
 if not os.getenv('DEBUG'):
@@ -40,12 +60,6 @@ Compress(app)
 
 api = flask_restful.Api(app)
 
-mongo_uri = os.getenv(
-    'MONGODB_URI',
-    'mongodb://localhost:27017/worlddriven'
-) + '?retryWrites=false'
-app.config['MONGO_URI'] = mongo_uri
-mongo = PyMongo(app)
 apiendpoint.mongo = mongo
 routes.githubWebHook.mongo = mongo
 
@@ -71,6 +85,9 @@ def token_getter():
 
 @app.route('/v1/repositories')
 def repositories():
+    if not g.user:
+        return 401;
+
     github_client = github.Github(g.user['github_access_token'])
     user = github_client.get_user()
     github_repositories = user.get_repos(type='owner')
@@ -116,8 +133,8 @@ def login():
 
 @app.route('/logout/')
 def logout():
-    session.pop('user_id', None)
-    return redirect(url_for('index'))
+    session.clear()
+    return redirect('/')
 
 
 @app.route('/github-callback/')
@@ -134,7 +151,7 @@ def authorized(oauth_token):
         })
         user = mongo.db.users.find_one({'_id': insert.inserted_id})
 
-    session['user_id'] = str(user['_id'])
+    session['user_id'] = user['_id']
     return redirect('/dashboard')
 
 

@@ -30,23 +30,41 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
       method: 'GET',
     });
     fetch(getUser)
-      .then((res) => res.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
       .then((result) => {
         this.setState({
           user: result.name,
         });
+      })
+      .catch(() => {
+      // TODO better show a message and delete cookie?
+        window.location.replace('/');
       });
 
     const getRepositories = new Request(`/v1/repositories`, {
       method: 'GET',
     });
     fetch(getRepositories)
-      .then((res) => res.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
       .then((result) => {
         this.setState({
           repositories: result,
           fetched: true,
         });
+      })
+      .catch(() => {
+      // TODO better show a message and delete cookie?
+        window.location.replace('/');
       });
   }
 
@@ -95,6 +113,14 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
 
     return (
       <div style={style}>
+        <div className="top">
+          <div className="login">
+            <a href="/logout">
+              <span className="logintitle">Logout</span>
+              <img src="/static/images/GitHub-Mark-120px-plus.png" width="30" />
+            </a>
+          </div>
+        </div>
         <h1>{ this.state.user }</h1>
         Here you can enable world driven for each of your repositories. When
         enabled pull requests are watched and automatically emerged based on the
