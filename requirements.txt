@@ -11,7 +11,7 @@ GitHub-Flask==3.2.0
 gunicorn==20.0.4
 mock==3.0.5
 PyGithub==1.51
-pytest==5.4.2
+pytest==5.4.3
 pytest-pythonpath==0.7.3
-pytest-cov==2.8.1
-requests==2.23.0
+pytest-cov==2.10.0
+requests==2.24.0

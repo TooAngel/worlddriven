@@ -206,7 +206,8 @@ def ws_admin_logs(ws):
             try:
                 ws.send(decoded_line + '\n')
             except Exception as e:
-                logging.exception(e)
+                logging.error(dir(e))
+                logging.error('/admin/logs ws.send() exception {}'.format(e))
                 break
 
     logging.info('websocket connection ended')
