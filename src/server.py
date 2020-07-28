@@ -206,7 +206,7 @@ def ws_admin_logs(ws):
             try:
                 ws.send(decoded_line + '\n')
             except Exception as e:
-                logging.error(dir(e))
+                logging.error('error args {} errno {} strerror {}'.format(e.args, e.errno, e.strerror))
                 logging.error('/admin/logs ws.send() exception {}'.format(e))
                 break
 
