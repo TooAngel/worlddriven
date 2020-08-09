@@ -31,8 +31,8 @@ class PullRequest(object):
         })
         token = mongo_repository['github_access_token']
         github_client = github.Github(token)
-        repository = github_client.get_repo(data['repository']['id'])
-        pull_request = repository.get_pull(data['pull_request']['number'])
+        repository = github_client.get_repo(self.data['repository']['id'])
+        pull_request = repository.get_pull(self.data['pull_request']['number'])
 
         pr = PR(repository, pull_request)
         pr.get_contributors()
@@ -49,6 +49,11 @@ class PullRequest(object):
             pr.days_to_merge.seconds / 3600
         )
         _set_status(repository, pull_request, 'success', status_message)
+        pull_request.create_issue_comment('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} days.
+
+        `Approved` reviews will speed this up.
+        `Request Changes` reviews will slow it down or stop it.
+        '''.format(pr.days_to_merge.days))
 
     def execute_synchronize(self):
         logging.info('execute_synchronize {}'.format(self.data))
