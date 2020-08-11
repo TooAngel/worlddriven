@@ -76,6 +76,7 @@ class PullRequest(object):
     def get_latest_dates(self):
         issue = self.repository.get_issue(self.pull_request.number)
         issue_events = [event for event in issue.get_events() if event.event == 'unlabeled' and event.raw_data['label']['name'] == 'WIP']
+        # TODO this is removing the label, instead draft PRs should be used - so need to check when the status changed to open
         self.unlabel_date = _get_last_date(issue_events)
         events = [event for event in self.pull_request.head.repo.get_events() if event.type == 'PushEvent' and event.payload['ref'] == 'refs/heads/{}'.format(self.pull_request.head.ref)]
         self.push_date = _get_last_date(events)
@@ -96,24 +97,8 @@ class PullRequest(object):
         self.commits = self.pull_request.commits
 
     def mergeable_pull_request(self):
-        return not self.pull_request.title.startswith('[WIP]')
-
-    def isWIP(self):
-        if not self.mergeable_pull_request():
-            issue = self.repository.get_issue(self.pull_request.number)
-            labels = [item for item in issue.labels if item.name == 'WIP']
-            if not labels:
-                logging.info('Set WIP label')
-                issue.add_to_labels('WIP')
-                _set_status(self.pull_request, self.repository, 'error', 'The title is prefixed with [WIP]')
-            return True
-
-        issue = self.repository.get_issue(self.pull_request.number)
-        labels = [item for item in issue.labels if item.name == 'WIP']
-        if labels:
-            logging.info('Remove label')
-            issue.remove_from_labels(labels[0])
-        return False
+        # TODO actual check the PR here
+        return True
 
     def check_for_merge(self):
         if self.coefficient >= 0:
@@ -150,8 +135,6 @@ class PullRequest(object):
         self.get_latest_dates()
         self.get_merge_time()
 
-        if self.isWIP():
-            return
         self.check_for_merge()
 
 
