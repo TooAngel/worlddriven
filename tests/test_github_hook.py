@@ -5,7 +5,7 @@ import json
 from mock import patch, MagicMock
 
 
-class ReviewTestCase(unittest.TestCase):
+class GithubHookTestCase(unittest.TestCase):
 
     def setUp(self):
         server.app.testing = True
@@ -26,19 +26,21 @@ class ReviewTestCase(unittest.TestCase):
         PR_mock.coefficient = 0.5
         PR_mock.days_to_merge.seconds = 55
         PR_mock.days_to_merge.days = 5
+        PR_mock.days_to_merge.hours = 7
 
         Commit_mock = MagicMock();
 
         PullRequest_mock = MagicMock()
         PullRequest_mock.get_commits.return_value = [Commit_mock]
+        PullRequest_mock.number = 42
 
-        class Repository_mock():
-            def get_pull(repo, pull_number):
-                return PullRequest_mock
+        Repository_mock = MagicMock()
+        Repository_mock.get_pull.return_value = PullRequest_mock
+        Repository_mock.full_name = 'test'
 
         class Github_mock():
             def get_repo(self, repo_id):
-                return Repository_mock()
+                return Repository_mock
 
         github.Github.return_value = Github_mock()
 
@@ -65,8 +67,8 @@ class ReviewTestCase(unittest.TestCase):
         data = json.loads(rv.data.decode('utf-8'))
 
         self.assertEqual('All fine, thanks', data['info'])
-        PullRequest_mock.create_issue_comment.assert_called_with('This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in 5 days.\n\n        `Approved` reviews will speed this up.\n        `Request Changes` reviews will slow it down or stop it.\n        ')
-        Commit_mock.create_status.assert_called_with('success', '', '1/2 50.0 Merge in 5 days 0.015277777777777777', 'worlddriven')
+        PullRequest_mock.create_issue_comment.assert_called_with('This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in 5 days an 7 hours.\nCheck the `worlddriven` status checks or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.\n\n`Approved` reviews will speed this up.\n`Request Changes` reviews will slow it down or stop it.')
+        Commit_mock.create_status.assert_called_with('success', 'https://www.worlddriven.org/test/pull/42', '1/2 50.0 Merge in 5 days 0.015277777777777777', 'worlddriven')
 
 if __name__ == '__main__':
     unittest.main()

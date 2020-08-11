@@ -79,7 +79,8 @@ class ReviewTestCase(unittest.TestCase):
                 'submitted_at': 'submitted_at'
             },
             'repository': {
-                'id': 'id'
+                'id': 'id',
+                'full_name': 'full_name'
             },
             'pull_request': {
                 'number': 42
