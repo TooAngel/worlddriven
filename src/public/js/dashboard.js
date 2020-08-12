@@ -26,6 +26,8 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
    * @return {void}
    **/
   componentDidMount() {
+    console.log(`${window.location.protocol}//${window.location.host}/v1/user`);
+    console.log(JSON.stringify(window.location));
     const getUser = new Request(`${window.location.protocol}//${window.location.host}/v1/user`, {
       method: 'GET',
     });
