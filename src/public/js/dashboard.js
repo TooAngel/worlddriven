@@ -26,7 +26,7 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
    * @return {void}
    **/
   componentDidMount() {
-    const getUser = new Request(`/v1/user`, {
+    const getUser = new Request(`${window.location.protocol}//${window.location.host}/v1/user`, {
       method: 'GET',
     });
     fetch(getUser)
@@ -46,7 +46,7 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
         window.location.replace('/');
       });
 
-    const getRepositories = new Request(`/v1/repositories`, {
+    const getRepositories = new Request(`${window.location.protocol}//${window.location.host}/v1/repositories`, {
       method: 'GET',
     });
     fetch(getRepositories)
@@ -75,7 +75,7 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
    * @return {void}
    **/
   handleChange(event) {
-    const updateRepository = new Request(`/v1/${event.target.name}/`, {
+    const updateRepository = new Request(`${window.location.protocol}//${window.location.host}/v1/${event.target.name}/`, {
       method: 'PUT',
       headers: {'content-type': 'application/json'},
       body: JSON.stringify({'checked': event.target.checked}),

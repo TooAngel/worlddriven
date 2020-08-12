@@ -6,10 +6,12 @@ from PullRequest import PullRequest as PR
 
 mongo = None
 
+DOMAIN = 'https://www.worlddriven.org'
 
 def _set_status(repository, pull_request, state, message):
     commit = pull_request.get_commits()[0]
-    commit.create_status(state, '', message, 'worlddriven')
+    url = '{}/{}/pull/{}'.format(DOMAIN, repository.full_name, pull_request.number)
+    commit.create_status(state, url, message, 'worlddriven')
 
 class PullRequest(object):
     def __init__(self, data):
@@ -49,11 +51,14 @@ class PullRequest(object):
             pr.days_to_merge.seconds / 3600
         )
         _set_status(repository, pull_request, 'success', status_message)
-        pull_request.create_issue_comment('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} days.
 
-        `Approved` reviews will speed this up.
-        `Request Changes` reviews will slow it down or stop it.
-        '''.format(pr.days_to_merge.days))
+        # Refactor `_set_status` to accept the url (or get the url from PR)
+        url = '{}/{}/pull/{}'.format(DOMAIN, repository.full_name, pull_request.number)
+        pull_request.create_issue_comment('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} days an {} hours.
+Check the `worlddriven` status checks or the [dashboard]({}) for actual stats.
+
+`Approved` reviews will speed this up.
+`Request Changes` reviews will slow it down or stop it.'''.format(pr.days_to_merge.days, pr.days_to_merge.hours, url))
 
     def execute_synchronize(self):
         logging.info('execute_synchronize {}'.format(self.data))
@@ -90,7 +95,7 @@ class GithubWebHook(flask_restful.Resource):
 
             logging.info('Need repository name: {}'.format(data))
             mongo_repository = mongo.db.repositories.find_one(
-                {'full_name': data['repository']['id']}
+                {'full_name': data['repository']['full_name']}
             )
             token = mongo_repository['github_access_token']
             github_client = github.Github(token)
