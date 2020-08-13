@@ -158,6 +158,9 @@ def check_pull_requests():
         github_client = github.Github(mongo_repository['github_access_token'])
         repository = github_client.get_repo(repository_name)
         for pull_request in repository.get_pulls():
+            if not pull_request.mergeable:
+                logging.info('Pull Request {} is not mergeable'.format(pull_request.title.encode('utf-8')))
+                continue
             check_pull_request(repository, pull_request, False, mongo_repository['github_access_token'])
 
 if __name__ == '__main__':
