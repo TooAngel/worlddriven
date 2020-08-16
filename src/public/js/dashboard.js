@@ -26,9 +26,7 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
    * @return {void}
    **/
   componentDidMount() {
-    console.log(`${window.location.protocol}//${window.location.host}/v1/user`);
-    console.log(JSON.stringify(window.location));
-    const getUser = new Request(`${window.location.protocol}//${window.location.host}/v1/user`, {
+    const getUser = new Request(`/v1/user/`, {
       method: 'GET',
     });
     fetch(getUser)
@@ -48,7 +46,7 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
         window.location.replace('/');
       });
 
-    const getRepositories = new Request(`${window.location.protocol}//${window.location.host}/v1/repositories`, {
+    const getRepositories = new Request(`/v1/repositories/`, {
       method: 'GET',
     });
     fetch(getRepositories)

@@ -1,0 +1,20 @@
+{
+  "name": "world driven",
+  "description": "World driven introduces a contribution based weighted voting system for automatic merging of pull requests. As soon as you contribute to a project, you get a share or responsibility for the progress of the project.",
+  "keywords": [
+    "Contribution based weighted voting system",
+    "Dynamic code ownership",
+    "Auto merge"
+  ],
+  "website": "https://www.worlddriven.org/",
+  "repository": "https://github.com/tooangel/worlddriven",
+  "logo": "https://www.worlddriven.org/static/images/globe.svg",
+  "success_url": "/",
+  "buildpacks": [
+    {"url": "heroku/nodejs"},
+    {"url": "heroku/python"}
+  ],
+  "addons": [
+    "mongolab:sandbox"
+  ]
+}

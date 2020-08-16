@@ -24,9 +24,8 @@ class GithubHookTestCase(unittest.TestCase):
         PR_mock.votes = 1
         PR_mock.votes_total = 2
         PR_mock.coefficient = 0.5
-        PR_mock.days_to_merge.seconds = 55
         PR_mock.days_to_merge.days = 5
-        PR_mock.days_to_merge.hours = 7
+        PR_mock.days_to_merge.seconds = 7.2 * 3600
 
         Commit_mock = MagicMock();
 
@@ -67,8 +66,8 @@ class GithubHookTestCase(unittest.TestCase):
         data = json.loads(rv.data.decode('utf-8'))
 
         self.assertEqual('All fine, thanks', data['info'])
-        PullRequest_mock.create_issue_comment.assert_called_with('This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in 5 days an 7 hours.\nCheck the `worlddriven` status checks or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.\n\n`Approved` reviews will speed this up.\n`Request Changes` reviews will slow it down or stop it.')
-        Commit_mock.create_status.assert_called_with('success', 'https://www.worlddriven.org/test/pull/42', '1/2 50.0 Merge in 5 days 0.015277777777777777', 'worlddriven')
+        PullRequest_mock.create_issue_comment.assert_called_with('This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in 5 days and 7 hours.\nCheck the `worlddriven` status checks or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.\n\n`Approved` reviews will speed this up.\n`Request Changes` reviews will slow it down or stop it.')
+        Commit_mock.create_status.assert_called_with('success', 'https://www.worlddriven.org/test/pull/42', '1/2 50.0 Merge in 5 days 7.2', 'worlddriven')
 
 if __name__ == '__main__':
     unittest.main()
