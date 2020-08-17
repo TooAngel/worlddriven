@@ -37,11 +37,10 @@ class GithubHookTestCase(unittest.TestCase):
         Repository_mock.get_pull.return_value = PullRequest_mock
         Repository_mock.full_name = 'test'
 
-        class Github_mock():
-            def get_repo(self, repo_id):
-                return Repository_mock
+        Github_mock = MagicMock()
+        Github_mock.get_repo.return_value = Repository_mock
 
-        github.Github.return_value = Github_mock()
+        github.Github.return_value = Github_mock
 
         headers = {
             'Content-Type': 'application/json',
@@ -68,6 +67,132 @@ class GithubHookTestCase(unittest.TestCase):
         self.assertEqual('All fine, thanks', data['info'])
         PullRequest_mock.create_issue_comment.assert_called_with('This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in 5 days and 7 hours.\nCheck the `worlddriven` status checks or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.\n\n`Approved` reviews will speed this up.\n`Request Changes` reviews will slow it down or stop it.')
         Commit_mock.create_status.assert_called_with('success', 'https://www.worlddriven.org/test/pull/42', '1/2 50.0 Merge in 5 days 7.2', 'worlddriven')
+
+    @patch('routes.githubWebHook.logging')
+    @patch('routes.githubWebHook.mongo')
+    @patch('routes.githubWebHook.PR')
+    @patch('routes.githubWebHook.github')
+    def test_pull_request_synchronize(self, github, PR, mongo, logging):
+        def PyMongo_mock(app):
+            print('PyMongo_mock')
+        PyMongo = PyMongo_mock
+
+        PullRequest_mock = MagicMock()
+        PullRequest_mock.number = 42
+
+        Repository_mock = MagicMock()
+        Repository_mock.get_pull.return_value = PullRequest_mock
+        Repository_mock.full_name = 'test'
+
+        class Github_mock():
+            def get_repo(self, repo_id):
+                return Repository_mock
+
+        github.Github.return_value = Github_mock()
+
+        headers = {
+            'Content-Type': 'application/json',
+            'X-GitHub-Event': 'pull_request'
+        }
+        data = {
+            'action': 'synchronize',
+        }
+        rv = self.app.post(
+            '/github/',
+            data=json.dumps(data),
+            headers=headers,
+            base_url='https://localhost'
+        )
+        print(self.app)
+        print(rv.data)
+        data = json.loads(rv.data.decode('utf-8'))
+
+        self.assertEqual('All fine, thanks', data['info'])
+        logging.info.assert_called_with("execute_synchronize {'action': 'synchronize'}");
+
+    @patch('routes.githubWebHook.logging')
+    @patch('routes.githubWebHook.mongo')
+    @patch('routes.githubWebHook.PR')
+    @patch('routes.githubWebHook.github')
+    def test_pull_request_edited(self, github, PR, mongo, logging):
+        def PyMongo_mock(app):
+            print('PyMongo_mock')
+        PyMongo = PyMongo_mock
+
+        PullRequest_mock = MagicMock()
+        PullRequest_mock.number = 42
+
+        Repository_mock = MagicMock()
+        Repository_mock.get_pull.return_value = PullRequest_mock
+        Repository_mock.full_name = 'test'
+
+        class Github_mock():
+            def get_repo(self, repo_id):
+                return Repository_mock
+
+        github.Github.return_value = Github_mock()
+
+        headers = {
+            'Content-Type': 'application/json',
+            'X-GitHub-Event': 'pull_request'
+        }
+        data = {
+            'action': 'edited',
+        }
+        rv = self.app.post(
+            '/github/',
+            data=json.dumps(data),
+            headers=headers,
+            base_url='https://localhost'
+        )
+        print(self.app)
+        print(rv.data)
+        data = json.loads(rv.data.decode('utf-8'))
+
+        self.assertEqual('All fine, thanks', data['info'])
+        logging.info.assert_called_with("execute_edited {'action': 'edited'}");
+
+    @patch('routes.githubWebHook.logging')
+    @patch('routes.githubWebHook.mongo')
+    @patch('routes.githubWebHook.PR')
+    @patch('routes.githubWebHook.github')
+    def test_pull_request_closed(self, github, PR, mongo, logging):
+        def PyMongo_mock(app):
+            print('PyMongo_mock')
+        PyMongo = PyMongo_mock
+
+        PullRequest_mock = MagicMock()
+        PullRequest_mock.number = 42
+
+        Repository_mock = MagicMock()
+        Repository_mock.get_pull.return_value = PullRequest_mock
+        Repository_mock.full_name = 'test'
+
+        class Github_mock():
+            def get_repo(self, repo_id):
+                return Repository_mock
+
+        github.Github.return_value = Github_mock()
+
+        headers = {
+            'Content-Type': 'application/json',
+            'X-GitHub-Event': 'pull_request'
+        }
+        data = {
+            'action': 'closed',
+        }
+        rv = self.app.post(
+            '/github/',
+            data=json.dumps(data),
+            headers=headers,
+            base_url='https://localhost'
+        )
+        print(self.app)
+        print(rv.data)
+        data = json.loads(rv.data.decode('utf-8'))
+
+        self.assertEqual('All fine, thanks', data['info'])
+        logging.info.assert_called_with("execute_closed {'action': 'closed'}");
 
 if __name__ == '__main__':
     unittest.main()
