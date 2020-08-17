@@ -3,6 +3,7 @@ from flask import request
 import logging
 import github
 from PullRequest import PullRequest as PR
+import math
 
 mongo = None
 
@@ -54,11 +55,11 @@ class PullRequest(object):
 
         # Refactor `_set_status` to accept the url (or get the url from PR)
         url = '{}/{}/pull/{}'.format(DOMAIN, repository.full_name, pull_request.number)
-        pull_request.create_issue_comment('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} days an {} hours.
+        pull_request.create_issue_comment('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} days and {} hours.
 Check the `worlddriven` status checks or the [dashboard]({}) for actual stats.
 
 `Approved` reviews will speed this up.
-`Request Changes` reviews will slow it down or stop it.'''.format(pr.days_to_merge.days, pr.days_to_merge.hours, url))
+`Request Changes` reviews will slow it down or stop it.'''.format(pr.days_to_merge.days, math.floor(pr.days_to_merge.seconds / 3600), url))
 
     def execute_synchronize(self):
         logging.info('execute_synchronize {}'.format(self.data))

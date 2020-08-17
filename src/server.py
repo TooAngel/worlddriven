@@ -1,4 +1,5 @@
 import os
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask import Flask, request, redirect, url_for, session, g, Response, render_template, send_file
 import flask_restful
 from flask_compress import Compress
@@ -31,6 +32,7 @@ app = Flask(
     static_folder='../static',
     template_folder='../templates'
 )
+app.wsgi_app = ProxyFix(app.wsgi_app)
 
 mongo_uri = os.getenv(
     'MONGODB_URI',
@@ -74,6 +76,8 @@ def before_request():
     if 'user_id' in session:
         user = mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
         g.user = user
+    else:
+        logging.info('no user in session')
 
 
 @github_oauth.access_token_getter
@@ -82,8 +86,10 @@ def token_getter():
     if user is not None:
         user = user['github_access_token']
         return user
+    else:
+        logging.info('No g user')
 
-@app.route('/v1/repositories')
+@app.route('/v1/repositories', strict_slashes=False)
 def repositories():
     if not g.user:
         return 401;
@@ -118,7 +124,7 @@ def repositories():
     return Response(json.dumps(response),  mimetype='application/json')
 
 
-@app.route('/<org_name>/<project_name>/pull/<int:pull_request_number>')
+@app.route('/<org_name>/<project_name>/pull/<int:pull_request_number>', strict_slashes=False)
 def show_pull_request(org_name, project_name, pull_request_number):
     return app.send_static_file('pull_request.html')
 
@@ -142,7 +148,7 @@ def logout():
 def authorized(oauth_token):
     if oauth_token is None:
         logging.info("Authorization failed.")
-        return redirect(redirect_url)
+        return redirect('/')
 
     user = mongo.db.users.find_one({'github_access_token': oauth_token})
     if not user:
@@ -155,7 +161,7 @@ def authorized(oauth_token):
     return redirect('/dashboard')
 
 
-@app.route('/v1/user/')
+@app.route('/v1/user', strict_slashes=False)
 def user():
     return Response(
         json.dumps(github_oauth.get('user')),
