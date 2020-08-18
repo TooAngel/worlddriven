@@ -80,6 +80,7 @@ class GithubWebHook(flask_restful.Resource):
     def handle_pull_request(self, data):
         pull_request = PullRequest(data)
         pull_request.execute()
+        print('aa')
         return {'info': 'All fine, thanks'}
 
     def handle_pull_request_review(self, data):
