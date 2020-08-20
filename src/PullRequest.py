@@ -12,19 +12,6 @@ DOMAIN = 'https://www.worlddriven.org'
 def toDateTime(value):
     return datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ')
 
-def _set_status(pull_request, repository, state, message):
-    commit = pull_request.get_commits().reversed[0]
-    url = '{}/{}/pull/{}'.format(DOMAIN, repository.full_name, pull_request.number)
-    statuses = commit.get_statuses()
-    for status in statuses:
-        if status.context == 'World driven' and status.description == message:
-            return
-    logging.info('Set Status message: {} {} {}'.format(state, url, message))
-    try:
-        commit.create_status(state, url, message, 'World driven')
-    except Exception as e:
-        logging.exception('PullRequest._set_status exception {}'.format(commit))
-
 def _get_last_date(data):
     data_sorted = sorted(data, key=lambda event: event.created_at, reverse=True)
     return data_sorted[0].created_at if len(data_sorted) > 0 else datetime(1960, 1, 1)
@@ -34,6 +21,28 @@ class PullRequest(object):
         self.repository = repository
         self.pull_request = pull_request
         self.token = token
+        self.url = '{}/{}/pull/{}'.format(DOMAIN, self.repository.full_name, self.pull_request.number)
+
+    def set_status(self):
+        if self.coefficient >= 0:
+            status_message = '{} Merge at {}'.format(round(self.coefficient, 2), self.max_date + self.merge_duration)
+            self._update_status('success', status_message)
+        else:
+            status_message = '{} Will not merge'.format(round(self.coefficient, 2))
+            self._update_status('error', status_message)
+            return
+
+    def _update_status(self, state, message):
+        commit = self.pull_request.get_commits().reversed[0]
+        statuses = commit.get_statuses()
+        for status in statuses:
+            if status.context == 'World driven' and status.description == message:
+                return
+        logging.info('Set Status message: {} {} {}'.format(state, self.url, message))
+        try:
+            commit.create_status(state, self.url, message, 'World driven')
+        except Exception as e:
+            logging.exception('PullRequest._set_status exception {}'.format(commit))
 
     def get_contributors(self):
         contributors = self.repository.get_stats_contributors()
@@ -101,13 +110,7 @@ class PullRequest(object):
         return True
 
     def check_for_merge(self):
-        if self.coefficient >= 0:
-            status_message = '{} Merge at {}'.format(round(self.coefficient, 2), self.max_date + self.merge_duration)
-            _set_status(self.pull_request, self.repository, 'success', status_message)
-        else:
-            status_message = '{} Will not merge'.format(round(self.coefficient, 2))
-            _set_status(self.pull_request, self.repository, 'error', status_message)
-            return
+        self.set_status()
 
         if self.max_date + self.merge_duration < datetime.utcnow() :
             logging.info('Would merge now')
