@@ -61,7 +61,7 @@ class GithubWebHook(flask_restful.Resource):
     def handle_push(self, data):
         # print('push - ignored')
         # print(data)
-        pass
+        return {'info': 'All fine, thanks'} 
 
     def handle_pull_request(self, data):
         pull_request = PullRequest(data)
