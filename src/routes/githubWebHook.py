@@ -9,11 +9,6 @@ mongo = None
 
 DOMAIN = 'https://www.worlddriven.org'
 
-def _set_status(repository, pull_request, state, message):
-    commit = pull_request.get_commits()[0]
-    url = '{}/{}/pull/{}'.format(DOMAIN, repository.full_name, pull_request.number)
-    commit.create_status(state, url, message, 'worlddriven')
-
 class PullRequest(object):
     def __init__(self, data):
         self.data = data
@@ -44,22 +39,13 @@ class PullRequest(object):
         pr.get_latest_dates()
         pr.get_merge_time()
 
-        status_message = '{}/{} {} Merge in {} days {}'.format(
-            pr.votes,
-            pr.votes_total,
-            round(pr.coefficient, 3) * 100,
-            pr.days_to_merge.days,
-            pr.days_to_merge.seconds / 3600
-        )
-        _set_status(repository, pull_request, 'success', status_message)
+        pr.set_status()
 
-        # Refactor `_set_status` to accept the url (or get the url from PR)
-        url = '{}/{}/pull/{}'.format(DOMAIN, repository.full_name, pull_request.number)
         pull_request.create_issue_comment('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} days and {} hours.
 Check the `worlddriven` status checks or the [dashboard]({}) for actual stats.
 
 `Approved` reviews will speed this up.
-`Request Changes` reviews will slow it down or stop it.'''.format(pr.days_to_merge.days, math.floor(pr.days_to_merge.seconds / 3600), url))
+`Request Changes` reviews will slow it down or stop it.'''.format(pr.days_to_merge.days, math.floor(pr.days_to_merge.seconds / 3600), pr.url))
 
     def execute_synchronize(self):
         logging.info('execute_synchronize {}'.format(self.data))
@@ -80,7 +66,6 @@ class GithubWebHook(flask_restful.Resource):
     def handle_pull_request(self, data):
         pull_request = PullRequest(data)
         pull_request.execute()
-        print('aa')
         return {'info': 'All fine, thanks'}
 
     def handle_pull_request_review(self, data):
@@ -104,7 +89,7 @@ class GithubWebHook(flask_restful.Resource):
             repository = github_client.get_repo(data['repository']['id'])
             pull_request = repository.get_pull(data['pull_request']['number'])
 
-            pr = PR(repository, pull_request)
+            pr = PR(repository, pull_request, token)
             pr.get_contributors()
             pr.update_contributors_with_reviews()
 
@@ -128,17 +113,13 @@ class GithubWebHook(flask_restful.Resource):
             pr.get_latest_dates()
             pr.get_merge_time()
 
-            status_message = '{}/{} {} Merge in {} days {}'.format(
-                pr.votes,
-                pr.votes_total,
-                round(pr.coefficient, 3) * 100,
-                pr.days_to_merge.days,
-                pr.days_to_merge.seconds / 3600
-            )
-            _set_status(repository, pull_request, 'success', status_message)
+            pr.set_status()
+
             pull_request.create_issue_comment('''Thank you for the review.
             This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} days, votes {}/{}.
-            '''.format(pr.days_to_merge.days, pr.votes, pr.votes_total))
+
+            Check the `worlddriven` status checks or the [dashboard]({}) for actual stats.
+            '''.format(pr.days_to_merge.days, pr.votes, pr.votes_total, pr.url))
             return {'info': 'All fine, thanks'}
 
     def post(self):

@@ -1,6 +1,7 @@
 import server
 import unittest
 import json
+from datetime import datetime, timedelta
 
 from mock import patch, MagicMock
 
@@ -11,27 +12,25 @@ class GithubHookTestCase(unittest.TestCase):
         server.app.testing = True
         self.app = server.app.test_client()
 
+    @patch('PullRequest.fetch_reviews')
     @patch('routes.githubWebHook.mongo')
-    @patch('routes.githubWebHook.PR')
     @patch('routes.githubWebHook.github')
-    def test_pull_request_opened(self, github, PR, mongo):
+    def test_pull_request_opened(self, github, mongo, fetch_reviews):
         def PyMongo_mock(app):
             print('PyMongo_mock')
         PyMongo = PyMongo_mock
 
-        PR_mock = MagicMock()
-        PR.return_value = PR_mock
-        PR_mock.votes = 1
-        PR_mock.votes_total = 2
-        PR_mock.coefficient = 0.5
-        PR_mock.days_to_merge.days = 5
-        PR_mock.days_to_merge.seconds = 7.2 * 3600
-
         Commit_mock = MagicMock();
+        Commit_mock.commit.author.date = datetime.utcnow()
+
+        Get_commits_mock = MagicMock()
+        Get_commits_mock.reversed = [Commit_mock]
 
         PullRequest_mock = MagicMock()
-        PullRequest_mock.get_commits.return_value = [Commit_mock]
+        PullRequest_mock.get_commits.return_value = Get_commits_mock
         PullRequest_mock.number = 42
+        PullRequest_mock.created_at = datetime.utcnow()
+        PullRequest_mock.commits = 1
 
         Repository_mock = MagicMock()
         Repository_mock.get_pull.return_value = PullRequest_mock
@@ -65,8 +64,8 @@ class GithubHookTestCase(unittest.TestCase):
         data = json.loads(rv.data.decode('utf-8'))
 
         self.assertEqual('All fine, thanks', data['info'])
-        PullRequest_mock.create_issue_comment.assert_called_with('This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in 5 days and 7 hours.\nCheck the `worlddriven` status checks or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.\n\n`Approved` reviews will speed this up.\n`Request Changes` reviews will slow it down or stop it.')
-        Commit_mock.create_status.assert_called_with('success', 'https://www.worlddriven.org/test/pull/42', '1/2 50.0 Merge in 5 days 7.2', 'worlddriven')
+        PullRequest_mock.create_issue_comment.assert_called_with('This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in 9 days and 23 hours.\nCheck the `worlddriven` status checks or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.\n\n`Approved` reviews will speed this up.\n`Request Changes` reviews will slow it down or stop it.')
+        Commit_mock.create_status.assert_called_with('success', 'https://www.worlddriven.org/test/pull/42', '0 Merge at {}'.format(PullRequest_mock.created_at + timedelta(days=10)), 'World driven')
 
     @patch('routes.githubWebHook.logging')
     @patch('routes.githubWebHook.mongo')
