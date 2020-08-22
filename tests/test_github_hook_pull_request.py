@@ -61,9 +61,9 @@ class GithubHookTestCase(unittest.TestCase):
             headers=headers,
             base_url='https://localhost'
         )
-        data = json.loads(rv.data.decode('utf-8'))
+        response = json.loads(rv.data.decode('utf-8'))
 
-        self.assertEqual('All fine, thanks', data['info'])
+        self.assertEqual('All fine, thanks', response['info'])
         PullRequest_mock.create_issue_comment.assert_called_with('This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in 9 days and 23 hours.\nCheck the `worlddriven` status checks or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.\n\n`Approved` reviews will speed this up.\n`Request Changes` reviews will slow it down or stop it.')
         Commit_mock.create_status.assert_called_with('success', 'https://www.worlddriven.org/test/pull/42', '0 Merge at {}'.format(PullRequest_mock.created_at + timedelta(days=10)), 'World driven')
 
@@ -102,11 +102,9 @@ class GithubHookTestCase(unittest.TestCase):
             headers=headers,
             base_url='https://localhost'
         )
-        print(self.app)
-        print(rv.data)
-        data = json.loads(rv.data.decode('utf-8'))
+        response = json.loads(rv.data.decode('utf-8'))
 
-        self.assertEqual('All fine, thanks', data['info'])
+        self.assertEqual('All fine, thanks', response['info'])
         logging.info.assert_called_with("execute_synchronize {'action': 'synchronize'}");
 
     @patch('routes.githubWebHook.logging')
@@ -146,9 +144,9 @@ class GithubHookTestCase(unittest.TestCase):
         )
         print(self.app)
         print(rv.data)
-        data = json.loads(rv.data.decode('utf-8'))
+        response = json.loads(rv.data.decode('utf-8'))
 
-        self.assertEqual('All fine, thanks', data['info'])
+        self.assertEqual('All fine, thanks', response['info'])
         logging.info.assert_called_with("execute_edited {'action': 'edited'}");
 
     @patch('routes.githubWebHook.logging')
@@ -188,9 +186,9 @@ class GithubHookTestCase(unittest.TestCase):
         )
         print(self.app)
         print(rv.data)
-        data = json.loads(rv.data.decode('utf-8'))
+        response = json.loads(rv.data.decode('utf-8'))
 
-        self.assertEqual('All fine, thanks', data['info'])
+        self.assertEqual('All fine, thanks', response['info'])
         logging.info.assert_called_with("execute_closed {'action': 'closed'}");
 
 if __name__ == '__main__':
