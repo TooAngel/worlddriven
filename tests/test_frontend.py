@@ -9,7 +9,7 @@ class FrontendTestCase(unittest.TestCase):
 
     def setUp(self):
         server.app.testing = True
-        server.app.config['SECRET_KEY'] = 'sekrit!'
+        server.app.config['SECRET_KEY'] = 'secret'
         self.app = server.app.test_client()
 
     def test_no_state(self):

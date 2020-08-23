@@ -1,2 +1,2 @@
-coverage run --source=. -m pytest
+coverage run -m pytest
 coverage html
