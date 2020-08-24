@@ -52,7 +52,6 @@ class PullRequest(object):
 
     def update_contributors_with_reviews(self):
         data = fetch_reviews(self.repository.full_name, self.pull_request.number, self.token)
-
         reviews_decided = [review for review in data if review['state'] != 'COMMENTED']
         for review in reviews_decided:
             value = 0
@@ -62,10 +61,10 @@ class PullRequest(object):
                 value = -1
 
             user = review['user']['login']
-
             if user not in self.contributors:
                 self.contributors[user] = {'name': review['user']['login'], 'review_value': value, 'review_date': review['submitted_at']}
                 continue
+
             if 'review_date' not in self.contributors[user] or toDateTime(self.contributors[user]['review_date']) < toDateTime(review['submitted_at']):
                 self.contributors[user]['review_value'] = value
                 self.contributors[user]['review_date'] = review['submitted_at']
@@ -77,7 +76,6 @@ class PullRequest(object):
         # Sum of total number of commits, initialize votes with the authors weight
         self.votes_total = sum(self.contributors[contributor].get('commits', 0) for contributor in self.contributors)
         self.votes = sum(self.contributors[contributor].get('review_value', 0) * self.contributors[contributor].get('commits', 0) for contributor in self.contributors)
-
         self.coefficient = 0
         if self.votes_total != 0:
             self.coefficient = float(self.votes) / float(self.votes_total)
@@ -106,13 +104,12 @@ class PullRequest(object):
         self.commits = self.pull_request.commits
 
     def mergeable_pull_request(self):
-        # TODO actual check the PR here
-        return True
+        self.pull_request.mergeable
 
     def check_for_merge(self):
         self.set_status()
 
-        if self.max_date + self.merge_duration < datetime.utcnow() :
+        if self.coefficient >= 0 and self.max_date + self.merge_duration < datetime.utcnow():
             logging.info('Would merge now')
             try:
                 self.pull_request.merge()
@@ -146,6 +143,7 @@ def check_pull_request(repository, pull_request, commentOnIssue, token):
 
     pr = PullRequest(repository, pull_request, token)
     pr.execute()
+    return pr
 
 
 def check_pull_requests():

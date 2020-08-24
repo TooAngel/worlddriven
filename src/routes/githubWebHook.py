@@ -9,6 +9,7 @@ mongo = None
 
 DOMAIN = 'https://www.worlddriven.org'
 
+
 class PullRequest(object):
     def __init__(self, data):
         self.data = data
@@ -61,7 +62,7 @@ class GithubWebHook(flask_restful.Resource):
     def handle_push(self, data):
         # print('push - ignored')
         # print(data)
-        return {'info': 'All fine, thanks'} 
+        return {'info': 'All fine, thanks'}
 
     def handle_pull_request(self, data):
         pull_request = PullRequest(data)
