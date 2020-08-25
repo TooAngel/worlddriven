@@ -20,7 +20,7 @@ class GithubHookTestCase(unittest.TestCase):
             print('PyMongo_mock')
         PyMongo = PyMongo_mock
 
-        Commit_mock = MagicMock();
+        Commit_mock = MagicMock()
         Commit_mock.commit.author.date = datetime.utcnow()
 
         Get_commits_mock = MagicMock()
@@ -64,7 +64,15 @@ class GithubHookTestCase(unittest.TestCase):
         response = json.loads(rv.data.decode('utf-8'))
 
         self.assertEqual('All fine, thanks', response['info'])
-        PullRequest_mock.create_issue_comment.assert_called_with('This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in 9 days and 23 hours.\nCheck the `worlddriven` status checks or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.\n\n`Approved` reviews will speed this up.\n`Request Changes` reviews will slow it down or stop it.')
+        PullRequest_mock.create_issue_comment.assert_called_with('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in 9 days and 23 hours.
+The start date is based on the latest Commit date / Pull Request created date / (force) Push date.
+The time to merge is 5 days plus 5 days for each commit.
+Check the `worlddriven` status checks or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.
+
+![Files changed](https://www.worlddriven.org/static/images/github-files-changed.png)
+![Review changes](https://www.worlddriven.org/static/images/github-review-changes.png)
+![Approve](https://www.worlddriven.org/static/images/github-approve.png) reviews will speed this up.
+![Request changes](https://www.worlddriven.org/static/images/github-request-changes.png) reviews will slow it down or stop it.''')
         Commit_mock.create_status.assert_called_with('success', 'https://www.worlddriven.org/test/pull/42', '0 Merge at {}'.format(PullRequest_mock.created_at + timedelta(days=10)), 'World driven')
 
     @patch('routes.githubWebHook.logging')
@@ -105,7 +113,7 @@ class GithubHookTestCase(unittest.TestCase):
         response = json.loads(rv.data.decode('utf-8'))
 
         self.assertEqual('All fine, thanks', response['info'])
-        logging.info.assert_called_with("execute_synchronize {'action': 'synchronize'}");
+        logging.info.assert_called_with("execute_synchronize {'action': 'synchronize'}")
 
     @patch('routes.githubWebHook.logging')
     @patch('routes.githubWebHook.mongo')
@@ -147,7 +155,7 @@ class GithubHookTestCase(unittest.TestCase):
         response = json.loads(rv.data.decode('utf-8'))
 
         self.assertEqual('All fine, thanks', response['info'])
-        logging.info.assert_called_with("execute_edited {'action': 'edited'}");
+        logging.info.assert_called_with("execute_edited {'action': 'edited'}")
 
     @patch('routes.githubWebHook.logging')
     @patch('routes.githubWebHook.mongo')
@@ -189,7 +197,8 @@ class GithubHookTestCase(unittest.TestCase):
         response = json.loads(rv.data.decode('utf-8'))
 
         self.assertEqual('All fine, thanks', response['info'])
-        logging.info.assert_called_with("execute_closed {'action': 'closed'}");
+        logging.info.assert_called_with("execute_closed {'action': 'closed'}")
+
 
 if __name__ == '__main__':
     unittest.main()

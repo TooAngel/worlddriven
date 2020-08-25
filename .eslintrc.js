@@ -1,5 +1,5 @@
 module.exports = {
-  'ignorePatterns': ['tmp/', 'node_modules/', 'dist/'],
+  'ignorePatterns': ['tmp/', 'node_modules/', 'dist/', 'htmlcov/'],
   'extends': [
     'google',
     'plugin:react/recommended',

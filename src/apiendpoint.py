@@ -10,6 +10,7 @@ from pymongo import MongoClient
 mongo = None
 DOMAIN = 'https://www.worlddriven.org'
 
+
 class APIPullRequest(flask_restful.Resource):
     def get(self, org, repo, pull):
         full_name = '{}/{}'.format(org, repo)
@@ -34,7 +35,7 @@ class APIPullRequest(flask_restful.Resource):
         for contributor in pr.contributors:
             pr.contributors[contributor]['time_value'] = timedelta(days=(pr.contributors[contributor]['commits'] / float(pr.votes_total)) * pr.total_merge_time).total_seconds()
 
-        contributors = [ pr.contributors[contributor] for contributor in pr.contributors ]
+        contributors = [pr.contributors[contributor] for contributor in pr.contributors]
 
         def activeFirst(value):
             return abs(value['review_value'] + 0.1) * value['commits']
@@ -57,9 +58,9 @@ class APIPullRequest(flask_restful.Resource):
                     'contributors': contributors,
                     'commits': pr.commits,
                     'age': {
-                        'days' : pr.age.days,
-                        'seconds' : pr.age.seconds,
-                        'microseconds' : pr.age.microseconds,
+                        'days': pr.age.days,
+                        'seconds': pr.age.seconds,
+                        'microseconds': pr.age.microseconds,
                         'total_seconds': pr.age.total_seconds(),
                     }
                     # 'reviews': get_reviews(repository, pull_request)
@@ -74,15 +75,15 @@ class APIPullRequest(flask_restful.Resource):
                 'times': {
                     'total_merge_time': pr.total_merge_time,
                     'merge_duration': {
-                        'days' : pr.merge_duration.days,
-                        'seconds' : pr.merge_duration.seconds,
-                        'microseconds' : pr.merge_duration.microseconds,
+                        'days': pr.merge_duration.days,
+                        'seconds': pr.merge_duration.seconds,
+                        'microseconds': pr.merge_duration.microseconds,
                         'total_seconds': pr.merge_duration.total_seconds(),
                     },
                     'days_to_merge': {
-                        'days' : pr.days_to_merge.days,
-                        'seconds' : pr.days_to_merge.seconds,
-                        'microseconds' : pr.days_to_merge.microseconds,
+                        'days': pr.days_to_merge.days,
+                        'seconds': pr.days_to_merge.seconds,
+                        'microseconds': pr.days_to_merge.microseconds,
                         'total_seconds': pr.days_to_merge.total_seconds(),
                     },
                     'commits': pr.commits,
@@ -90,6 +91,7 @@ class APIPullRequest(flask_restful.Resource):
                 }
             },
         }
+
 
 class APIRepository(flask_restful.Resource):
     def get(self, org, repo):

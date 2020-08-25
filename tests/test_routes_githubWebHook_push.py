@@ -30,5 +30,6 @@ class GithubHookTestCase(unittest.TestCase):
 
         self.assertEqual('All fine, thanks', response['info'])
 
+
 if __name__ == '__main__':
     unittest.main()
