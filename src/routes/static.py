@@ -1,8 +1,12 @@
 from flask import Blueprint, render_template, send_file
 
-static = Blueprint('static', __name__,
-                    static_folder='../../static',
-                    template_folder='../../templates')
+static = Blueprint(
+    'static',
+    __name__,
+    static_folder='../../static',
+    template_folder='../../templates'
+)
+
 
 @static.route('/favicon.ico')
 def favicon():
@@ -35,6 +39,7 @@ def index():
     response.headers['server'] = None
     response.headers['X-XSS-Protection'] = '1; mode=block'
     return response
+
 
 @static.route('/dashboard')
 def dashboard():

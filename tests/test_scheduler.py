@@ -10,6 +10,56 @@ class SchedulerTestCase(unittest.TestCase):
     @patch('PullRequest.logging')
     @patch('PullRequest.fetch_reviews')
     @patch('PullRequest.github')
+    def test_not_merging_changes_requested(self, github, fetch_reviews, logging, mongoClient):
+        contributor_author = MagicMock()
+        contributor_author.login = 'reviewer'
+
+        contributor = MagicMock()
+        contributor.author = contributor_author
+        contributor.total = 1
+
+        repository = MagicMock()
+        repository.get_stats_contributors.return_value = [contributor]
+
+        fetch_reviews.return_value = [
+            {
+                'state': 'CHANGES_REQUESTED',
+                'submitted_at': datetime.now() - timedelta(days=10),
+                'user': {
+                    'login': 'reviewer'
+                }
+            }
+        ]
+
+        user = MagicMock()
+        user.login = 'login'
+        user.date = 5
+
+        commit = MagicMock()
+        commit.author = user
+        commit.commit.author.date = datetime.now() - timedelta(days=23)
+
+        commits = MagicMock()
+        commits.reversed = [commit]
+
+        pull_request = MagicMock()
+        pull_request.get_commits.return_value = commits
+        pull_request.title = 'title'
+        pull_request.user = user
+        pull_request.commits = 1
+        pull_request.created_at = datetime.now() - timedelta(days=24)
+
+        commentOnIssue = False
+        token = ''
+
+        pr = PullRequest.check_pull_request(repository, pull_request, commentOnIssue, token)
+
+        assert not pull_request.merge.called
+
+    @patch('PullRequest.MongoClient')
+    @patch('PullRequest.logging')
+    @patch('PullRequest.fetch_reviews')
+    @patch('PullRequest.github')
     def test_get_pull(self, github, fetch_reviews, logging, mongoClient):
         database = MagicMock()
         database.repositories.find.return_value = [{
@@ -63,7 +113,6 @@ class SchedulerTestCase(unittest.TestCase):
         fetch_reviews = fetch_reviews_mock
 
         PullRequest.check_pull_requests()
-        print(logging.info.call_args)
         self.assertEqual(
             logging.info.call_args_list[1],
             (('Repository: test 4',),)
