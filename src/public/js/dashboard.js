@@ -1,7 +1,8 @@
 import React from 'react';
+import {Repository} from './repository'; // eslint-disable-line no-unused-vars
 
 /**
- * Application class
+ * Dashboard class
  **/
 export class Dashboard extends React.Component { // eslint-disable-line no-unused-vars
   /**
@@ -17,8 +18,8 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
       repositories: [],
       fetched: false,
     };
-    this.handleChange = this.handleChange.bind(this);
   }
+
 
   /**
    * componentDidMount - after component mount
@@ -58,29 +59,15 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
       })
       .then((result) => {
         this.setState({
-          repositories: result,
+          repositories: result.sort((a, b) => (a.configured === b.configured)? 0 : a.configured? -1 : 1),
           fetched: true,
         });
       })
-      .catch(() => {
+      .catch((e) => {
       // TODO better show a message and delete cookie?
+        console.log(e);
         window.location.replace('/');
       });
-  }
-
-  /**
-   * handleChange - handles changes
-   *
-   * @param {object} event - The event
-   * @return {void}
-   **/
-  handleChange(event) {
-    const updateRepository = new Request(`${window.location.protocol}//${window.location.host}/v1/${event.target.name}/`, {
-      method: 'PUT',
-      headers: {'content-type': 'application/json'},
-      body: JSON.stringify({'checked': event.target.checked}),
-    });
-    fetch(updateRepository);
   }
 
   /**
@@ -98,17 +85,7 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
 
     const repositories = [];
     for (const repository of this.state.repositories) {
-      repositories.push(
-        <tr key={repository.full_name}>
-          <td>{ repository.full_name }</td>
-          <td>
-            <label className="switch">
-              <input type="checkbox" defaultChecked={repository.configured} name={ repository.full_name } onClick={(e) => this.handleChange(e)}/>
-              <span className="slider round"></span>
-            </label>
-          </td>
-        </tr>,
-      );
+      repositories.push(<Repository key={repository.full_name} repository={repository} />);
     }
 
     return (
@@ -127,10 +104,9 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
         reviews.
         <div className="main-content">
           <h2>Repositories</h2>
-          <table>
-            <thead><tr><td><b>name</b></td></tr></thead>
-            <tbody>{ repositories }</tbody>
-          </table>
+          <div className="repositories">
+            { repositories }
+          </div>
         </div>
       </div>
     );

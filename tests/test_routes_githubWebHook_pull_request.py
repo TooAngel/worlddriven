@@ -67,12 +67,15 @@ class GithubHookTestCase(unittest.TestCase):
         PullRequest_mock.create_issue_comment.assert_called_with('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in 9 days and 23 hours.
 The start date is based on the latest Commit date / Pull Request created date / (force) Push date.
 The time to merge is 5 days plus 5 days for each commit.
-Check the `worlddriven` status checks or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.
+Check the `worlddriven` status check or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.
 
-![Files changed](https://www.worlddriven.org/static/images/github-files-changed.png)
-![Review changes](https://www.worlddriven.org/static/images/github-review-changes.png)
-![Approve](https://www.worlddriven.org/static/images/github-approve.png) reviews will speed this up.
-![Request changes](https://www.worlddriven.org/static/images/github-request-changes.png) reviews will slow it down or stop it.''')
+To speed up or delay the merge review the pull request:
+1. ![Files changed](https://www.worlddriven.org/static/images/github-files-changed.png)
+1. ![Review changes](https://www.worlddriven.org/static/images/github-review-changes.png)
+
+- Speed up: ![Approve](https://www.worlddriven.org/static/images/github-approve.png)
+- Delay or stop: ![Request changes](https://www.worlddriven.org/static/images/github-request-changes.png)
+''')
         Commit_mock.create_status.assert_called_with('success', 'https://www.worlddriven.org/test/pull/42', '0 Merge at {}'.format(PullRequest_mock.created_at + timedelta(days=10)), 'World driven')
 
     @patch('routes.githubWebHook.logging')

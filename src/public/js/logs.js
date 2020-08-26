@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Application class
+ * Logs class
  **/
 export class Logs extends React.Component { // eslint-disable-line no-unused-vars
   /**

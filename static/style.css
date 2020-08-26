@@ -183,3 +183,37 @@ input:checked + .slider:before {
   font-size: 16pt;
   padding: 8px;
 }
+
+.repository {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 80% 20%;
+}
+
+.repositoryName {
+  font-size: 1.5em;
+}
+
+.pullRequestLine {
+  margin-bottom: 2px;
+  padding-left: 6px;
+  border-radius: 6px;
+}
+
+.pullRequestListItem {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 65% 35%;
+}
+
+.red {
+  background: indianred;
+}
+
+.green {
+  background: lightgreen;
+}
+
+.gray {
+  background: lightgray;
+}

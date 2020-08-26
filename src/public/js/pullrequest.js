@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Application class
+ * PullRequest class
  **/
 export class PullRequest extends React.Component { // eslint-disable-line no-unused-vars
   /**
