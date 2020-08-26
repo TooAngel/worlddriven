@@ -18,14 +18,16 @@ class APIPullRequest(flask_restful.Resource):
         mongo = MongoClient(mongo_url)
         database = mongo.get_database()
         mongo_repository = database.repositories.find_one({'full_name': full_name})
-        if not mongo_repository:
-            abort(401)
-            return
-        github_client = github.Github(mongo_repository['github_access_token'])
+        token = os.getenv('GITHUB_USER_TOKEN')
+
+        if mongo_repository:
+            token = mongo_repository['github_access_token']
+
+        github_client = github.Github(token)
         repository = github_client.get_repo(full_name)
         pull_request = repository.get_pull(pull)
 
-        pr = PullRequest(repository, pull_request, mongo_repository['github_access_token'])
+        pr = PullRequest(repository, pull_request, token)
         pr.get_contributors()
         pr.update_contributors_with_reviews()
         pr.update_votes()
@@ -50,6 +52,7 @@ class APIPullRequest(flask_restful.Resource):
                 'url': pull_request.url,
                 'user': pull_request.user.raw_data,
                 'state': pull_request.state,
+                'mergeable': pull_request.mergeable,
                 'stats': {
                     'mergeable': pr.mergeable_pull_request(),
                     'coefficient': pr.coefficient,

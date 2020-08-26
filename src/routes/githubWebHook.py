@@ -4,6 +4,7 @@ import logging
 import github
 from PullRequest import PullRequest as PR
 import math
+import os
 
 mongo = None
 
@@ -28,7 +29,11 @@ class PullRequest(object):
         mongo_repository = mongo.db.repositories.find_one({
             'full_name': self.data['repository']['full_name']
         })
-        token = mongo_repository['github_access_token']
+        # Make sure it is configured
+        if not mongo_repository:
+            return
+
+        token = os.getenv('GITHUB_USER_TOKEN')
         github_client = github.Github(token)
         repository = github_client.get_repo(self.data['repository']['id'])
         pull_request = repository.get_pull(self.data['pull_request']['number'])
@@ -45,12 +50,15 @@ class PullRequest(object):
         pull_request.create_issue_comment('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} days and {} hours.
 The start date is based on the latest Commit date / Pull Request created date / (force) Push date.
 The time to merge is 5 days plus 5 days for each commit.
-Check the `worlddriven` status checks or the [dashboard]({}) for actual stats.
+Check the `worlddriven` status check or the [dashboard]({}) for actual stats.
 
-![Files changed](https://www.worlddriven.org/static/images/github-files-changed.png)
-![Review changes](https://www.worlddriven.org/static/images/github-review-changes.png)
-![Approve](https://www.worlddriven.org/static/images/github-approve.png) reviews will speed this up.
-![Request changes](https://www.worlddriven.org/static/images/github-request-changes.png) reviews will slow it down or stop it.'''.format(pr.days_to_merge.days, math.floor(pr.days_to_merge.seconds / 3600), pr.url))
+To speed up or delay the merge review the pull request:
+1. ![Files changed](https://www.worlddriven.org/static/images/github-files-changed.png)
+1. ![Review changes](https://www.worlddriven.org/static/images/github-review-changes.png)
+
+- Speed up: ![Approve](https://www.worlddriven.org/static/images/github-approve.png)
+- Delay or stop: ![Request changes](https://www.worlddriven.org/static/images/github-request-changes.png)
+'''.format(pr.days_to_merge.days, math.floor(pr.days_to_merge.seconds / 3600), pr.url))
 
     def execute_synchronize(self):
         logging.info('execute_synchronize {}'.format(self.data))
@@ -89,7 +97,11 @@ class GithubWebHook(flask_restful.Resource):
             mongo_repository = mongo.db.repositories.find_one(
                 {'full_name': data['repository']['full_name']}
             )
-            token = mongo_repository['github_access_token']
+            # Make sure it is configured
+            if not mongo_repository:
+                return
+
+            token = os.getenv('GITHUB_USER_TOKEN')
             github_client = github.Github(token)
             repository = github_client.get_repo(data['repository']['id'])
             pull_request = repository.get_pull(data['pull_request']['number'])

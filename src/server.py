@@ -90,6 +90,14 @@ def token_getter():
         logging.info('No g user')
 
 
+def get_pull_requests(repository):
+    pull_requests = repository.get_pulls(state='open')
+    return [
+        {'number': pull_request.number, 'title': pull_request.title}
+        for pull_request in pull_requests
+    ]
+
+
 @app.route('/v1/repositories', strict_slashes=False)
 def repositories():
     if not g.user:
@@ -102,24 +110,31 @@ def repositories():
     query = {'$or': []}
     repositories = {}
     for repository in github_repositories:
-        repositories[repository.full_name] = False
+        repositories[repository.full_name] = {
+            'configured': False,
+            'pull_requests': get_pull_requests(repository),
+        }
         query['$or'].append({'full_name': repository.full_name})
 
     organizations = user.get_orgs()
     for organization in organizations:
         for repository in organization.get_repos('public'):
-            repositories[repository.full_name] = False
+            repositories[repository.full_name] = {
+                'configured': False,
+                'pull_requests': get_pull_requests(repository),
+            }
             query['$or'].append({'full_name': repository.full_name})
 
     mongo_repositories = mongo.db.repositories.find(query)
     for mongo_repository in mongo_repositories:
-        repositories[mongo_repository['full_name']] = True
+        repositories[mongo_repository['full_name']]['configured'] = True
 
     response = []
     for key, value in repositories.items():
         response.append({
             'full_name': key,
-            'configured': value
+            'configured': value['configured'],
+            'pull_requests': value['pull_requests'],
         })
     response = sorted(response, key=lambda i: i['full_name'])
     return Response(json.dumps(response), mimetype='application/json')
@@ -260,8 +275,9 @@ def admin_logs():
 
 
 sched = BackgroundScheduler()
-sched.add_job(check_pull_requests, 'interval', minutes=51)
-sched.start()
+if os.getenv('DISABLE_WORKER') != 'true':
+    sched.add_job(check_pull_requests, 'interval', minutes=51)
+    sched.start()
 
 
 app.secret_key = os.getenv('SESSION_SECRET')
