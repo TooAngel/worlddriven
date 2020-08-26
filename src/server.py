@@ -42,7 +42,7 @@ app.config['MONGO_URI'] = mongo_uri
 mongo = PyMongo(app)
 
 mongo_parts = mongo_uri.split('/')
-mongo_db = mongo_parts.pop().split('?')[0   ]
+mongo_db = mongo_parts.pop().split('?')[0]
 
 SESSION_TYPE = 'mongodb'
 SESSION_MONGODB = mongo.cx
@@ -89,10 +89,11 @@ def token_getter():
     else:
         logging.info('No g user')
 
+
 @app.route('/v1/repositories', strict_slashes=False)
 def repositories():
     if not g.user:
-        return 401;
+        return 401
 
     github_client = github.Github(g.user['github_access_token'])
     user = github_client.get_user()
@@ -120,8 +121,8 @@ def repositories():
             'full_name': key,
             'configured': value
         })
-    response = sorted(response, key = lambda i: i['full_name'])
-    return Response(json.dumps(response),  mimetype='application/json')
+    response = sorted(response, key=lambda i: i['full_name'])
+    return Response(json.dumps(response), mimetype='application/json')
 
 
 @app.route('/<org_name>/<project_name>/pull/<int:pull_request_number>', strict_slashes=False)
@@ -167,6 +168,7 @@ def user():
         json.dumps(github_oauth.get('user')),
         mimetype='application/json'
     )
+
 
 api.add_resource(routes.githubWebHook.GithubWebHook, '/github/')
 

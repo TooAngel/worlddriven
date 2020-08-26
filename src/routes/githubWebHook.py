@@ -43,10 +43,14 @@ class PullRequest(object):
         pr.set_status()
 
         pull_request.create_issue_comment('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} days and {} hours.
+The start date is based on the latest Commit date / Pull Request created date / (force) Push date.
+The time to merge is 5 days plus 5 days for each commit.
 Check the `worlddriven` status checks or the [dashboard]({}) for actual stats.
 
-`Approved` reviews will speed this up.
-`Request Changes` reviews will slow it down or stop it.'''.format(pr.days_to_merge.days, math.floor(pr.days_to_merge.seconds / 3600), pr.url))
+![Files changed](https://www.worlddriven.org/static/images/github-files-changed.png)
+![Review changes](https://www.worlddriven.org/static/images/github-review-changes.png)
+![Approve](https://www.worlddriven.org/static/images/github-approve.png) reviews will speed this up.
+![Request changes](https://www.worlddriven.org/static/images/github-request-changes.png) reviews will slow it down or stop it.'''.format(pr.days_to_merge.days, math.floor(pr.days_to_merge.seconds / 3600), pr.url))
 
     def execute_synchronize(self):
         logging.info('execute_synchronize {}'.format(self.data))

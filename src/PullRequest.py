@@ -9,12 +9,15 @@ import sys
 
 DOMAIN = 'https://www.worlddriven.org'
 
+
 def toDateTime(value):
     return datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ')
+
 
 def _get_last_date(data):
     data_sorted = sorted(data, key=lambda event: event.created_at, reverse=True)
     return data_sorted[0].created_at if len(data_sorted) > 0 else datetime(1960, 1, 1)
+
 
 class PullRequest(object):
     def __init__(self, repository, pull_request, token):
@@ -163,6 +166,7 @@ def check_pull_requests():
                 logging.info('Pull Request {} is not mergeable'.format(pull_request.title.encode('utf-8')))
                 continue
             check_pull_request(repository, pull_request, False, mongo_repository['github_access_token'])
+
 
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)

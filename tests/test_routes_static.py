@@ -60,5 +60,6 @@ class FrontendTestCase(unittest.TestCase):
         )
         self.assertEqual(200, rv.status_code)
 
+
 if __name__ == '__main__':
     unittest.main()

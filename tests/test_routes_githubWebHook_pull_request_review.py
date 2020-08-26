@@ -141,5 +141,6 @@ class ReviewTestCase(unittest.TestCase):
         response = json.loads(rv.data.decode('utf-8'))
         self.assertEqual('All fine, thanks', response['info'])
 
+
 if __name__ == '__main__':
     unittest.main()
