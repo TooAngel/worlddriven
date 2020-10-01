@@ -31,6 +31,11 @@ Set Session secret as `SESSION_SECRET` initial a random string.
 
 Run tests with: `pytest`
 
+### Install via docker compose
+Copy `.env-example` to `.env` and add your environment variables.
+```sh
+docker-compose up
+```
 ## Api
 
 - `/v1/:org/:repo/` e.g. `/v1/tooangel/worlddriven/`
