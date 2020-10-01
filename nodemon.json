@@ -1,5 +1,9 @@
 {
   "ignore": ["tmp/*", "dist/*"],
   "delay": "2500",
-  "ext": "*"
+  "ext": "*",
+  "events": {
+    "start": "npm run build",
+    "restart": "npm run build"
+  }
 }
