@@ -1,0 +1,32 @@
+version: '3.7'
+
+services:
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - ./init-mongo.sh:/docker-entrypoint-initdb.d/init-mongo.sh:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+      MONGO_INITDB_USERNAME: username
+      MONGO_INITDB_PASSWORD: password
+      MONGO_INITDB_DATABASE: worlddriven
+    ports:
+      - 27017:27017
+  application:
+    build:
+      context: .
+      dockerfile: development.dockerfile
+    command: gunicorn --bind 0.0.0.0:5000 --workers=1 --worker-class=flask_sockets.worker server:app --chdir src
+    working_dir: /usr/src/api/
+    volumes:
+      - ./:/usr/src/api/
+    ports:
+      - 5000:5000
+    environment:
+      DEBUG: "true"
+      MONGODB_URI: "mongodb://username:password@mongodb:27017/worlddriven"
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
