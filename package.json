@@ -2,37 +2,38 @@
   "name": "worlddriven",
   "version": "1.0.0",
   "description": "World driven introduces a contribution based weighted voting system",
+  "homepage": "https://github.com/TooAngel/worlddriven#readme",
+  "bugs": {
+    "url": "https://github.com/TooAngel/worlddriven/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TooAngel/worlddriven.git"
+  },
+  "license": "AGPL",
+  "author": "Tobias Wilken",
   "main": "",
   "directories": {
     "test": "tests"
   },
   "scripts": {
     "build": "webpack",
-    "test": "eslint ."
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/TooAngel/worlddriven.git"
-  },
-  "author": "Tobias Wilken",
-  "license": "AGPL",
-  "bugs": {
-    "url": "https://github.com/TooAngel/worlddriven/issues"
-  },
-  "homepage": "https://github.com/TooAngel/worlddriven#readme",
-  "devDependencies": {
-    "babel-cli": "6.26.0",
-    "babel-preset-react-app": "9.1.2",
-    "eslint": "7.5.0",
-    "eslint-config-google": "0.14.0",
-    "eslint-plugin-react": "7.20.4",
-    "jsx": "0.9.89",
-    "webpack": "4.44.0",
-    "webpack-cli": "3.3.12"
+    "test": "eslint . && sort-package-json package.json --check"
   },
   "dependencies": {
-    "babel-loader": "^8.1.0",
     "react": "16.13.1",
     "react-dom": "16.13.1"
+  },
+  "devDependencies": {
+    "babel-cli": "6.26.0",
+    "babel-loader": "8.1.0",
+    "babel-preset-react-app": "9.1.2",
+    "eslint": "7.10.0",
+    "eslint-config-google": "0.14.0",
+    "eslint-plugin-react": "7.21.2",
+    "jsx": "0.9.89",
+    "sort-package-json": "1.46.0",
+    "webpack": "4.44.2",
+    "webpack-cli": "3.3.12"
   }
 }
