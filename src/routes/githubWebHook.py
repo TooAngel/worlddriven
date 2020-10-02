@@ -124,18 +124,21 @@ class GithubWebHook(flask_restful.Resource):
             elif review['state'] == 'CHANGES_REQUESTED':
                 value = -1
 
+            logging.info('Approved pullrequest {} {}'.format(reviewer, value))
             pr.contributors[reviewer]['review_value'] = value
 
             pr.update_votes()
             pr.get_latest_dates()
             pr.get_merge_time()
 
+            logging.info('Contributors {}'.format(pr.contributors))
+
             pr.set_status()
 
             pull_request.create_issue_comment('''Thank you for the review.
-            This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} days, votes {}/{}.
+This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} days, votes {}/{}.
 
-            Check the `worlddriven` status checks or the [dashboard]({}) for actual stats.
+Check the `worlddriven` status checks or the [dashboard]({}) for actual stats.
             '''.format(pr.days_to_merge.days, pr.votes, pr.votes_total, pr.url))
             return {'info': 'All fine, thanks'}
 
