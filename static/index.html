@@ -63,70 +63,67 @@
     <p>For decades, open source projects have brought transparency and openness to development.
     Over time, certain problems have come to light:</p>
 
-    <ul>
-      <li><b>Contribution can be frustrating due to unclear processes</b><br />
+    <ul class='challenge-bullets'>
+      <li><h4>Contribution can be frustrating due to unclear processes</h4>
         For example, I had a couple of cases where contributions / Pull Requests were missing
         communication or agreement on when to merge between the maintainers or were just ignored.</li>
-      <li><b>The power of progress is restricted to a certain group</b><br />
+      <li><h4>The power of progress is restricted to a certain group</h4>
         Independent of previous contributions, the direction of a project is decided upon by a
         limited number of people or companies with possibly hidden agendas.</li>
-      <li><b>Projects die even with interested contributors</b><br />
+      <li><h4>Projects die even with interested contributors</h4>
         The owner of the project is not interested any more or has become sidetracked and
         so no longer manages any contributions</li>
-      <li><b>Project owner change leads to uncertainties</b><br />
+      <li><h4>Project owner change leads to uncertainties</h4>
         One of the bad examples:
         <a href="https://www.theregister.com/2018/11/26/npm_repo_bitcoin_stealer/">The event-stream incident</a></li>
     </ul>
 
     <h3>An Idea</h3>
 
-    Establish a contribution-based, weighted voting system for time-based auto-merges.<br />
-    Nice sentence, but what does that mean?<br />
-    <span>In the following, I'm using the Github vocabulary but I hope this can be easily translated into similar systems:</span><br />
-    <br />
-    Contributions are presented as Pull Requests, the Pull Requests are automatically
-    merged after a certain time by the world driven auto merger.<br />
+    <p>Establish a contribution-based, weighted voting system for time-based auto-merges.</p>
+    <p>Nice sentence, but what does that mean? In the following, I'm using the GitHub vocabulary
+    but I hope this can be easily translated into similar systems:</p>
+    <p>Contributions are presented as Pull Requests, the Pull Requests are automatically
+    merged after a certain time by the world driven auto merger.
     Contributors have the possibility to vote on the merge by reviewing the Pull Request and either
-    Approving (for) or Requesting Changes (against).<br />
+    Approving (for) or Requesting Changes (against).
     The weight of the vote depends on their previous contributions: The more contributions the
-    reviewer has made the more their vote can speed up or slow down the merge date.<br />
-    When a certain threshold of negative points are reached, the merge is cancelled.<br />
+    reviewer has made the more their vote can speed up or slow down the merge date.</p>
+    <p>If a certain threshold of negative points is reached, the merge is cancelled.</p>
 
     <h4>An Example</h4>
-    For different projects a different configuration than the one given here may make more sense,
-    but this example will help explain the process regardless of the specific configuration chosen:<br />
-    <br />
-    Let's say that the merge duration is 10 days long, the weight is the number of commits on the
-    repository and the project itself has 1000 of them.<br />
-    <br />
-    Alice sends her first Pull Request to this project. Bob, one of the active contributors who has
+    <p>For different projects a different configuration than the one given here may make more sense,
+    but this example will help explain the process regardless of the specific configuration chosen:</p>
+
+    <p>Let's say that the merge duration is 10 days long, the weight is the number of commits on the
+    repository and the project itself has 1000 of them.</p>
+
+    <p>Alice sends her first Pull Request to this project. Bob, one of the active contributors who has
     400 commits, likes the changes and votes to 'Approve' them in his review. As a result, the time until
     the auto-merge completes is reduced by 4 days: 400 (contributions from Bob) / 1000 (overall commits
-    in the project) * 10 (the merge duration).<br />
-    <br />
-    Carol, who is fairly new to the project but already has 100 commits, doesn't like the styling
+    in the project) * 10 (the merge duration).</p>
+
+    <p>Carol, who is fairly new to the project but already has 100 commits, doesn't like the styling
     and wants the code refactored into methods. Her 'Request Changes' review increases the time to merge
     by one day: 100 (contributions from Carol) / 1000 (overall commits in the project) * 10
-    (the initial merge duration).<br />
-    <br />
-    Alice agrees to Carol's suggestions, prepares the changes and pushes them so the timer is reset
-    due to code changes.<br />
-    <br />
-    Bob agrees to this altered version of the Pull Request (-4 days) as does Carol (-1 day). So,
-    overall this Pull Request now has 5 days until it is merged.<br />
-    <br />
-    Next time Alice, due to her now merged contributions, has the ability to vote on any future Pull Requests.
-    This means she can have some responsibility over the progress of the project.<br />
+    (the initial merge duration).</p>
+
+    <p>Alice agrees to Carol's suggestions, prepares the changes and pushes them so the timer is reset
+    due to code changes.</p>
+
+    <p>Bob agrees to this altered version of the Pull Request (-4 days) as does Carol (-1 day). So,
+    overall this Pull Request now has 5 days until it is merged.</p>
+
+    <p>Next time Alice, due to her now merged contributions, has the ability to vote on any future Pull Requests.
+    This means she can have some responsibility over the progress of the project.</p>
 
     <h4>Current Status</h4>
 
-    The auto merger is working on itself and a couple of other projects as well;
-    therefore, I would say it is in a prototype state.
+    <p>The auto merger is working on itself and a couple of other projects as well;
+    therefore, I would say it is in a prototype state.</p>
 
-    <br />
-    <br />
-    A status check is used to show the current time until the Pull Request is merged and provide
-    a link to a detailed breakdown of how that time has been calculated.
+    <p>A status check is used to show the current time until the Pull Request is merged and provide
+    a link to a detailed breakdown of how that time has been calculated.</p>
     <img src="static/images/merge_at.png" />
 
     <h4>Why?:</h4>
@@ -142,19 +139,18 @@
         Currently, the owner of the project has full control and can stop or speed up anything they wish.
         It would be nice if they didn't have to.
     </ul>
-    <br />
 
-    There are definitely ways this system can be tricked with certain types of behaviour but that's
+    <p>There are definitely ways this system can be tricked with certain types of behaviour but that's
     not the idea behind using world driven. Working on an open source project is all about collaboration
-    so most, if not all, of this unwanted behaviour can easily be solved by communication.
+    so most, if not all, of this unwanted behaviour can easily be solved by communication.</p>
 
     <h4>Current Rules:</h4>
     <ul>
       <li>10 days (at least more than a week) should give everyone enough time to look into the Pull Request.</li>
       <li>The time is increased for each commit in the Pull Request. This is because multiple commits indicate
         a certain degree of complexity behind the request hence reviewers will need more time to check it.</li>
-      <li>Github's reviewing functionality is the perfect place to discuss the PR and express your preference
-        (Gitlab is the same but that feature is not yet implemented).</li>
+      <li>GitHub's reviewing functionality is the perfect place to discuss the PR and express your preference
+        (GitLab is the same but that feature is not yet implemented).</li>
     </ul>
 
     This project is `world driven` itself. If you like, jump in and be a part of
@@ -164,40 +160,38 @@
     or simply say hello to the project's creator <a href="mailto:tooangel@tooangel.de">Tobias Wilken</a>
 
     <h2>Phase Two: Transparent Services</h2>
-    Having clear and automated rules for progressing in open source projects
-    is just the start.
-    Due to the DevOps (or GitOps) ideas, many operational tasks are now stored
-    in repositories and applied upon merge. So the challenge now is building
-    (world driven) services that operate on these ideas and are only maintained via Pull Requests.
-
-    This provides a new level of trust and a new entity <i>unavailable system
-      data</i> (still searching for a better name).
+    <p>Having clear and automated rules for progressing in open source projects is just the start.
+    Due to the DevOps (or GitOps) ideas, many operational tasks are now stored in repositories
+    and applied upon merge. So the challenge now is building (world driven) services that operate
+    on these ideas and are only maintained via Pull Requests. This provides a new level of trust
+    and a new entity <em>unavailable system data</em> (still searching for a better name).
     Passwords, service credentials and the like is data which does not necessarily have to be
-    accessible by humans; it can therefore be maintained and used exclusively in the system itself.<br/>
-    <br/>
-    For example: In one of the companies I was working for, the employees were using
+    accessible by humans; it can therefore be maintained and used exclusively in the system itself.</p>
+
+    <p>For example: In one of the companies I was working for, the employees were using
     Chromeboxes. As part of their daily work they had to split and merge PDFs.
     There are a lot of (free) services out there that can do the job but
     they can't be used due to privacy concerns - What happens with my PDFs? Do they store them? Do
-    they use them? - I hope (and guess) that they don't but I can't be sure.<br/>
-    <br/>
-    Compare that to a PDF service that is open source, world driven and uses continuous deployment.
+    they use them? - I hope (and guess) that they don't but I can't be sure.</p>
+
+    <p>Compare that to a PDF service that is open source, world driven and uses continuous deployment.
     No one has access to any credentials and changes can only be done via public Pull Requests -
-    That sounds far more secure to me.
+    That sounds far more secure to me.</p>
 
     <h2>Phase Three: Down the Rabbit Hole</h2>
-    In my mind these examples use:
+    <p>In my mind these examples use:</p>
     <ul>
       <li>Some CI services for testing and deployment</li>
       <li>Some automated hosting environment (PaaS)</li>
       <li>Some databases...</li>
     </ul>
-    The web service itself is world driven but can I trust the other parties?
+    <p>The web service itself is world driven but can I trust the other parties?
     Why not build the infrastructure in the same way? Using IaaS instead of
     higher level managed server is a lot to do but it is doable (I know, I've already built a PaaS).
-    World driven fully automated IaaS, IMHO, is more challenging.<br />
-    <br />
-    The question now is how deep to dig and how far along this journey you're willing to come with me?
+    World driven fully automated IaaS, IMHO, is more challenging.</p>
+
+    <p>The question now is how deep to dig and how far along this journey you're willing
+    to come with me?</p>
   </div>
 </body>
 </html>
