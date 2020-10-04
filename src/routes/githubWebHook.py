@@ -119,9 +119,9 @@ class GithubWebHook(flask_restful.Resource):
                 }
 
             value = 0
-            if review['state'] == 'APPROVED':
+            if review['state'] == 'approved':
                 value = 1
-            elif review['state'] == 'CHANGES_REQUESTED':
+            elif review['state'] == 'changes_requested':
                 value = -1
 
             logging.info('Approved pullrequest {} {}'.format(reviewer, value))
