@@ -26,6 +26,11 @@ Set Session secret as `SESSION_SECRET` initial a random string.
 
 Run tests with: `pytest`
 
+### Install via docker compose
+Copy `.env-example` to `.env` and add your environment variables.
+```sh
+docker-compose up
+```
 
 ## Production environment
 
