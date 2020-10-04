@@ -64,7 +64,7 @@ class GithubHookTestCase(unittest.TestCase):
         response = json.loads(rv.data.decode('utf-8'))
 
         self.assertEqual('All fine, thanks', response['info'])
-        PullRequest_mock.create_issue_comment.assert_called_with('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in 9 days and 23 hours.
+        PullRequest_mock.create_issue_comment.assert_called_with('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in 9 day(s) and 23 hour(s).
 The start date is based on the latest Commit date / Pull Request created date / (force) Push date.
 The time to merge is 5 days plus 5 days for each commit.
 Check the `worlddriven` status check or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.
