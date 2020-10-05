@@ -3,7 +3,6 @@ from flask import request
 import logging
 import github
 from PullRequest import PullRequest as PR
-import math
 import os
 
 mongo = None
@@ -47,7 +46,7 @@ class PullRequest(object):
 
         pr.set_status()
 
-        pull_request.create_issue_comment('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} days and {} hours.
+        pull_request.create_issue_comment('''This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} day(s) and {} hour(s).
 The start date is based on the latest Commit date / Pull Request created date / (force) Push date.
 The time to merge is 5 days plus 5 days for each commit.
 Check the `worlddriven` status check or the [dashboard]({}) for actual stats.
@@ -58,7 +57,7 @@ To speed up or delay the merge review the pull request:
 
 - Speed up: ![Approve](https://www.worlddriven.org/static/images/github-approve.png)
 - Delay or stop: ![Request changes](https://www.worlddriven.org/static/images/github-request-changes.png)
-'''.format(pr.days_to_merge.days, math.floor(pr.days_to_merge.seconds / 3600), pr.url))
+'''.format(pr.days_to_merge.days, pr.days_to_merge.seconds // 3600, pr.url))
 
     def execute_synchronize(self):
         logging.info('execute_synchronize {}'.format(self.data))
@@ -136,10 +135,10 @@ class GithubWebHook(flask_restful.Resource):
             pr.set_status()
 
             pull_request.create_issue_comment('''Thank you for the review.
-This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} days, votes {}/{}.
+This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} day(s) and {} hour(s). Current votes: {}/{}.
 
 Check the `worlddriven` status checks or the [dashboard]({}) for actual stats.
-            '''.format(pr.days_to_merge.days, pr.votes, pr.votes_total, pr.url))
+            '''.format(pr.days_to_merge.days, pr.days_to_merge // 3600, pr.votes, pr.votes_total, pr.url))
             return {'info': 'All fine, thanks'}
 
     def post(self):
