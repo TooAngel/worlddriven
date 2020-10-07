@@ -42,7 +42,22 @@ When worlddriven checks new Pull Requests it fetches the `.worlddriven.ini` from
 your default branch (fetching from the Pull Request could be a security issue)
 and applies the configuration.
 
+## Frontend
+
+The frontend has three views:
+
+- `/` the frontpage
+- `/dashboard` a dashboard with an overview of the repositories and a button to
+enable World Driven for the repository
+- `/:org/:repo/pull/:pull_number` A detailed calculation breakdown for the pull
+request
+
+To be able to easily work on the different views test endpoints are available:
+
+- `/test/dashboard` - for the dashboard
+- `/test/:org/:repo/pull/:pull_number` - for the pull request view
+
 ## Production environment
 
-The worlddriven auto merge service is hosted on heroku, tested via CircleCI,
-merge via worlddriven and automatically deployed.
+The World Driven auto-merge service is hosted on heroku, tested via CircleCI,
+merge via World Driven and automatically deployed.

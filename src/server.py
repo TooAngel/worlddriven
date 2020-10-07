@@ -140,11 +140,6 @@ def repositories():
     return Response(json.dumps(response), mimetype='application/json')
 
 
-@app.route('/<org_name>/<project_name>/pull/<int:pull_request_number>', strict_slashes=False)
-def show_pull_request(org_name, project_name, pull_request_number):
-    return app.send_static_file('pull_request.html')
-
-
 @app.route('/login/')
 def login():
     if session.get('user_id', None) is None:
