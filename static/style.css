@@ -74,14 +74,19 @@ header {
 }
 
 .logo {
-  width:400px;
   padding: 0 1.2rem;
+  width: 100%;
 }
 
+@media only screen and (min-width:451px) {
+  .logo {
+    width: 80%;
+  }
+}
 
 @media only screen and (min-width:1025px) {
   .logo {
-    width: 600px;
+    width: 60%;
   }
 }
 
