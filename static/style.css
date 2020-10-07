@@ -118,12 +118,12 @@ li h4 {
   margin-top: 0;
 }
 
+/* Status Check Image */
 
-
-
-
-
-
+.status-check {
+  display: block;
+  text-align: center;
+}
 
 .main {
   font-size: 21px;

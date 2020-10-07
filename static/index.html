@@ -123,7 +123,17 @@
 
     <p>A status check is used to show the current time until the Pull Request is merged and provide
     a link to a detailed breakdown of how that time has been calculated.</p>
-    <img src="static/images/merge_at.png" />
+    <div class='status-check'>
+      <picture>
+        <source media='(min-width: 801px)'
+                srcset='static/images/merge_at_big.png' />
+        <source media='(min-width: 401px) and (max-width: 800px)'
+                srcset='static/images/merge_at_med.png' />
+        <source media='(max-width: 400px)'
+                srcset='static/images/merge_at_small.png' />
+        <img src='static/images/merge_at_med.png' />
+      </picture>
+    </div>
 
     <h4 class="subheading">Why?:</h4>
     <ul>
