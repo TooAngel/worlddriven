@@ -52,13 +52,13 @@
       </div>
     </div>
     <div class="heading">
-      <img src="/static/images/globe.svg" class="logo" alt="World driven logo" height="60" width="60">
-      <h1>World Driven</h1>
+      <img src="/static/images/logo_world_driven.svg" class="logo" alt="World driven logo">
+      
     </div>
     <center><h6>Trustable service landscape</h6></center>
-    <h2>Phase One: Dynamic Code Ownership</h2>
+    <h2 class='phases'>Phase One: Dynamic Code Ownership</h2>
 
-    <h3>The Challenge</h3>
+    <h3 class="subheading">The Challenge</h3>
 
     <p>For decades, open source projects have brought transparency and openness to development.
     Over time, certain problems have come to light:</p>
@@ -78,7 +78,7 @@
         <a href="https://www.theregister.com/2018/11/26/npm_repo_bitcoin_stealer/">The event-stream incident</a></li>
     </ul>
 
-    <h3>An Idea</h3>
+    <h3 class="subheading">An Idea</h3>
 
     <p>Establish a contribution-based, weighted voting system for time-based auto-merges.</p>
     <p>Nice sentence, but what does that mean? In the following, I'm using the GitHub vocabulary
@@ -91,7 +91,7 @@
     reviewer has made the more their vote can speed up or slow down the merge date.</p>
     <p>If a certain threshold of negative points is reached, the merge is cancelled.</p>
 
-    <h4>An Example</h4>
+    <h4 class="subheading">An Example</h4>
     <p>For different projects a different configuration than the one given here may make more sense,
     but this example will help explain the process regardless of the specific configuration chosen:</p>
 
@@ -117,8 +117,8 @@
     <p>Next time Alice, due to her now merged contributions, has the ability to vote on any future Pull Requests.
     This means she can have some responsibility over the progress of the project.</p>
 
-    <h4>Current Status</h4>
 
+    <h4 class="subheading">Current Status</h4>
     <p>The auto merger is working on itself and a couple of other projects as well;
     therefore, I would say it is in a prototype state.</p>
 
@@ -126,7 +126,7 @@
     a link to a detailed breakdown of how that time has been calculated.</p>
     <img src="static/images/merge_at.png" />
 
-    <h4>Why?:</h4>
+    <h4 class="subheading">Why?:</h4>
     <ul>
       <li>Due to the clear rules, it is easy to see what happens with your PR and
         when it will be merged.</li>
@@ -144,7 +144,7 @@
     not the idea behind using world driven. Working on an open source project is all about collaboration
     so most, if not all, of this unwanted behaviour can easily be solved by communication.</p>
 
-    <h4>Current Rules:</h4>
+    <h4 class="subheading">Current Rules:</h4>
     <ul>
       <li>10 days (at least more than a week) should give everyone enough time to look into the Pull Request.</li>
       <li>The time is increased for each commit in the Pull Request. This is because multiple commits indicate
@@ -159,7 +159,7 @@
       <img src="/static/images/Discord-Logo-Black.png" width="20px"></a>
     or simply say hello to the project's creator <a href="mailto:tooangel@tooangel.de">Tobias Wilken</a>
 
-    <h2>Phase Two: Transparent Services</h2>
+    <h2 class='phases'>Phase Two: Transparent Services</h2>
     <p>Having clear and automated rules for progressing in open source projects is just the start.
     Due to the DevOps (or GitOps) ideas, many operational tasks are now stored in repositories
     and applied upon merge. So the challenge now is building (world driven) services that operate
@@ -178,7 +178,8 @@
     No one has access to any credentials and changes can only be done via public Pull Requests -
     That sounds far more secure to me.</p>
 
-    <h2>Phase Three: Down the Rabbit Hole</h2>
+
+    <h2 class='phases'>Phase Three: Down the Rabbit Hole</h2>
     <p>In my mind these examples use:</p>
     <ul>
       <li>Some CI services for testing and deployment</li>
