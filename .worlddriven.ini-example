@@ -1,0 +1,3 @@
+[DEFAULT]
+baseMergeTimeInHours = 120
+perCommitTimeInHours = 120

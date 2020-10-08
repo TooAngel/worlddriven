@@ -1,4 +1,5 @@
 import logging
+import configparser
 from datetime import datetime, timedelta
 import os
 import github
@@ -25,6 +26,19 @@ class PullRequest(object):
         self.pull_request = pull_request
         self.token = token
         self.url = '{}/{}/pull/{}'.format(DOMAIN, self.repository.full_name, self.pull_request.number)
+        self.config = {
+            'baseMergeTimeInHours': 120.,
+            'perCommitTimeInHours': 120.,
+        }
+
+        try:
+            config_file_content = repository.get_contents(".worlddriven.ini")
+            config = configparser.ConfigParser()
+            config.read_string(config_file_content)
+            self.config['baseMergeTimeInHours'] = float(config['DEFAULT'].get('baseMergeTimeInHours', self.config['baseMergeTimeInHours']))
+            self.config['perCommitTimeInHours'] = float(config['DEFAULT'].get('perCommitTimeInHours', self.config['perCommitTimeInHours']))
+        except Exception as e:
+            logging.info('No config file found')
 
     def set_status(self):
         if self.coefficient >= 0:
@@ -41,7 +55,6 @@ class PullRequest(object):
         for status in statuses:
             if status.context == 'World driven' and status.description == message:
                 return
-        logging.info('Set Status message: {} {} {}'.format(state, self.url, message))
         try:
             commit.create_status(state, self.url, message, 'World driven')
         except Exception as e:
@@ -101,7 +114,7 @@ class PullRequest(object):
         self.age = datetime.utcnow() - self.max_date
 
     def get_merge_time(self):
-        self.total_merge_time = (5 + self.pull_request.commits * 5)
+        self.total_merge_time = (self.config['baseMergeTimeInHours'] / 24 + self.pull_request.commits * self.config['perCommitTimeInHours'] / 24)
         self.merge_duration = timedelta(days=(1 - self.coefficient) * self.total_merge_time)
         self.days_to_merge = self.merge_duration - self.age
         self.commits = self.pull_request.commits
