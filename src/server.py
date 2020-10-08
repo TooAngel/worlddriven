@@ -18,6 +18,8 @@ from bson.objectid import ObjectId
 import json
 from datetime import timedelta
 from flask_sockets import Sockets
+import re
+import hashlib
 
 from routes.static import static
 import apiendpoint
@@ -266,11 +268,15 @@ def admin_logs():
         stream=True
     )
 
+    def hashIp(matchObject):
+        return hashlib.sha224(matchObject.group(0).encode('utf-8')).hexdigest()[0:15]
+
     def generate():
         for line in log.iter_lines():
             if line:
                 decoded_line = line.decode('utf-8')
-                yield decoded_line + '\n'
+                response = re.sub(r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})", hashIp, decoded_line)
+                yield response + '\n'
     return Response(generate(), mimetype='text/plain')
 
 

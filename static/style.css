@@ -70,6 +70,16 @@
   margin-left: 25%;
 }
 
+footer {
+  width: 50%;
+  margin-left: 25%;
+  text-align: center;
+}
+
+footer span {
+  margin: 16px;
+}
+
 .logo {
   width:350px;
 }

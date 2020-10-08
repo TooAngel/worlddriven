@@ -44,3 +44,13 @@ def index():
 @static.route('/dashboard')
 def dashboard():
     return static.send_static_file('dashboard.html')
+
+
+@static.route('/imprint')
+def imprint():
+    return static.send_static_file('imprint.html')
+
+
+@static.route('/privacyPolicy')
+def privacyPolicy():
+    return static.send_static_file('privacy_policy.html')
