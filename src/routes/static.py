@@ -59,3 +59,13 @@ def show_pull_request(org_name, project_name, pull_request_number):
 @static.route('/test/<org_name>/<project_name>/pull/<int:pull_request_number>', strict_slashes=False)
 def testshow_pull_request(org_name, project_name, pull_request_number):
     return static.send_static_file('dashboard.html')
+
+
+@static.route('/imprint')
+def imprint():
+    return static.send_static_file('imprint.html')
+
+
+@static.route('/privacyPolicy')
+def privacyPolicy():
+    return static.send_static_file('privacy_policy.html')
