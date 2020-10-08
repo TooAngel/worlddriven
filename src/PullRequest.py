@@ -29,6 +29,7 @@ class PullRequest(object):
         self.config = {
             'baseMergeTimeInHours': 120.,
             'perCommitTimeInHours': 120.,
+            'merge_method': 'merge',
         }
 
         try:
@@ -37,6 +38,7 @@ class PullRequest(object):
             config.read_string(config_file_content)
             self.config['baseMergeTimeInHours'] = float(config['DEFAULT'].get('baseMergeTimeInHours', self.config['baseMergeTimeInHours']))
             self.config['perCommitTimeInHours'] = float(config['DEFAULT'].get('perCommitTimeInHours', self.config['perCommitTimeInHours']))
+            self.config['merge_method'] = float(config['DEFAULT'].get('merge_method', self.config['merge_method']))
         except Exception as e:
             logging.info('No config file found')
 
@@ -128,7 +130,7 @@ class PullRequest(object):
         if self.coefficient >= 0 and self.max_date + self.merge_duration < datetime.utcnow():
             logging.info('Would merge now')
             try:
-                self.pull_request.merge()
+                self.pull_request.merge(merge_method=self.config['merge_method'])
             except Exception as e:
                 # Maybe add a comment that the conflicts should be resolved
                 logging.exception(self.pull_request)
