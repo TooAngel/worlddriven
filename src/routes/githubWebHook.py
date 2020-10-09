@@ -138,7 +138,7 @@ class GithubWebHook(flask_restful.Resource):
 This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} day(s) and {} hour(s). Current votes: {}/{}.
 
 Check the `worlddriven` status checks or the [dashboard]({}) for actual stats.
-            '''.format(pr.days_to_merge.days, pr.days_to_merge // 3600, pr.votes, pr.votes_total, pr.url))
+            '''.format(pr.days_to_merge.days, pr.days_to_merge.seconds // 3600, pr.votes, pr.votes_total, pr.url))
             return {'info': 'All fine, thanks'}
 
     def post(self):
