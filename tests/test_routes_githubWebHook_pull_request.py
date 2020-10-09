@@ -218,7 +218,6 @@ Check the `worlddriven` status check or the [dashboard](https://www.worlddriven.
         response = json.loads(rv.data.decode('utf-8'))
 
         self.assertEqual('All fine, thanks', response['info'])
-        logging.info.assert_called_with("execute_closed {'action': 'closed'}")
 
 
 if __name__ == '__main__':

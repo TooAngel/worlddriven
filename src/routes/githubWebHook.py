@@ -91,7 +91,9 @@ Check the `worlddriven` status check or the [dashboard]({}) for actual stats.
         logging.info('execute_edited {}'.format(self.data))
 
     def execute_closed(self):
-        logging.info('execute_closed {}'.format(self.data))
+        # Don't know if we need to do something here
+        # logging.info('execute_closed {}'.format(self.data))
+        pass
 
 
 class GithubWebHook(flask_restful.Resource):
