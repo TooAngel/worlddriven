@@ -27,18 +27,11 @@ export class Repository extends React.Component { // eslint-disable-line no-unus
    **/
   componentDidMount() {
     this.props.repository.pull_requests.forEach((pullRequest) => {
-      const getPullRequest = new Request(`/v1/${this.props.repository.full_name}/pull/${pullRequest.number}`, {
-        method: 'GET',
+      this.props.getPullRequest(this.props.repository.full_name, pullRequest.number, (result) => {
+        const pullRequestData = result.pull_request;
+        pullRequestData.fetched = true;
+        this.setState({[pullRequestData.title]: pullRequestData});
       });
-      fetch(getPullRequest)
-        .then((res) => res.json())
-        .then((result) => {
-          const pullRequestData = result.pull_request;
-          pullRequestData.fetched = true;
-          this.setState({[pullRequestData.title]: pullRequestData});
-        }).catch(function(e) {
-          console.log(`error: ${e}`);
-        });
     });
   }
 
@@ -100,4 +93,5 @@ export class Repository extends React.Component { // eslint-disable-line no-unus
 
 Repository.propTypes = {
   repository: PropTypes.object,
+  getPullRequest: PropTypes.func,
 };

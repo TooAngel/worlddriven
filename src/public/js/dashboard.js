@@ -20,13 +20,13 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
     };
   }
 
-
   /**
-   * componentDidMount - after component mount
+   * getUser - Fetches the user from the backend
    *
+   * @param {function} callback - The callback function
    * @return {void}
    **/
-  componentDidMount() {
+  getUser(callback) {
     const getUser = new Request(`/v1/user/`, {
       method: 'GET',
     });
@@ -38,15 +38,21 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
         return response.json();
       })
       .then((result) => {
-        this.setState({
-          user: result.name,
-        });
+        callback(result);
       })
       .catch(() => {
       // TODO better show a message and delete cookie?
         window.location.replace('/');
       });
+  }
 
+  /**
+   * getRepositories - Fetches the repositories from the backend
+   *
+   * @param {function} callback - The callback function
+   * @return {void}
+   **/
+  getRepositories(callback) {
     const getRepositories = new Request(`/v1/repositories/`, {
       method: 'GET',
     });
@@ -58,6 +64,7 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
         return response.json();
       })
       .then((result) => {
+        callback(result);
         this.setState({
           repositories: result.sort((a, b) => (a.configured === b.configured)? 0 : a.configured? -1 : 1),
           fetched: true,
@@ -68,6 +75,47 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
         console.log(e);
         window.location.replace('/');
       });
+  }
+
+  /**
+   * getPullRequest - Fetches the Pull Request from the backend
+   *
+   * @param {string} repositoryFullName - The repository name
+   * @param {integer} pullRequestNumber - The Pull Request number
+   * @param {function} callback - The callback function
+   * @return {void}
+   **/
+  getPullRequest(repositoryFullName, pullRequestNumber, callback) {
+    const getPullRequest = new Request(`/v1/${repositoryFullName}/pull/${pullRequestNumber}/`, {
+      method: 'GET',
+    });
+    fetch(getPullRequest)
+      .then((res) => res.json())
+      .then((result) => {
+        callback(result);
+      }).catch(function(e) {
+        console.log(`error: ${e}`);
+      });
+  }
+
+  /**
+   * componentDidMount - after component mount
+   *
+   * @return {void}
+   **/
+  componentDidMount() {
+    this.getUser((result) => {
+      this.setState({
+        user: result.name,
+      });
+    });
+
+    this.getRepositories((result) => {
+      this.setState({
+        repositories: result.sort((a, b) => (a.configured === b.configured)? 0 : a.configured? -1 : 1),
+        fetched: true,
+      });
+    });
   }
 
   /**
@@ -85,7 +133,7 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
 
     const repositories = [];
     for (const repository of this.state.repositories) {
-      repositories.push(<Repository key={repository.full_name} repository={repository} />);
+      repositories.push(<Repository key={repository.full_name} repository={repository} getPullRequest={this.getPullRequest} />);
     }
 
     return (

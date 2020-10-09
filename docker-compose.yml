@@ -17,16 +17,23 @@ services:
     build:
       context: .
       dockerfile: development.dockerfile
-    command: gunicorn --bind 0.0.0.0:5000 --workers=1 --worker-class=flask_sockets.worker server:app --chdir src
+    command: gunicorn --bind 0.0.0.0:5000 --reload --workers=1 --worker-class=flask_sockets.worker server:app --chdir src
     working_dir: /usr/src/api/
     volumes:
       - ./:/usr/src/api/
     ports:
-      - 5000:5000
+      - ${PORT:-5000}:5000
     environment:
-      DEBUG: "true"
-      MONGODB_URI: "mongodb://username:password@mongodb:27017/worlddriven"
+      - DEBUG=true
+      - MONGODB_URI=mongodb://username:password@mongodb:27017/worlddriven
+      - PORT=5000
     env_file:
       - .env
     depends_on:
       - mongodb
+  frontend:
+    image: node:lts
+    working_dir: /usr/src/frontend/
+    volumes:
+      - ./:/usr/src/frontend/
+    command: utils/build_frontend.sh

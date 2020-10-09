@@ -44,3 +44,18 @@ def index():
 @static.route('/dashboard')
 def dashboard():
     return static.send_static_file('dashboard.html')
+
+
+@static.route('/test/dashboard')
+def testdashboard():
+    return static.send_static_file('dashboard.html')
+
+
+@static.route('/<org_name>/<project_name>/pull/<int:pull_request_number>', strict_slashes=False)
+def show_pull_request(org_name, project_name, pull_request_number):
+    return static.send_static_file('pull_request.html')
+
+
+@static.route('/test/<org_name>/<project_name>/pull/<int:pull_request_number>', strict_slashes=False)
+def testshow_pull_request(org_name, project_name, pull_request_number):
+    return static.send_static_file('dashboard.html')
