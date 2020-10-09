@@ -60,7 +60,32 @@ To speed up or delay the merge review the pull request:
 '''.format(pr.days_to_merge.days, pr.days_to_merge.seconds // 3600, pr.url))
 
     def execute_synchronize(self):
-        logging.info('execute_synchronize {}'.format(self.data))
+        mongo_repository = mongo.db.repositories.find_one({
+            'full_name': self.data['repository']['full_name']
+        })
+        # Make sure it is configured
+        if not mongo_repository:
+            return
+
+        token = os.getenv('GITHUB_USER_TOKEN')
+        github_client = github.Github(token)
+        repository = github_client.get_repo(self.data['repository']['id'])
+        pull_request = repository.get_pull(self.data['pull_request']['number'])
+
+        pr = PR(repository, pull_request, token)
+        pr.get_contributors()
+        pr.update_contributors_with_reviews()
+        pr.update_votes()
+        pr.get_latest_dates()
+        pr.get_merge_time()
+
+        pr.set_status()
+
+        pull_request.create_issue_comment('''This branch of this pull request was updated, times are reseted.
+
+It will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} day(s) and {} hour(s).
+Check the `worlddriven` status check or the [dashboard]({}) for actual stats.
+'''.format(pr.days_to_merge.days, pr.days_to_merge.seconds // 3600, pr.url))
 
     def execute_edited(self):
         logging.info('execute_edited {}'.format(self.data))

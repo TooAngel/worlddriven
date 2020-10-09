@@ -79,11 +79,11 @@ class SchedulerTestCase(unittest.TestCase):
         pull.title = 'title'
         pull.user = user
         pull.commits = 4
-        pull.created_at = datetime.now() - timedelta(days=2)
+        pull.created_at = datetime.utcnow() - timedelta(days=2)
 
         commit = MagicMock()
         commit.author = user
-        commit.commit.author.date = datetime.now() - timedelta(days=1)
+        commit.commit.author.date = datetime.utcnow() - timedelta(days=1)
 
         commits = MagicMock()
         commits.reversed = [commit]
@@ -122,7 +122,7 @@ class SchedulerTestCase(unittest.TestCase):
             ((b'title',),)
         )
         self.assertEqual(
-            logging.info.call_args_list[4],
+            logging.info.call_args_list[3],
             (('Would merge now',),)
         )
 

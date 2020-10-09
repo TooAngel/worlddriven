@@ -78,27 +78,34 @@ To speed up or delay the merge review the pull request:
 ''')
         Commit_mock.create_status.assert_called_with('success', 'https://www.worlddriven.org/test/pull/42', '0 Merge at {}'.format(PullRequest_mock.created_at + timedelta(days=10)), 'World driven')
 
-    @patch('routes.githubWebHook.logging')
+    @patch('PullRequest.fetch_reviews')
     @patch('routes.githubWebHook.mongo')
-    @patch('routes.githubWebHook.PR')
     @patch('routes.githubWebHook.github')
-    def test_pull_request_synchronize(self, github, PR, mongo, logging):
+    def test_pull_request_synchronize(self, github, mongo, fetch_reviews):
         def PyMongo_mock(app):
             print('PyMongo_mock')
         PyMongo = PyMongo_mock
 
+        Commit_mock = MagicMock()
+        Commit_mock.commit.author.date = datetime.utcnow()
+
+        Get_commits_mock = MagicMock()
+        Get_commits_mock.reversed = [Commit_mock]
+
         PullRequest_mock = MagicMock()
+        PullRequest_mock.get_commits.return_value = Get_commits_mock
         PullRequest_mock.number = 42
+        PullRequest_mock.created_at = datetime.utcnow()
+        PullRequest_mock.commits = 1
 
         Repository_mock = MagicMock()
         Repository_mock.get_pull.return_value = PullRequest_mock
         Repository_mock.full_name = 'test'
 
-        class Github_mock():
-            def get_repo(self, repo_id):
-                return Repository_mock
+        Github_mock = MagicMock()
+        Github_mock.get_repo.return_value = Repository_mock
 
-        github.Github.return_value = Github_mock()
+        github.Github.return_value = Github_mock
 
         headers = {
             'Content-Type': 'application/json',
@@ -106,6 +113,13 @@ To speed up or delay the merge review the pull request:
         }
         data = {
             'action': 'synchronize',
+            'repository': {
+                'id': 'id',
+                'full_name': 'test/repository'
+            },
+            'pull_request': {
+                'number': 42
+            }
         }
         rv = self.app.post(
             '/github/',
@@ -116,7 +130,11 @@ To speed up or delay the merge review the pull request:
         response = json.loads(rv.data.decode('utf-8'))
 
         self.assertEqual('All fine, thanks', response['info'])
-        logging.info.assert_called_with("execute_synchronize {'action': 'synchronize'}")
+        PullRequest_mock.create_issue_comment.assert_called_with('''This branch of this pull request was updated, times are reseted.
+
+It will be automatically merged by [worlddriven](https://www.worlddriven.org) in 9 day(s) and 23 hour(s).
+Check the `worlddriven` status check or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.
+''')
 
     @patch('routes.githubWebHook.logging')
     @patch('routes.githubWebHook.mongo')
