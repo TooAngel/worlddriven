@@ -1,3 +1,4 @@
 [DEFAULT]
 baseMergeTimeInHours = 120
 perCommitTimeInHours = 120
+merge_method = merge
