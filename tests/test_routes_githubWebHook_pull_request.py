@@ -130,7 +130,7 @@ To speed up or delay the merge review the pull request:
         response = json.loads(rv.data.decode('utf-8'))
 
         self.assertEqual('All fine, thanks', response['info'])
-        PullRequest_mock.create_issue_comment.assert_called_with('''This branch of this pull request was updated, times are reseted.
+        PullRequest_mock.create_issue_comment.assert_called_with('''The branch of this pull request was updated so the auto-merge time has been reset.
 
 It will be automatically merged by [worlddriven](https://www.worlddriven.org) in 9 day(s) and 23 hour(s).
 Check the `worlddriven` status check or the [dashboard](https://www.worlddriven.org/test/pull/42) for actual stats.

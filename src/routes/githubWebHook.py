@@ -81,7 +81,7 @@ To speed up or delay the merge review the pull request:
 
         pr.set_status()
 
-        pull_request.create_issue_comment('''This branch of this pull request was updated, times are reseted.
+        pull_request.create_issue_comment('''The branch of this pull request was updated so the auto-merge time has been reset.
 
 It will be automatically merged by [worlddriven](https://www.worlddriven.org) in {} day(s) and {} hour(s).
 Check the `worlddriven` status check or the [dashboard]({}) for actual stats.
