@@ -6,8 +6,8 @@ This repository uses
 [World driven](https://github.com/tooangel/worlddriven)
 for automatic merging.
 
-Pull requests needs to be send to the master, all checks needs to be good green.
-The automatic merge is time based depending on github review workflow outcome.
+Pull requests needs to be send to the master, all checks needs to be green.
+The automatic merge is time based depending on GitHub review workflow outcome.
 
  - `Request changes` reduces the outcome.
  - `Approve` increases the outcome
