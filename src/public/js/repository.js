@@ -18,6 +18,7 @@ export class Repository extends React.Component { // eslint-disable-line no-unus
       this.state[pullRequest.title] = {fetched: false};
     }
     this.handleChange = this.handleChange.bind(this);
+    this.selectPullRequest= this.selectPullRequest.bind(this);
   }
 
   /**
@@ -33,6 +34,17 @@ export class Repository extends React.Component { // eslint-disable-line no-unus
         this.setState({[pullRequestData.title]: pullRequestData});
       });
     });
+  }
+
+  /**
+   * selectPullRequest - selects a pull request
+   *
+   * @param {object} event - the click event
+   * @param {string} pullRequestTitle - The title of a pull request
+   * @return {void}
+   **/
+  selectPullRequest(event, pullRequestTitle) {
+    this.props.setPullRequest(this.state[pullRequestTitle]);
   }
 
   /**
@@ -70,12 +82,18 @@ export class Repository extends React.Component { // eslint-disable-line no-unus
         if (pullRequestData.stats.coefficient > 0) {
           className = 'pullRequestLine green';
           title = 'Will be merged automatically';
-          content = <div className="pullRequestListItem"><div>{pullRequestData.title}</div><div>merge on {new Date(pullRequestData.times.merge_date * 1000 || 0).toISOString()}</div></div>;
+          content = <div className="pullRequestListItem">
+            <div>
+              <div>{pullRequestData.title}</div>
+              <div>merge</div>
+            </div>
+            <div>{new Date(pullRequestData.times.merge_date * 1000 || 0).toISOString().replace('T', ' ').replace('.000Z', ' UTC')}</div>
+          </div>;
         }
       }
-      pullRequests.push(<li key={pullRequestData.title} className={className} title={title}>{content}</li>);
+      pullRequests.push(<li key={pullRequestData.title} className={className} title={title} onClick={(e) => this.selectPullRequest(e, pullRequestData.title)}>{content}</li>);
     }
-    const pullRequestsTag = <ul>{pullRequests}</ul>;
+    const pullRequestsTag = <div className="repositoryList"><ul>{pullRequests}</ul></div>;
 
     return (<div key={this.props.repository.full_name} className="repository">
       <div className="repositoryName">{this.props.repository.full_name}</div>
@@ -94,4 +112,5 @@ export class Repository extends React.Component { // eslint-disable-line no-unus
 Repository.propTypes = {
   repository: PropTypes.object,
   getPullRequest: PropTypes.func,
+  setPullRequest: PropTypes.func,
 };
