@@ -4,45 +4,16 @@
   }
 }
 
-@media (min-width:320px) {
-  .container {
-    width: 320px;
-  }
+body {
+  font-size: 16px;
 }
-@media (min-width:480px) {
-  .container {
-    width: 480px;
-  }
-}
-@media (min-width:600px) {
-  .container {
-    width: 600px;
-  }
-}
-@media (min-width:801px) {
-  .container {
-    width: 801px;
-  }
-}
-@media (min-width:1025px) {
-  .container {
-    width: 1025px;
-  }
-}
-@media (min-width:1281px) {
-  .container {
-    width: 1281px;
+
+@media only screen and (min-width: 401px) {
+  body {
+    font-size: 18px;
   }
 }
 
-/* Index page titles and subtitles */
-.phases {
-  color: #3c6a82;
-}
-
-.subheading {
-  color: #678a9d;
-}
 
 .bg {
   position: fixed;
@@ -62,30 +33,101 @@
   -o-background-size: cover;
   background-size: cover;
 
-  filter: opacity(10%) hue-rotate(90deg);
+  filter: opacity(3%) hue-rotate(90deg);
 }
 
 .container {
-  width: 50%;
-  margin-left: 25%;
+  padding: 5px;
+  width: 80%;
+  margin: 0 auto;
+}
+
+@media only screen and (min-width:1025px) {
+  .container {
+    width: 900px;
+  }
+}
+
+/* Links */
+
+a,
+a:hover,
+a:visited {
+  color: #678a9d;
+  text-decoration: none;
+  font-weight: bold;
+  border-bottom: 1px solid #678a9d;
+}
+
+/* Header */
+
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+.login {
+  margin-left: auto;
+  margin-bottom: -30px;
 }
 
 .logo {
-  width:350px;
+  padding: 0 1.2rem;
+  width: 100%;
 }
 
-.logo, h1 {
-  color: #205572;
+@media only screen and (min-width:451px) {
+  .logo {
+    width: 80%;
+  }
 }
 
-.logo, h1 {
-  color: #205572;
+@media only screen and (min-width:1025px) {
+  .logo {
+    width: 60%;
+  }
 }
 
-.heading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.login a {
+  border: 0;
+}
+
+header h4 {
+  margin: -8px auto 10px auto;
+}
+
+/* Index page titles and subtitles */
+
+.phases {
+  color: #205575;
+  padding-top: 1.6rem;
+}
+
+.subheading {
+  color: #3c6a82;
+}
+
+/* Lists */
+
+li {
+  margin-bottom: 0.8rem;
+}
+
+li:first-child {
+  margin-top: -0.6rem;
+}
+
+li h4 {
+  margin-top: 0;
+}
+
+/* Status Check Image */
+
+.status-check {
+  display: block;
+  text-align: center;
 }
 
 .main {
