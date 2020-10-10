@@ -63,12 +63,16 @@ class PullRequestTestCase(unittest.TestCase):
         pr = PullRequest.check_pull_request(repository, pull_request, commentOnIssue, token)
         assert not pull_request.merge.called
 
-        # Merge with updated config
-        repository.get_contents.return_value = """
+        content = MagicMock()
+        content.decoded_content = b"""
 [DEFAULT]
 baseMergeTimeInHours = 20
 perCommitTimeInHours = 20
 """
+
+        # Merge with updated config
+        repository.get_contents.return_value = content
+
         pr = PullRequest.check_pull_request(repository, pull_request, commentOnIssue, token)
         assert pull_request.merge.called
 

@@ -35,10 +35,12 @@ class PullRequest(object):
         try:
             config_file_content = repository.get_contents(".worlddriven.ini")
             config = configparser.ConfigParser()
-            config.read_string(config_file_content)
-            self.config['baseMergeTimeInHours'] = float(config['DEFAULT'].get('baseMergeTimeInHours', self.config['baseMergeTimeInHours']))
-            self.config['perCommitTimeInHours'] = float(config['DEFAULT'].get('perCommitTimeInHours', self.config['perCommitTimeInHours']))
-            self.config['merge_method'] = float(config['DEFAULT'].get('merge_method', self.config['merge_method']))
+            config.read_string(config_file_content.decoded_content.decode('utf-8'))
+            config_new = {}
+            config_new['baseMergeTimeInHours'] = float(config['DEFAULT'].get('baseMergeTimeInHours'))
+            config_new['perCommitTimeInHours'] = float(config['DEFAULT'].get('perCommitTimeInHours'))
+            config_new['merge_method'] = config['DEFAULT'].get('merge_method')
+            self.config.update(config_new)
         except Exception as e:
             logging.info('No config file found')
 
