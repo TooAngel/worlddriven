@@ -58,10 +58,6 @@ footer span {
   margin: 16px;
 }
 
-.logo {
-  width:350px;
-}
-
 /* Links */
 
 a,
@@ -88,8 +84,14 @@ header {
 }
 
 .logo {
-  padding: 0 1.2rem;
   width: 100%;
+  padding-top: 0.5rem;
+  border-bottom: None;
+}
+
+
+.logo:hover {
+  border-bottom: None;
 }
 
 @media only screen and (min-width:451px) {
