@@ -42,11 +42,11 @@ This can be overwritten with the environment variable: `MONGODB_URI`
 As server Gunicorn is used, checkout the `Procfile` or use
 `gunicorn --workers=1 --worker-class=flask_sockets.worker server:app --chdir src`.
 
-The authentication and authentication uses GitHub OAuth and API.
+The authentication and authorization uses GitHub OAuth and API.
 
 For OAuth and merging of pull requests create an GitHub OAuth App
-(https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/)
-an set `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` as environment variable.
+(https://docs.github.com/en/free-pro-team@latest/developers/apps/creating-an-oauth-app)
+and set `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` as environment variable.
 The GitHub callback path is: `/github-callback`.
 
 For commenting a personal token is used
