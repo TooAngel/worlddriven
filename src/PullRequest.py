@@ -136,6 +136,7 @@ class PullRequest(object):
             except Exception as e:
                 # Maybe add a comment that the conflicts should be resolved
                 logging.exception(self.pull_request)
+                logging.info(self.pull_request.state)
                 return
             try:
                 self.pull_request.create_issue_comment('This pull request was merged by [worlddriven](https://www.worlddriven.org).')
@@ -159,7 +160,7 @@ class PullRequest(object):
 
 
 def check_pull_request(repository, pull_request, commentOnIssue, token):
-    logging.info(pull_request.title.encode('utf-8'))
+    logging.info('Pull Request: {}'.format(pull_request.title.encode('utf-8')))
 
     pr = PullRequest(repository, pull_request, token)
     pr.execute()
@@ -175,12 +176,11 @@ def check_pull_requests():
     mongo_repositories = database.repositories.find()
     for mongo_repository in mongo_repositories:
         repository_name = mongo_repository['full_name']
-        logging.info('Repository: {} {}'.format(repository_name, mongo_repository['_id']))
+        logging.info('Repository: {}'.format(repository_name))
         github_client = github.Github(mongo_repository['github_access_token'])
         repository = github_client.get_repo(repository_name)
-        for pull_request in repository.get_pulls():
+        for pull_request in repository.get_pulls(state='open'):
             if not pull_request.mergeable:
-                logging.info('Pull Request {} is not mergeable'.format(pull_request.title.encode('utf-8')))
                 continue
             check_pull_request(repository, pull_request, False, mongo_repository['github_access_token'])
 

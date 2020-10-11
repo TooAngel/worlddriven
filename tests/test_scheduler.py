@@ -115,11 +115,11 @@ class SchedulerTestCase(unittest.TestCase):
         PullRequest.check_pull_requests()
         self.assertEqual(
             logging.info.call_args_list[1],
-            (('Repository: test 4',),)
+            (('Repository: test',),)
         )
         self.assertEqual(
             logging.info.call_args_list[2],
-            ((b'title',),)
+            (('Pull Request: b\'title\'',),)
         )
         self.assertEqual(
             logging.info.call_args_list[4],
