@@ -42,7 +42,7 @@ class PullRequest(object):
             config_new['merge_method'] = config['DEFAULT'].get('merge_method')
             self.config.update(config_new)
         except Exception as e:
-            logging.info('No config file found')
+            pass
 
     def set_status(self):
         if self.coefficient >= 0:
