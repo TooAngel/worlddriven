@@ -48,6 +48,16 @@ body {
   }
 }
 
+footer {
+  width: 50%;
+  margin-left: 25%;
+  text-align: center;
+}
+
+footer span {
+  margin: 16px;
+}
+
 /* Links */
 
 a,
@@ -74,8 +84,14 @@ header {
 }
 
 .logo {
-  padding: 0 1.2rem;
   width: 100%;
+  padding-top: 0.5rem;
+  border-bottom: None;
+}
+
+
+.logo:hover {
+  border-bottom: None;
 }
 
 @media only screen and (min-width:451px) {
@@ -100,12 +116,21 @@ header h4 {
 
 /* Index page titles and subtitles */
 
-.phases {
+h1 {
   color: #205575;
   padding-top: 1.6rem;
 }
 
-.subheading {
+h2 {
+  color: #205575;
+  padding-top: 1.6rem;
+}
+
+h3 {
+  color: #3c6a82;
+}
+
+h4 {
   color: #3c6a82;
 }
 
