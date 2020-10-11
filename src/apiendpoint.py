@@ -74,6 +74,7 @@ class APIPullRequest(flask_restful.Resource):
                     'unlabel': datetime.timestamp(pr.unlabel_date),
                     'push': datetime.timestamp(pr.push_date),
                     'created': datetime.timestamp(pr.pull_request.created_at),
+                    'last_draft': datetime.timestamp(pr.ready_for_review_date),
                 },
                 'times': {
                     'total_merge_time': pr.total_merge_time,
