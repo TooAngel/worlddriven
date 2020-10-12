@@ -104,6 +104,8 @@ class PullRequest(object):
         issue = self.repository.get_issue(self.pull_request.number)
         issue_events = [event for event in issue.get_events() if event.event == 'unlabeled' and event.raw_data['label']['name'] == 'WIP']
         # TODO this is removing the label, instead draft PRs should be used - so need to check when the status changed to open
+        ready_for_review_events = [event for event in issue.get_events() if event.event == 'ready_for_review']
+        self.ready_for_review_date = _get_last_date(ready_for_review_events)
         self.unlabel_date = _get_last_date(issue_events)
         events = [event for event in self.pull_request.head.repo.get_events() if event.type == 'PushEvent' and event.payload['ref'] == 'refs/heads/{}'.format(self.pull_request.head.ref)]
         self.push_date = _get_last_date(events)
@@ -114,7 +116,7 @@ class PullRequest(object):
         self.commit_date = commit.commit.author.date
         self.pull_request_date = self.pull_request.created_at
 
-        self.max_date = max(self.commit_date, self.unlabel_date, self.push_date, self.pull_request.created_at)
+        self.max_date = max(self.commit_date, self.unlabel_date, self.push_date, self.pull_request.created_at, self.ready_for_review_date)
         self.age = datetime.utcnow() - self.max_date
 
     def get_merge_time(self):
