@@ -78,8 +78,6 @@ def before_request():
     if 'user_id' in session:
         user = mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
         g.user = user
-    else:
-        logging.info('no user in session')
 
 
 @github_oauth.access_token_getter
