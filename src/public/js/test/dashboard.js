@@ -49,13 +49,37 @@ export class TestDashboard extends Dashboard { // eslint-disable-line no-unused-
    **/
   getPullRequest(repositoryFullName, pullRequestNumber, callback) {
     callback({pull_request: {
-      title: 'pull request title',
+      title: 'Some cool new feature',
       mergeable: true,
       stats: {
+        contributors: [
+          {
+            name: 'contributor',
+            review_value: 5,
+            commits: '4',
+            time_value: 7,
+          },
+        ],
+        age: {},
         coefficient: 0.3,
+        votes: 7,
+        votes_total: 12,
+      },
+      org: 'testorg',
+      repo: 'testrepo',
+      number: 5,
+      state: 'state',
+      dates: {
+        max: 123456789,
       },
       times: {
-        merge_date: 1234567,
+        days_to_merge: {
+          merge_date: 1234567,
+
+        },
+        merge_duration: {
+
+        },
       },
     }});
   }

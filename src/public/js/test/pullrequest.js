@@ -21,6 +21,8 @@ export class TestPullRequest extends PullRequest { // eslint-disable-line no-unu
           },
         ],
         age: {},
+        votes: 7,
+        votes_total: 12,
       },
       org: 'testorg',
       repo: 'testrepo',

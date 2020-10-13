@@ -1,5 +1,6 @@
 import React from 'react';
 import {Repository} from './repository'; // eslint-disable-line no-unused-vars
+import {PullRequestView} from './pullrequestView'; // eslint-disable-line no-unused-vars
 
 /**
  * Dashboard class
@@ -18,6 +19,8 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
       repositories: [],
       fetched: false,
     };
+
+    this.setPullRequest = this.setPullRequest.bind(this);
   }
 
   /**
@@ -119,6 +122,16 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
   }
 
   /**
+   * setPullRequest - Sets the data of a pull request to the state
+   *
+   * @param {object} pullRequest - The Pull Request data
+   * @return {void}
+   **/
+  setPullRequest(pullRequest) {
+    this.setState({pullRequest: pullRequest});
+  }
+
+  /**
    * render - renders
    * @return {object} - The element to be renderd
    **/
@@ -133,7 +146,14 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
 
     const repositories = [];
     for (const repository of this.state.repositories) {
-      repositories.push(<Repository key={repository.full_name} repository={repository} getPullRequest={this.getPullRequest} />);
+      repositories.push(<Repository key={repository.full_name} repository={repository} getPullRequest={this.getPullRequest} setPullRequest={this.setPullRequest}/>);
+    }
+
+    let main = <div>Here you can enable world driven for each of your repositories. When
+    enabled pull requests are watched and automatically merged based on the
+    reviews.</div>;
+    if (this.state.pullRequest) {
+      main = <PullRequestView pullRequest={this.state.pullRequest} />;
     }
 
     return (
@@ -147,13 +167,15 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
           </div>
         </div>
         <h1>{ this.state.user }</h1>
-        Here you can enable world driven for each of your repositories. When
-        enabled pull requests are watched and automatically emerged based on the
-        reviews.
         <div className="main-content">
-          <h2>Repositories</h2>
-          <div className="repositories">
-            { repositories }
+          <div className="gridFirst">
+            <h2>Repositories</h2>
+            <div className="repositories">
+              {repositories}
+            </div>
+          </div>
+          <div className="gridSecond">
+            {main}
           </div>
         </div>
       </div>
