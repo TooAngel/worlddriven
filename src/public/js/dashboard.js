@@ -168,13 +168,13 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
         </div>
         <h1>{ this.state.user }</h1>
         <div className="main-content">
-          <div className="gridFirst">
+          <div className="sidebar">
             <h2>Repositories</h2>
             <div className="repositories">
               {repositories}
             </div>
           </div>
-          <div className="gridSecond">
+          <div>
             {main}
           </div>
         </div>

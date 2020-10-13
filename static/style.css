@@ -308,14 +308,11 @@ input:checked + .slider:before {
 
 .main-content {
   display: grid;
+  grid-template-columns: 25% 75%;
 }
 
-.gridFirst {
-  grid-column: 1;
-}
-
-.gridSecond {
-  grid-column: 2 / span 2;
+.sidebar {
+  background-color: #97AEB9;
 }
 
 .repositoryList {

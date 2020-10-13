@@ -63,7 +63,7 @@ export class PullRequestView extends React.Component { // eslint-disable-line no
               <tr title="The date when the labels changed"><td>Unlabel date:</td><td>{ new Date(this.props.pullRequest.dates.unlabel * 1000 || 0).toISOString() }</td></tr>
               <tr title="The last date it was pushed"><td>Push date:</td><td>{ new Date(this.props.pullRequest.dates.push * 1000 || 0).toISOString() }</td></tr>
               <tr title="The last date of the commits"><td>Commit date:</td><td>{ new Date(this.props.pullRequest.dates.commit * 1000 || 0).toISOString() }</td></tr>
-              <tr title="The last date it was ready for Review"><td>Ready For Review date:</td><td>{ new Date(this.state.pullRequest.dates.last_draft * 1000 || 0).toISOString() }</td></tr>
+              <tr title="The last date it was ready for Review"><td>Ready For Review date:</td><td>{ new Date(this.props.pullRequest.dates.last_draft * 1000 || 0).toISOString() }</td></tr>
               <tr title="The date when the pull request was opened"><td>Pull Request date:</td><td>{ new Date(this.props.pullRequest.dates.created * 1000 || 0).toISOString() }</td></tr>
               <tr><td><hr/></td><td><hr/></td></tr>
               <tr title="The start date is the most recent one from the above"><td>Start date:</td><td>{ new Date(this.props.pullRequest.dates.max * 1000 || 0).toISOString() }</td></tr>
