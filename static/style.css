@@ -114,9 +114,15 @@ header {
   width: 100%;
 }
 
-@media only screen and (min-width:451px) {
+@media only screen and (min-width: 451px) {
   .logo {
     width: 70%;
+  }
+}
+
+@media only screen and (min-width: 1025px) {
+  .logo {
+    width: 60%;
   }
 }
 
