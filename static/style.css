@@ -49,14 +49,29 @@ body {
 }
 
 footer {
-  width: 50%;
-  margin-left: 25%;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  margin-top: 1.6rem;
 }
 
-footer span {
-  margin: 16px;
+footer a {
+  margin-bottom: 0.8rem;
 }
+
+@media only screen and (min-width: 500px) {
+  footer {
+    flex-direction: row;
+    justify-content: center;
+    align-items: space-around;
+  }
+
+  footer a {
+    margin-right: 1.0rem;
+  }
+}
+
 
 /* Links */
 
@@ -79,30 +94,29 @@ header {
 
 
 .login {
-  margin-left: auto;
-  margin-bottom: -30px;
+  margin: 0 0 -30px auto;
 }
 
 .logo {
-  width: 100%;
-  padding-top: 0.5rem;
-  border-bottom: None;
+  display: flex;
+  justify-content: center;
+  margin-bottom: -1.6rem;
 }
 
 
-.logo:hover {
+.logo a,
+.logo a:hover {
+  width: 100%;
   border-bottom: None;
+}
+
+.logo img {
+  width: 100%;
 }
 
 @media only screen and (min-width:451px) {
   .logo {
-    width: 80%;
-  }
-}
-
-@media only screen and (min-width:1025px) {
-  .logo {
-    width: 60%;
+    width: 70%;
   }
 }
 
@@ -113,6 +127,7 @@ header {
 header h4 {
   margin: -8px auto 10px auto;
 }
+
 
 /* Index page titles and subtitles */
 
