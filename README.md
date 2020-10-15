@@ -79,8 +79,7 @@ enable World Driven for the repository
 - `/:org/:repo/pull/:pull_number` A detailed calculation breakdown for the pull
 request
 
-Use the following endpoints to work on the dashboard with mock data and fast
-reloads:
+Use the following endpoints to more easily work on the dashboard with mock data:
 
 - `/test/dashboard` - for the dashboard
 - `/test/:org/:repo/pull/:pull_number` - for the pull request view
