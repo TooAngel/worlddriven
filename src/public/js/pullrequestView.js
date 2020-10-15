@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import styles from '../../../static/css/pullRequest.module.css';
 
 /**
  * PullRequest class
@@ -35,14 +36,15 @@ export class PullRequestView extends React.Component { // eslint-disable-line no
    * @return {object} - The element to be renderd
    **/
   render() {
-    const style = {
-      height: '100%',
-    };
-    const headerStyle = {color: 'grey'};
+    if (!this.props.pullRequest) {
+      return <div>Here you can enable world driven for each of your repositories. When
+      enabled pull requests are watched and automatically merged based on the
+      reviews.</div>;
+    }
 
     const contributors = [];
     for (const contributor of this.props.pullRequest.stats.contributors) {
-      contributors.push(<tr key={contributor.name} className={`review_value${contributor.review_value}` }>
+      contributors.push(<tr key={contributor.name} className={styles[`review_value${contributor.review_value}`]}>
         <td>{ contributor.name }</td>
         <td>{ contributor.commits }</td>
         <td>{ this.getTimeDeltaString(contributor.time_value) }</td>
@@ -51,13 +53,14 @@ export class PullRequestView extends React.Component { // eslint-disable-line no
 
     const githubPullRequestLink = `https://github.com/${this.props.pullRequest.org}/${this.props.pullRequest.repo}/pull/${this.props.pullRequest.number}`;
     return (
-      <div style={style}>
-        <h1><a href={githubPullRequestLink}>{ this.props.pullRequest.title } <span style={headerStyle}>#{ this.props.pullRequest.number }</span></a></h1>
-        <span className="PullRequestSummary">repository: { this.props.pullRequest.org }/{ this.props.pullRequest.repo }</span> <br />
-        <span className="PullRequestSummary">state: { this.props.pullRequest.state }</span>
+      <div className={styles.content}>
+        <h1><a href={githubPullRequestLink}>{ this.props.pullRequest.title } <span className={styles.pullRequestNumber}>#{ this.props.pullRequest.number }</span></a></h1>
+        <span className={styles.PullRequestSummary}>state: { this.props.pullRequest.state }</span>
 
         <details>
-          <summary className="PullRequestSummary"><span title="The point in time when the countdown starts">Start date: { new Date(this.props.pullRequest.dates.max * 1000 || 0).toISOString() }</span></summary>
+          <summary className={styles.PullRequestSummary}>
+            <span title="The point in time when the countdown starts">Start date: { new Date(this.props.pullRequest.dates.max * 1000 || 0).toISOString() }</span>
+          </summary>
           <table>
             <tbody>
               <tr title="The date when the labels changed"><td>Unlabel date:</td><td>{ new Date(this.props.pullRequest.dates.unlabel * 1000 || 0).toISOString() }</td></tr>
@@ -72,7 +75,7 @@ export class PullRequestView extends React.Component { // eslint-disable-line no
         </details>
 
         <details>
-          <summary className="PullRequestSummary"><span title="Pull Request reviews counted as votes">Positive votes: { this.props.pullRequest.stats.votes }/{ this.props.pullRequest.stats.votes_total } (~{ Math.round(this.props.pullRequest.stats.votes / this.props.pullRequest.stats.votes_total * 100) } %)</span></summary>
+          <summary className={styles.PullRequestSummary}><span title="Pull Request reviews counted as votes">Positive votes: { this.props.pullRequest.stats.votes }/{ this.props.pullRequest.stats.votes_total } (~{ Math.round(this.props.pullRequest.stats.votes / this.props.pullRequest.stats.votes_total * 100) } %)</span></summary>
           <table>
             <tbody>
               <tr><td title="Number of votes due to pull request reviews">votes:</td><td>{ this.props.pullRequest.stats.votes }</td></tr>
@@ -89,7 +92,7 @@ export class PullRequestView extends React.Component { // eslint-disable-line no
         </details>
 
         <details>
-          <summary className="PullRequestSummary">
+          <summary className={styles.PullRequestSummary}>
             <span title="The Pull Request will be automatically merged in">Time to merge: {this.getTimeDeltaString(this.props.pullRequest.times.days_to_merge.total_seconds)} ({ new Date(this.props.pullRequest.times.merge_date * 1000 || 0).toISOString() })</span>
           </summary>
           <table>
@@ -108,5 +111,5 @@ export class PullRequestView extends React.Component { // eslint-disable-line no
 }
 
 PullRequestView.propTypes = {
-  pullRequest: PropTypes.object.isRequired,
+  pullRequest: PropTypes.object,
 };

@@ -1,0 +1,24 @@
+.content {
+  height: 100%,
+}
+
+.pullRequestNumber {
+  color: grey;
+}
+
+.PullRequestSummary {
+  font-size: 16pt;
+  padding: 8px;
+}
+
+.review_value0 {
+  color: grey;
+}
+
+.review_value1 {
+  color: green;
+}
+
+.review_value-1 {
+  color: red;
+}

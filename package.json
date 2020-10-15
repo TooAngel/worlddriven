@@ -30,12 +30,14 @@
     "babel-cli": "6.26.0",
     "babel-loader": "8.1.0",
     "babel-preset-react-app": "9.1.2",
+    "css-loader": "^5.0.0",
     "eslint": "7.10.0",
     "eslint-config-google": "0.14.0",
     "eslint-plugin-react": "7.21.2",
     "jsx": "0.9.89",
     "nodemon": "2.0.4",
     "sort-package-json": "1.46.0",
+    "style-loader": "^2.0.0",
     "webpack": "4.44.2",
     "webpack-cli": "3.3.12"
   }

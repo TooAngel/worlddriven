@@ -1,0 +1,14 @@
+.content {
+  height: '100%';
+}
+
+.mainContent {
+  display: grid;
+  grid-template-columns: 25% auto;
+  grid-column-gap: 20px;
+}
+
+.sidebar {
+  background-color: #97AEB9;
+  padding-right: 10px;
+}
