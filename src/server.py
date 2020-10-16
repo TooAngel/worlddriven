@@ -20,6 +20,7 @@ from datetime import timedelta
 from flask_sockets import Sockets
 import re
 import hashlib
+import gevent
 
 from routes.static import static
 import apiendpoint
@@ -192,6 +193,18 @@ api.add_resource(
 )
 
 
+class WebsocketPing(gevent.Greenlet):
+    def __init__(self, ws):
+        self.running = True
+        self.ws = ws
+        gevent.Greenlet.__init__(self)
+
+    def _run(self):
+        while self.running:
+            self.ws.send_frame('ping', self.ws.OPCODE_PING)
+            gevent.sleep(20)
+
+
 @sockets.route('/admin/logs')
 def ws_admin_logs(ws):
     logging.info('websocket connection started')
@@ -202,6 +215,7 @@ def ws_admin_logs(ws):
     data = {
         'tail': True,
     }
+
     auth = (os.environ['HEROKU_EMAIL'], os.environ['HEROKU_TOKEN'])
     session_response = requests.post(
         url,
@@ -216,6 +230,9 @@ def ws_admin_logs(ws):
         auth=auth,
         stream=True
     )
+    ping = WebsocketPing(ws)
+    ping.start()
+
     for line in log.iter_lines():
         if line:
             decoded_line = line.decode('utf-8')
@@ -228,6 +245,8 @@ def ws_admin_logs(ws):
                 logging.error('/admin/logs ws.send() exception {}'.format(e))
                 break
 
+    ping.running = False
+
     logging.info('websocket connection ended')
 
 
@@ -236,6 +255,7 @@ def admin():
     return app.send_static_file('admin.html')
 
 
+# TODO this can be removed, as soon as /admin is working fine
 @app.route('/admin/logs')
 def admin_logs():
     url = 'https://api.heroku.com/apps/worlddriven/log-sessions'
