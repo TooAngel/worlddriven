@@ -1,5 +1,5 @@
 {
-  "ignore": ["tmp/*", "dist/*"],
+  "ignore": ["tmp/*", "dist/*", "*.py", "*.pyc"],
   "delay": "2500",
   "ext": "*",
   "events": {
