@@ -28,6 +28,8 @@ export class TestDashboard extends Dashboard { // eslint-disable-line no-unused-
         pull_requests: [
           {number: 11},
         ],
+        description: 'Super cool screeps',
+        html_url: 'https://github.com/TooAngel/screeps',
       },
       {
         full_name: 'TooAngel/worlddriven',
@@ -35,6 +37,8 @@ export class TestDashboard extends Dashboard { // eslint-disable-line no-unused-
         pull_requests: [
           {number: 11},
         ],
+        description: 'Extreme cool World Driven',
+        html_url: 'https://github.com/TooAngel/worlddriven',
       },
     ]);
   }
@@ -48,15 +52,27 @@ export class TestDashboard extends Dashboard { // eslint-disable-line no-unused-
    * @return {void}
    **/
   getPullRequest(repositoryFullName, pullRequestNumber, callback) {
-    callback({pull_request: {
-      title: 'Some cool new feature',
+    let data = {pull_request: {
+      title: 'Perfect attack',
       mergeable: true,
       stats: {
         contributors: [
           {
             name: 'contributor',
-            review_value: 5,
+            review_value: -1,
             commits: '4',
+            time_value: 7,
+          },
+          {
+            name: 'contributor',
+            review_value: 0,
+            commits: '7',
+            time_value: 7,
+          },
+          {
+            name: 'contributor',
+            review_value: 1,
+            commits: '9',
             time_value: 7,
           },
         ],
@@ -81,6 +97,57 @@ export class TestDashboard extends Dashboard { // eslint-disable-line no-unused-
 
         },
       },
-    }});
+    }};
+    if (repositoryFullName === 'TooAngel/worlddriven') {
+      data = {
+        pull_request: {
+          title: 'Merger improvement',
+          mergeable: false,
+          stats: {
+            contributors: [
+              {
+                name: 'contributor',
+                review_value: -1,
+                commits: '4',
+                time_value: 7,
+              },
+              {
+                name: 'contributor',
+                review_value: 0,
+                commits: '7',
+                time_value: 7,
+              },
+              {
+                name: 'contributor',
+                review_value: 1,
+                commits: '9',
+                time_value: 7,
+              },
+            ],
+            age: {},
+            coefficient: 0.3,
+            votes: 7,
+            votes_total: 12,
+          },
+          org: 'testorg',
+          repo: 'testrepo',
+          number: 5,
+          state: 'state',
+          dates: {
+            max: 123456789,
+          },
+          times: {
+            days_to_merge: {
+              merge_date: 1234567,
+
+            },
+            merge_duration: {
+
+            },
+          },
+        },
+      };
+    }
+    callback(data);
   }
 }

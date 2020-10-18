@@ -1,6 +1,9 @@
 import React from 'react';
 import {Repository} from './repository'; // eslint-disable-line no-unused-vars
+import {RepositoryListItem} from './repositoryListItem'; // eslint-disable-line no-unused-vars
 import {PullRequestView} from './pullrequestView'; // eslint-disable-line no-unused-vars
+
+import styles from '../../../static/css/dashboard.module.css';
 
 /**
  * Dashboard class
@@ -21,6 +24,7 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
     };
 
     this.setPullRequest = this.setPullRequest.bind(this);
+    this.setRepository = this.setRepository.bind(this);
   }
 
   /**
@@ -124,11 +128,22 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
   /**
    * setPullRequest - Sets the data of a pull request to the state
    *
+   * @param {int} repositoryIndex - The index of the repository list
    * @param {object} pullRequest - The Pull Request data
    * @return {void}
    **/
-  setPullRequest(pullRequest) {
-    this.setState({pullRequest: pullRequest});
+  setPullRequest(repositoryIndex, pullRequest) {
+    this.setState({activeRepository: repositoryIndex, pullRequest: pullRequest});
+  }
+
+  /**
+   * setRepository - Sets the data of a repository to the state
+   *
+   * @param {int} repositoryIndex - The index of the repository list
+   * @return {void}
+   **/
+  setRepository(repositoryIndex) {
+    this.setState({activeRepository: repositoryIndex, pullRequest: undefined});
   }
 
   /**
@@ -140,24 +155,18 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
       return <div className="loader"></div>;
     }
 
-    const style = {
-      height: '100%',
-    };
-
     const repositories = [];
-    for (const repository of this.state.repositories) {
-      repositories.push(<Repository key={repository.full_name} repository={repository} getPullRequest={this.getPullRequest} setPullRequest={this.setPullRequest}/>);
+    for (let repositoryIndex=0; repositoryIndex < this.state.repositories.length; repositoryIndex++) {
+      const repository = this.state.repositories[repositoryIndex];
+      repositories.push(<RepositoryListItem key={repository.full_name} repositoryIndex={repositoryIndex} repository={repository} getPullRequest={this.getPullRequest} setRepository={this.setRepository} setPullRequest={this.setPullRequest}/>);
     }
 
-    let main = <div>Here you can enable world driven for each of your repositories. When
-    enabled pull requests are watched and automatically merged based on the
-    reviews.</div>;
-    if (this.state.pullRequest) {
-      main = <PullRequestView pullRequest={this.state.pullRequest} />;
-    }
+    const repository = <Repository repository={this.state.repositories[this.state.activeRepository]} />;
+    const pullRequest = <PullRequestView pullRequest={this.state.pullRequest} />;
+    const main = <div>{repository}{pullRequest}</div>;
 
     return (
-      <div style={style}>
+      <div className={styles.content}>
         <div className="top">
           <div className="login">
             <a href="/logout">
@@ -167,16 +176,14 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
           </div>
         </div>
         <h1>{ this.state.user }</h1>
-        <div className="main-content">
-          <div className="sidebar">
-            <h2>Repositories</h2>
-            <div className="repositories">
+        <div className={styles.mainContent}>
+          <div className={styles.sidebar}>
+            <h2 onClick={() => this.setRepository()}>Repositories</h2>
+            <div>
               {repositories}
             </div>
           </div>
-          <div>
-            {main}
-          </div>
+          {main}
         </div>
       </div>
     );

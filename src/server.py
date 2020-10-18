@@ -114,6 +114,8 @@ def repositories():
         repositories[repository.full_name] = {
             'configured': False,
             'pull_requests': get_pull_requests(repository),
+            'description': repository.description,
+            'html_url': repository.html_url,
         }
         query['$or'].append({'full_name': repository.full_name})
 
@@ -123,6 +125,8 @@ def repositories():
             repositories[repository.full_name] = {
                 'configured': False,
                 'pull_requests': get_pull_requests(repository),
+                'description': repository.description,
+                'html_url': repository.html_url,
             }
             query['$or'].append({'full_name': repository.full_name})
 
@@ -136,6 +140,8 @@ def repositories():
             'full_name': key,
             'configured': value['configured'],
             'pull_requests': value['pull_requests'],
+            'description': value['description'],
+            'html_url': value['html_url'],
         })
     response = sorted(response, key=lambda i: i['full_name'])
     return Response(json.dumps(response), mimetype='application/json')
