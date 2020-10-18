@@ -53,7 +53,7 @@ footer {
   flex-direction: column;
   justify-content: space-around;
   align-items: center;
-  margin-top: 1.6rem;
+  margin-top: 5.6rem;
 }
 
 footer a {
@@ -167,6 +167,12 @@ li:first-child {
 
 li h4 {
   margin-top: 0;
+}
+
+/* Fade effect */
+.future-phases,
+.future-phases-2 {
+  opacity: 0.6;
 }
 
 /* Status Check Image */
