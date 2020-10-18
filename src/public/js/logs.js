@@ -33,7 +33,11 @@ export class Logs extends React.Component { // eslint-disable-line no-unused-var
    * @return {void}
    **/
   initWS() {
-    const url = `ws://${window.location.hostname}:${window.location.port}/admin/logs`;
+    let protocol = 'wss';
+    if (window.location.protocol === 'http:') {
+      protocol = 'ws';
+    }
+    const url = `${protocol}://${window.location.hostname}:${window.location.port}/admin/logs`;
     this.ws = new WebSocket(url);
     this.ws.onopen = () => {
       console.log('connected');
