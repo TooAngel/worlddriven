@@ -166,46 +166,76 @@
         (GitLab is the same but that feature is not yet implemented).</li>
     </ul>
 
-    This project is `world driven` itself. If you like, jump in and be a part of
+    <p>This project is `world driven` itself. If you like, jump in and be a part of
     <a href="https://github.com/tooangel/worlddriven">the World Driven project</a>.
     You can also join the <a href="https://discord.gg/RrGFHKb">discord server</a>
       <img src="/static/images/Discord-Logo-Black.png" class='discord-image' width="20px">
-    or simply say hello to the project's creator <a href="mailto:tooangel@tooangel.de">Tobias Wilken</a>
+    or simply say hello to the project's creator
+    <a href="mailto:tooangel@tooangel.de">Tobias Wilken</a></p>
 
-    <h2>Phase Two: Transparent Services</h2>
-    <p>Having clear and automated rules for progressing in open source projects is just the start.
-    Due to the DevOps (or GitOps) ideas, many operational tasks are now stored in repositories
-    and applied upon merge. So the challenge now is building (world driven) services that operate
-    on these ideas and are only maintained via Pull Requests. This provides a new level of trust
-    and a new entity <em>unavailable system data</em> (still searching for a better name).
-    Passwords, service credentials and the like is data which does not necessarily have to be
-    accessible by humans; it can therefore be maintained and used exclusively in the system itself.</p>
-
-    <p>For example: In one of the companies I was working for, the employees were using
-    Chromeboxes. As part of their daily work they had to split and merge PDFs.
-    There are a lot of (free) services out there that can do the job but
-    they can't be used due to privacy concerns - What happens with my PDFs? Do they store them? Do
-    they use them? - I hope (and guess) that they don't but I can't be sure.</p>
-
-    <p>Compare that to a PDF service that is open source, world driven and uses continuous deployment.
-    No one has access to any credentials and changes can only be done via public Pull Requests -
-    That sounds far more secure to me.</p>
+    <h3 id='start-fade'>A Speculative Future...</h3>
+    <p>The further phases are only speculative and lay blurry upon the project's horizon. Scroll
+    further and our current ideas will be clarified, join us and you can help shape them.</p>
 
 
-    <h2>Phase Three: Down the Rabbit Hole</h2>
-    <p>In my mind these examples use:</p>
-    <ul>
-      <li>Some CI services for testing and deployment</li>
-      <li>Some automated hosting environment (PaaS)</li>
-      <li>Some databases...</li>
-    </ul>
-    <p>The web service itself is world driven but can I trust the other parties?
-    Why not build the infrastructure in the same way? Using IaaS instead of
-    higher level managed server is a lot to do but it is doable (I know, I've already built a PaaS).
-    World driven fully automated IaaS, IMHO, is more challenging.</p>
+    <div class='future-phases'>
+      <h2>Phase Two: Transparent Services</h2>
+      <p>Having clear and automated rules for progressing in open source projects is just the start.
+      Due to the DevOps (or GitOps) ideas, many operational tasks are now stored in repositories
+      and applied upon merge. So the challenge now is building (world driven) services that operate
+      on these ideas and are only maintained via Pull Requests. This provides a new level of trust
+      and a new entity <em>unavailable system data</em> (still searching for a better name).
+      Passwords, service credentials and the like is data which does not necessarily have to be
+      accessible by humans; it can therefore be maintained and used exclusively in the system itself.</p>
 
-    <p>The question now is how deep to dig and how far along this journey you're willing
-    to come with me?</p>
+      <p>For example: In one of the companies I was working for, the employees were using
+      Chromeboxes. As part of their daily work they had to split and merge PDFs.
+      There are a lot of (free) services out there that can do the job but
+      they can't be used due to privacy concerns - What happens with my PDFs? Do they store them? Do
+      they use them? - I hope (and guess) that they don't but I can't be sure.</p>
+
+      <p>Compare that to a PDF service that is open source, world driven and uses continuous deployment.
+      No one has access to any credentials and changes can only be done via public Pull Requests -
+      That sounds far more secure to me.</p>
+    </div>
+
+    <div class='future-phases-2'>
+      <h2>Phase Three: Down the Rabbit Hole</h2>
+      <p>In my mind these examples use:</p>
+      <ul>
+        <li>Some CI services for testing and deployment</li>
+        <li>Some automated hosting environment (PaaS)</li>
+        <li>Some databases...</li>
+      </ul>
+      <p>The web service itself is World Driven but can I trust the other parties?
+      Why not build the infrastructure in the same way? Using IaaS instead of
+      higher level managed server is a lot to do but it is doable (I know, I've already built a PaaS).
+      In my opinion, a World Driven, fully automated IaaS is more challenging.</p>
+
+      <p id='end-fade'>The question now is how deep to dig? You've scrolled this far, how much futher along this
+      journey are you willing to go? We'll be pleased to have you regardless.
+      to come with me?</p>
+    </div>
+
+    <script>
+      const startFade = document.getElementById('start-fade').offsetTop;
+      const endFade = document.getElementById('end-fade').offsetTop;
+      const fadeIncrement = (endFade - startFade) * 0.5;
+
+      window.addEventListener("scroll", () => {
+        const currentPosition = window.pageYOffset;
+        opacity = (currentPosition - startFade) / fadeIncrement;
+        if (opacity < 0.6) {
+          opacity = 0.6;
+        };
+        document.querySelector(".future-phases").style.opacity = opacity;
+        if (opacity < 0.6) {
+          opacity = 0.8;
+        };
+        document.querySelector(".future-phases-2").style.opacity = opacity - 0.2;
+      });
+    </script>
+
   </article>
 
   <footer>
