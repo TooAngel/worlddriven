@@ -14,7 +14,6 @@ from flask_pymongo import PyMongo
 from flask_github import GitHub
 import logging
 from PullRequest import PullRequest as PR, check_pull_requests
-from bson.objectid import ObjectId
 import json
 from datetime import timedelta
 from flask_sockets import Sockets
@@ -22,9 +21,15 @@ import re
 import hashlib
 import gevent
 
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate, upgrade
+
 from routes.static import static
 import apiendpoint
-import routes.githubWebHook
+from routes import githubWebHook
+
+from models import Repository, User, db
+from flask_session import SqlAlchemySessionInterface
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(message)s',
@@ -37,6 +42,24 @@ app = Flask(
 )
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
+
+SESSION_TYPE = 'sqlalchemy'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('POSTGRESQL_URI', 'postgresql://worlddriven:password@localhost/worlddriven')
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_size': 20, 'max_overflow': 10}
+db.init_app(app)
+migrate = Migrate(app, db)
+
+SqlAlchemySessionInterface(app, db, "sessions", "sess_")
+with app.app_context():
+    upgrade()
+
+app.config.from_object(__name__)
+Session(app)
+
+app.register_blueprint(static)
+
+
 mongo_uri = os.getenv(
     'MONGODB_URI',
     'mongodb://localhost:27017/worlddriven'
@@ -44,18 +67,16 @@ mongo_uri = os.getenv(
 app.config['MONGO_URI'] = mongo_uri
 mongo = PyMongo(app)
 
-mongo_parts = mongo_uri.split('/')
-mongo_db = mongo_parts.pop().split('?')[0]
-
-SESSION_TYPE = 'mongodb'
-SESSION_MONGODB = mongo.cx
-SESSION_MONGODB_DB = mongo_db
-SESSION_MONGODB_COLLECT = 'sessions'
-
-app.config.from_object(__name__)
-Session(app)
-
-app.register_blueprint(static)
+repositories = mongo.db.repositories.find()
+for repository in repositories:
+    with app.app_context():
+        db_repository = Repository.query.filter_by(full_name=repository['full_name']).first()
+        if not db_repository:
+            print(repository)
+            db_repository = Repository(full_name=repository['full_name'], github_access_token=repository['github_access_token'])
+            db.session.add(db_repository)
+            db.session.commit()
+            print('{} created'.format(repository['full_name']))
 
 if not os.getenv('DEBUG'):
     sslify = SSLify(app, permanent=True)
@@ -64,9 +85,6 @@ sockets = Sockets(app)
 Compress(app)
 
 api = flask_restful.Api(app)
-
-apiendpoint.mongo = mongo
-routes.githubWebHook.mongo = mongo
 
 app.config['GITHUB_CLIENT_ID'] = os.getenv('GITHUB_CLIENT_ID')
 app.config['GITHUB_CLIENT_SECRET'] = os.getenv('GITHUB_CLIENT_SECRET')
@@ -77,7 +95,9 @@ github_oauth = GitHub(app)
 def before_request():
     g.user = None
     if 'user_id' in session:
-        user = mongo.db.users.find_one({'_id': ObjectId(session['user_id'])})
+
+        logging.info(session['user_id'])
+        user = User.query.filter_by(id=session['user_id']).first()
         g.user = user
 
 
@@ -85,7 +105,7 @@ def before_request():
 def token_getter():
     user = g.user
     if user is not None:
-        user = user['github_access_token']
+        user = user.github_access_token
         return user
     else:
         logging.info('No g user')
@@ -104,11 +124,11 @@ def repositories():
     if not g.user:
         return 401
 
-    github_client = github.Github(g.user['github_access_token'])
+    github_client = github.Github(g.user.github_access_token)
     user = github_client.get_user()
     github_repositories = user.get_repos(type='owner')
 
-    query = {'$or': []}
+    repositoryNames = []
     repositories = {}
     for repository in github_repositories:
         repositories[repository.full_name] = {
@@ -117,7 +137,7 @@ def repositories():
             'description': repository.description,
             'html_url': repository.html_url,
         }
-        query['$or'].append({'full_name': repository.full_name})
+        repositoryNames.append(repository.full_name)
 
     organizations = user.get_orgs()
     for organization in organizations:
@@ -128,11 +148,11 @@ def repositories():
                 'description': repository.description,
                 'html_url': repository.html_url,
             }
-            query['$or'].append({'full_name': repository.full_name})
+            repositoryNames.append(repository.full_name)
 
-    mongo_repositories = mongo.db.repositories.find(query)
-    for mongo_repository in mongo_repositories:
-        repositories[mongo_repository['full_name']]['configured'] = True
+    db_repositories = Repository.query.filter(Repository.full_name.in_(repositoryNames)).all()
+    for db_repository in db_repositories:
+        repositories[db_repository.full_name]['configured'] = True
 
     response = []
     for key, value in repositories.items():
@@ -168,14 +188,13 @@ def authorized(oauth_token):
         logging.info("Authorization failed.")
         return redirect('/')
 
-    user = mongo.db.users.find_one({'github_access_token': oauth_token})
+    user = User.query.filter_by(github_access_token=oauth_token).first()
     if not user:
-        insert = mongo.db.users.insert_one({
-            'github_access_token': oauth_token
-        })
-        user = mongo.db.users.find_one({'_id': insert.inserted_id})
+        user = User(github_access_token=oauth_token)
+        db.session.add(user)
+        db.session.commit()
 
-    session['user_id'] = user['_id']
+    session['user_id'] = user.id
     return redirect('/dashboard')
 
 
@@ -187,7 +206,7 @@ def user():
     )
 
 
-api.add_resource(routes.githubWebHook.GithubWebHook, '/github/')
+api.add_resource(githubWebHook.GithubWebHook, '/github/')
 
 api.add_resource(
     apiendpoint.APIPullRequest,
@@ -310,8 +329,8 @@ app.secret_key = os.getenv('SESSION_SECRET')
 app.debug = os.getenv('DEBUG', 'false').lower() == 'true'
 
 if __name__ == '__main__':
-    # app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5001)))
-    from gevent import pywsgi
-    from geventwebsocket.handler import WebSocketHandler
-    server = pywsgi.WSGIServer(('', 5000), app, handler_class=WebSocketHandler)
-    server.serve_forever()
+    app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5001)))
+    # from gevent import pywsgi
+    # from geventwebsocket.handler import WebSocketHandler
+    # server = pywsgi.WSGIServer(('0.0.0.0', 5001), app, handler_class=WebSocketHandler)
+    # server.serve_forever()

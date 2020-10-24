@@ -6,11 +6,11 @@ from datetime import datetime, timedelta
 
 class SchedulerTestCase(unittest.TestCase):
 
-    @patch('PullRequest.MongoClient')
+    @patch('PullRequest.Repository')
     @patch('PullRequest.logging')
     @patch('PullRequest.fetch_reviews')
     @patch('PullRequest.github')
-    def test_not_merging_changes_requested(self, github, fetch_reviews, logging, mongoClient):
+    def test_not_merging_changes_requested(self, github, fetch_reviews, logging, db_repository):
         contributor_author = MagicMock()
         contributor_author.login = 'reviewer'
 
@@ -56,21 +56,16 @@ class SchedulerTestCase(unittest.TestCase):
 
         assert not pull_request.merge.called
 
-    @patch('PullRequest.MongoClient')
+    @patch('PullRequest.Repository')
     @patch('PullRequest.logging')
     @patch('PullRequest.fetch_reviews')
     @patch('PullRequest.github')
-    def test_get_pull(self, github, fetch_reviews, logging, mongoClient):
-        database = MagicMock()
-        database.repositories.find.return_value = [{
-            '_id': '4',
-            'full_name': 'test',
-            'github_access_token': 'github_access_token'
-        }]
-
-        mongo = MagicMock()
-        mongo.get_database.return_value = database
-        mongoClient.return_value = mongo
+    def test_get_pull(self, github, fetch_reviews, logging, db_repository):
+        db_repository_mock = MagicMock()
+        db_repository_mock.id = '4'
+        db_repository_mock.full_name = 'test'
+        db_repository_mock.github_access_token = 'github_access_token'
+        db_repository.query.all.return_value = [db_repository_mock]
 
         user = MagicMock()
         user.login = 'login'

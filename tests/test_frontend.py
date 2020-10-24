@@ -47,16 +47,16 @@ class FrontendTestCase(unittest.TestCase):
         )
         self.assertEqual('200 OK', rv.status)
 
-    @patch('server.mongo')
+    @patch('server.User')
     @patch('server.PR')
     @patch('server.github')
-    def test_get_pull_logged_in(self, github, PR, mongoClient):
+    def test_get_pull_logged_in(self, github, PR, user):
 
         find_one = MagicMock()
         find_one.return_value = [
             {'full_name': 'test', 'github_access_token': 'github_access_token'}
         ]
-        mongoClient.mongo.db.users.find_one = find_one
+        user.query.filter_by.first = find_one
 
         def github_mock(token):
             print('Github')

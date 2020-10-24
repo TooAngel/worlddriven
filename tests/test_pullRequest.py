@@ -6,11 +6,11 @@ from datetime import datetime, timedelta
 
 class PullRequestTestCase(unittest.TestCase):
 
-    @patch('PullRequest.MongoClient')
+    @patch('PullRequest.Repository')
     @patch('PullRequest.logging')
     @patch('PullRequest.fetch_reviews')
     @patch('PullRequest.github')
-    def test_config(self, github, fetch_reviews, logging, mongoClient):
+    def test_config(self, github, fetch_reviews, logging, db_repository):
         contributor_author = MagicMock()
         contributor_author.login = 'reviewer'
 

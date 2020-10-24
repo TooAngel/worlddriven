@@ -5,24 +5,20 @@ import logging
 from PullRequest import PullRequest
 from datetime import datetime, timedelta
 import os
-from pymongo import MongoClient
 
-mongo = None
+from models import Repository, db
+
 DOMAIN = 'https://www.worlddriven.org'
 
 
 class APIPullRequest(flask_restful.Resource):
     def get(self, org, repo, pull):
         full_name = '{}/{}'.format(org, repo)
-        mongo_url = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/worlddriven')
-        mongo = MongoClient(mongo_url)
-        database = mongo.get_database()
-        mongo_repository = database.repositories.find_one({'full_name': full_name})
+        db_repository = Repository.query.filter_by(full_name=full_name).first()
         token = os.getenv('GITHUB_USER_TOKEN')
 
-        if mongo_repository:
-            token = mongo_repository['github_access_token']
-
+        if db_repository:
+            token = db_repository.github_access_token
         github_client = github.Github(token)
         repository = github_client.get_repo(full_name)
         pull_request = repository.get_pull(pull)
@@ -99,14 +95,14 @@ class APIPullRequest(flask_restful.Resource):
 
 class APIRepository(flask_restful.Resource):
     def get(self, org, repo):
-        github_client = github.Github(g.user['github_access_token'])
+        github_client = github.Github(g.user.github_access_token)
         repository = github_client.get_repo('{}/{}'.format(org, repo))
         return repository.raw_data
 
     def put(self, org, repo):
         checked = request.json['checked']
         full_name = '{}/{}'.format(org, repo)
-        github_client = github.Github(g.user['github_access_token'])
+        github_client = github.Github(g.user.github_access_token)
         repository = github_client.get_repo('{}/{}'.format(org, repo))
         config = {
             'url': '{}/github/'.format(DOMAIN),
@@ -114,15 +110,17 @@ class APIRepository(flask_restful.Resource):
             'content_type': 'json'
         }
         events = [u'commit_comment', u'pull_request', u'pull_request_review', u'push']
+        db_repository = Repository.query.filter_by(full_name=full_name).first()
         if checked:
             try:
                 repository.create_hook('web', config, events=events, active=True)
             except github.GithubException as e:
                 logging.error(e)
 
-            repo_db = mongo.db.repositories.find_one({'full_name': full_name})
-            if not repo_db:
-                insert = mongo.db.repositories.insert_one({'full_name': full_name, 'github_access_token': g.user['github_access_token']})
+            if not db_repository:
+                db_repository = Repository(full_name=full_name, github_access_token=g.user.github_access_token)
+                db.session.add(db_repository)
+                db.session.commit()
         else:
             for hook in repository.get_hooks():
                 if 'url' not in hook.config:
@@ -130,5 +128,8 @@ class APIRepository(flask_restful.Resource):
 
                 if hook.config['url'] == '{}/github/'.format(DOMAIN):
                     hook.delete()
-            repo_db = mongo.db.repositories.delete_many({'full_name': full_name})
+
+            if db_repository:
+                db.session.delete(db_repository)
+                db.session.commit()
         return {}

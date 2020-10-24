@@ -13,6 +13,13 @@ services:
       MONGO_INITDB_DATABASE: worlddriven
     ports:
       - 27017:27017
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: worlddriven
+      POSTGRES_DB: worlddriven
+      POSTGRES_PASSWORD: password
   application:
     build:
       context: .
