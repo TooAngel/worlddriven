@@ -27,9 +27,9 @@ class PullRequest(object):
         self.token = token
         self.url = '{}/{}/pull/{}'.format(DOMAIN, self.repository.full_name, self.pull_request.number)
         self.config = {
-            'baseMergeTimeInHours': 120.,
-            'perCommitTimeInHours': 120.,
-            'merge_method': 'merge',
+            'baseMergeTimeInHours': 240.,
+            'perCommitTimeInHours': 0.,
+            'merge_method': 'squash',
         }
 
         try:
