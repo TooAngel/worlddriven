@@ -55,6 +55,15 @@ Set Session secret as `SESSION_SECRET` initial a random string.
 
 To disable https in a local environment set `DEBUG=true` as environment variable.
 
+#### Prepare PostgreSQL server
+
+```
+sudo -u postgres psql
+postgres=# create database mydb;
+postgres=# create user myuser with encrypted password 'mypass';
+postgres=# grant all privileges on database mydb to myuser;
+```
+
 ## Testing
 
 Run JavaScript tests with: `npm run test`

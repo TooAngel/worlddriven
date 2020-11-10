@@ -5,8 +5,9 @@ import os
 import github
 import requests
 from GithubReviews import fetch_reviews
-from pymongo import MongoClient
 import sys
+
+from models import Repository, db
 
 DOMAIN = 'https://www.worlddriven.org'
 
@@ -172,19 +173,17 @@ def check_pull_request(repository, pull_request, commentOnIssue, token):
 def check_pull_requests():
     logging.info('Check pull requests: {}'.format(datetime.utcnow()))
 
-    mongo_url = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/worlddriven')
-    mongo = MongoClient(mongo_url)
-    database = mongo.get_database()
-    mongo_repositories = database.repositories.find()
-    for mongo_repository in mongo_repositories:
-        repository_name = mongo_repository['full_name']
+    db_repositories = Repository.query.all()
+    print(db_repositories)
+    for db_repository in db_repositories:
+        repository_name = db_repository.full_name
         logging.info('Repository: {}'.format(repository_name))
-        github_client = github.Github(mongo_repository['github_access_token'])
+        github_client = github.Github(db_repository.github_access_token)
         repository = github_client.get_repo(repository_name)
         for pull_request in repository.get_pulls(state='open'):
             if not pull_request.mergeable:
                 continue
-            check_pull_request(repository, pull_request, False, mongo_repository['github_access_token'])
+            check_pull_request(repository, pull_request, False, db_repository.github_access_token)
 
 
 if __name__ == '__main__':

@@ -49,14 +49,10 @@ class ReviewTestCase(unittest.TestCase):
         response = json.loads(rv.data.decode('utf-8'))
         self.assertEqual('Only commented', response['info'])
 
-    @patch('routes.githubWebHook.mongo')
+    @patch('routes.githubWebHook.Repository')
     @patch('routes.githubWebHook.PR')
     @patch('routes.githubWebHook.github')
-    def test_approve(self, github, PR, mongo):
-        def PyMongo_mock(app):
-            print('PyMongo_mock')
-        PyMongo = PyMongo_mock
-
+    def test_approve(self, github, PR, db_repository):
         def PR_mock(token):
             print('PR')
         PR = PR_mock
@@ -95,14 +91,10 @@ class ReviewTestCase(unittest.TestCase):
         response = json.loads(rv.data.decode('utf-8'))
         self.assertEqual('All fine, thanks', response['info'])
 
-    @patch('routes.githubWebHook.mongo')
+    @patch('routes.githubWebHook.Repository')
     @patch('routes.githubWebHook.PR')
     @patch('routes.githubWebHook.github')
-    def test_changes_requested(self, github, PR, mongo):
-        def PyMongo_mock(app):
-            print('PyMongo_mock')
-        PyMongo = PyMongo_mock
-
+    def test_changes_requested(self, github, PR, db_repository):
         def PR_mock(token):
             print('PR')
         PR = PR_mock

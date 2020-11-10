@@ -13,13 +13,9 @@ class GithubHookTestCase(unittest.TestCase):
         self.app = server.app.test_client()
 
     @patch('PullRequest.fetch_reviews')
-    @patch('routes.githubWebHook.mongo')
+    @patch('routes.githubWebHook.Repository')
     @patch('routes.githubWebHook.github')
-    def test_pull_request_opened(self, github, mongo, fetch_reviews):
-        def PyMongo_mock(app):
-            print('PyMongo_mock')
-        PyMongo = PyMongo_mock
-
+    def test_pull_request_opened(self, github, db_repository, fetch_reviews):
         Commit_mock = MagicMock()
         Commit_mock.commit.author.date = datetime.utcnow()
 
@@ -79,9 +75,9 @@ To speed up or delay the merge review the pull request:
         Commit_mock.create_status.assert_called_with('success', 'https://www.worlddriven.org/test/pull/42', '0 Merge at {}'.format(PullRequest_mock.created_at + timedelta(days=10)), 'World driven')
 
     @patch('PullRequest.fetch_reviews')
-    @patch('routes.githubWebHook.mongo')
+    @patch('routes.githubWebHook.Repository')
     @patch('routes.githubWebHook.github')
-    def test_pull_request_synchronize(self, github, mongo, fetch_reviews):
+    def test_pull_request_synchronize(self, github, db_repository, fetch_reviews):
         def PyMongo_mock(app):
             print('PyMongo_mock')
         PyMongo = PyMongo_mock
@@ -137,10 +133,10 @@ Check the `worlddriven` status check or the [dashboard](https://www.worlddriven.
 ''')
 
     @patch('routes.githubWebHook.logging')
-    @patch('routes.githubWebHook.mongo')
+    @patch('routes.githubWebHook.Repository')
     @patch('routes.githubWebHook.PR')
     @patch('routes.githubWebHook.github')
-    def test_pull_request_edited(self, github, PR, mongo, logging):
+    def test_pull_request_edited(self, github, PR, db_repository, logging):
         def PyMongo_mock(app):
             print('PyMongo_mock')
         PyMongo = PyMongo_mock
@@ -179,10 +175,10 @@ Check the `worlddriven` status check or the [dashboard](https://www.worlddriven.
         logging.info.assert_called_with("execute_edited {'action': 'edited'}")
 
     @patch('routes.githubWebHook.logging')
-    @patch('routes.githubWebHook.mongo')
+    @patch('routes.githubWebHook.Repository')
     @patch('routes.githubWebHook.PR')
     @patch('routes.githubWebHook.github')
-    def test_pull_request_closed(self, github, PR, mongo, logging):
+    def test_pull_request_closed(self, github, PR, db_repository, logging):
         def PyMongo_mock(app):
             print('PyMongo_mock')
         PyMongo = PyMongo_mock

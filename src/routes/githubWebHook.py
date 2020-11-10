@@ -5,7 +5,7 @@ import github
 from PullRequest import PullRequest as PR
 import os
 
-mongo = None
+from models import Repository, db
 
 DOMAIN = 'https://www.worlddriven.org'
 
@@ -25,11 +25,9 @@ class PullRequest(object):
             return self.execute_closed()
 
     def execute_opened(self):
-        mongo_repository = mongo.db.repositories.find_one({
-            'full_name': self.data['repository']['full_name']
-        })
+        db_repository = Repository.query.filter_by(full_name=self.data['repository']['full_name']).first()
         # Make sure it is configured
-        if not mongo_repository:
+        if not db_repository:
             return
 
         token = os.getenv('GITHUB_USER_TOKEN')
@@ -60,11 +58,9 @@ To speed up or delay the merge review the pull request:
 '''.format(pr.days_to_merge.days, pr.days_to_merge.seconds // 3600, pr.url))
 
     def execute_synchronize(self):
-        mongo_repository = mongo.db.repositories.find_one({
-            'full_name': self.data['repository']['full_name']
-        })
+        db_repository = Repository.query.filter_by(full_name=self.data['repository']['full_name']).first()
         # Make sure it is configured
-        if not mongo_repository:
+        if not db_repository:
             return
 
         token = os.getenv('GITHUB_USER_TOKEN')
@@ -120,11 +116,9 @@ class GithubWebHook(flask_restful.Resource):
                 return {'info': 'Only commented'}
 
             logging.info('Need repository name: {}'.format(data))
-            mongo_repository = mongo.db.repositories.find_one(
-                {'full_name': data['repository']['full_name']}
-            )
+            db_repository = Repository.query.filter_by(full_name=data['repository']['full_name']).first()
             # Make sure it is configured
-            if not mongo_repository:
+            if not db_repository:
                 return
 
             token = os.getenv('GITHUB_USER_TOKEN')
