@@ -5,7 +5,6 @@ jobs:
         - image: circleci/python:3.7-stretch-node
           environment:
             JAWSDB_MARIA_URL: mysql://worlddriven:password@localhost/worlddriven
-        - image: circleci/mongo:latest
         - image: circleci/mariadb:latest
           environment:
             MYSQL_USER: worlddriven
