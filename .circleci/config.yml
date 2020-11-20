@@ -4,7 +4,7 @@ jobs:
       docker:
         - image: circleci/python:3.7-stretch-node
           environment:
-            JAWSDB_MARIA_URL: mysql://worlddriven:password@localhost/worlddriven
+            JAWSDB_MARIA_URL: mysql://worlddriven:password@127.0.0.1/worlddriven
         - image: circleci/mariadb:latest
           environment:
             MYSQL_USER: worlddriven

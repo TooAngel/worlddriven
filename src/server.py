@@ -44,8 +44,9 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 
 SESSION_TYPE = 'sqlalchemy'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('JAWSDB_MARIA_URL', 'mysql://worlddriven:password@localhost/worlddriven')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('JAWSDB_MARIA_URL', 'mysql://worlddriven:password@127.0.0.1/worlddriven')
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_size': 20, 'max_overflow': 10}
+
 db.init_app(app)
 migrate = Migrate(app, db)
 
