@@ -174,7 +174,7 @@ def check_pull_request(repository, pull_request, commentOnIssue, token):
 def check_pull_requests():
     logging.info('Check pull requests: {}'.format(datetime.utcnow()))
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('POSTGRESQL_URI', 'postgresql://worlddriven:password@localhost/worlddriven')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('JAWSDB_MARIA_URL', 'mysql://worlddriven:password@127.0.0.1/worlddriven')
     db.init_app(app)
     with app.app_context():
         db_repositories = Repository.query.all()
