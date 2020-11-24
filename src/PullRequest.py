@@ -6,6 +6,7 @@ import github
 import requests
 from GithubReviews import fetch_reviews
 import sys
+from flask import Flask
 
 from models import Repository, db
 
@@ -172,18 +173,20 @@ def check_pull_request(repository, pull_request, commentOnIssue, token):
 
 def check_pull_requests():
     logging.info('Check pull requests: {}'.format(datetime.utcnow()))
-
-    db_repositories = Repository.query.all()
-    print(db_repositories)
-    for db_repository in db_repositories:
-        repository_name = db_repository.full_name
-        logging.info('Repository: {}'.format(repository_name))
-        github_client = github.Github(db_repository.github_access_token)
-        repository = github_client.get_repo(repository_name)
-        for pull_request in repository.get_pulls(state='open'):
-            if not pull_request.mergeable:
-                continue
-            check_pull_request(repository, pull_request, False, db_repository.github_access_token)
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('JAWSDB_MARIA_URL', 'mysql://worlddriven:password@127.0.0.1/worlddriven')
+    db.init_app(app)
+    with app.app_context():
+        db_repositories = Repository.query.all()
+        for db_repository in db_repositories:
+            repository_name = db_repository.full_name
+            logging.info('Repository: {}'.format(repository_name))
+            github_client = github.Github(db_repository.github_access_token)
+            repository = github_client.get_repo(repository_name)
+            for pull_request in repository.get_pulls(state='open'):
+                if not pull_request.mergeable:
+                    continue
+                check_pull_request(repository, pull_request, False, db_repository.github_access_token)
 
 
 if __name__ == '__main__':

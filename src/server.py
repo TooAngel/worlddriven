@@ -10,7 +10,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import requests
 import sys
 from random import randrange
-from flask_pymongo import PyMongo
 from flask_github import GitHub
 import logging
 from PullRequest import PullRequest as PR, check_pull_requests
@@ -45,12 +44,13 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 
 SESSION_TYPE = 'sqlalchemy'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('POSTGRESQL_URI', 'postgresql://worlddriven:password@localhost/worlddriven')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('JAWSDB_MARIA_URL', 'mysql://worlddriven:password@127.0.0.1/worlddriven')
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_size': 20, 'max_overflow': 10}
+
 db.init_app(app)
 migrate = Migrate(app, db)
 
-SqlAlchemySessionInterface(app, db, "sessions", "sess_")
+# SqlAlchemySessionInterface(app, db, "sessions", "sess_")
 with app.app_context():
     upgrade()
 
@@ -58,25 +58,6 @@ app.config.from_object(__name__)
 Session(app)
 
 app.register_blueprint(static)
-
-
-mongo_uri = os.getenv(
-    'MONGODB_URI',
-    'mongodb://localhost:27017/worlddriven'
-) + '?retryWrites=false'
-app.config['MONGO_URI'] = mongo_uri
-mongo = PyMongo(app)
-
-repositories = mongo.db.repositories.find()
-for repository in repositories:
-    with app.app_context():
-        db_repository = Repository.query.filter_by(full_name=repository['full_name']).first()
-        if not db_repository:
-            print(repository)
-            db_repository = Repository(full_name=repository['full_name'], github_access_token=repository['github_access_token'])
-            db.session.add(db_repository)
-            db.session.commit()
-            print('{} created'.format(repository['full_name']))
 
 if not os.getenv('DEBUG'):
     sslify = SSLify(app, permanent=True)

@@ -5,7 +5,6 @@ coverage==4.5.1
 Flask==1.1.2
 Flask-Compress==1.5.0
 Flask-Migrate==2.5.3
-Flask-PyMongo==2.3.0
 Flask-RESTful==0.3.8
 Flask-Session==0.3.2
 Flask-SQLAlchemy==2.4.4
@@ -23,3 +22,4 @@ pytest-cov==2.10.0
 requests==2.24.0
 SQLAlchemy-Utils==0.36.8
 cryptography==3.2.1
+mysqlclient==2.0.1
