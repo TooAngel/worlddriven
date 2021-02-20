@@ -21,5 +21,5 @@ pytest-pythonpath==0.7.3
 pytest-cov==2.10.0
 requests==2.24.0
 SQLAlchemy-Utils==0.36.8
-cryptography==3.2.1
+cryptography==3.3.2
 mysqlclient==2.0.1
