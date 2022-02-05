@@ -22,9 +22,10 @@ export class Repository extends React.Component { // eslint-disable-line no-unus
    **/
   render() {
     let content = <div className={styles.content}></div>;
+    console.log(this.props.repository);
     if (this.props.repository) {
       content = <div className={styles.content}>
-        <a href={this.props.repository.html_url}><h1>{this.props.repository.full_name}</h1></a>
+        <a href={this.props.repository.htmlUrl}><h1>{this.props.repository.fullName}</h1></a>
         <div>{this.props.repository.description}</div>
       </div>;
     }

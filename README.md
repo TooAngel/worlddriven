@@ -29,7 +29,7 @@ Read more on https://www.worlddriven.org
 ### Run with docker compose
 Copy `.env-example` to `.env` and add your environment variables.
 ```sh
-docker-compose up
+docker compose up
 ```
 
 ### Manual

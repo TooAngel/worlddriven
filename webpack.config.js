@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   mode: 'development',
   entry: './src/public/js/script.js',
   module: {
@@ -14,7 +14,6 @@ module.exports = {
               sourceMap: false,
               modules: {
                 localIdentName: '[path]___[name]__[local]___[hash:base64:5]', // babel-plugin-css-module format
-                // localIdentName: "[path][name]__[local]" //recommended settings by cssloader#local-scope , this option generate unique classname for compiled css
               },
             },
           },
@@ -26,7 +25,7 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env', '@babel/preset-react'],
+            presets: [['@babel/preset-env', {targets: {node: '16.3.1'}}], '@babel/preset-react'],
           },
         },
       },

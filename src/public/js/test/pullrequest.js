@@ -1,4 +1,4 @@
-import {PullRequest} from '../pullrequest'; // eslint-disable-line no-unused-vars
+import {PullRequest} from '../pullrequest.js'; // eslint-disable-line no-unused-vars
 
 /**
  * PullRequest class

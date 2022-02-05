@@ -1,11 +1,11 @@
 import React from 'react'; // eslint-disable-line no-unused-vars
 import ReactDOM from 'react-dom';
 
-import {Dashboard} from './dashboard'; // eslint-disable-line no-unused-vars
-import {TestDashboard} from './test/dashboard'; // eslint-disable-line no-unused-vars
-import {PullRequest} from './pullrequest'; // eslint-disable-line no-unused-vars
-import {TestPullRequest} from './test/pullrequest'; // eslint-disable-line no-unused-vars
-import {Logs} from './logs'; // eslint-disable-line no-unused-vars
+import {Dashboard} from './dashboard.js'; // eslint-disable-line no-unused-vars
+import {TestDashboard} from './test/dashboard.js'; // eslint-disable-line no-unused-vars
+import {PullRequest} from './pullrequest.js'; // eslint-disable-line no-unused-vars
+import {TestPullRequest} from './test/pullrequest.js'; // eslint-disable-line no-unused-vars
+import {Logs} from './logs.js'; // eslint-disable-line no-unused-vars
 
 /**
  * main - The main method

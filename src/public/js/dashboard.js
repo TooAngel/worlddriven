@@ -1,7 +1,7 @@
 import React from 'react';
-import {Repository} from './repository'; // eslint-disable-line no-unused-vars
-import {RepositoryListItem} from './repositoryListItem'; // eslint-disable-line no-unused-vars
-import {PullRequestView} from './pullrequestView'; // eslint-disable-line no-unused-vars
+import {Repository} from './repository.js'; // eslint-disable-line no-unused-vars
+import {RepositoryListItem} from './repositoryListItem.js'; // eslint-disable-line no-unused-vars
+import {PullRequestView} from './pullrequestView.js'; // eslint-disable-line no-unused-vars
 
 import styles from '../../../static/css/dashboard.module.css';
 
@@ -25,63 +25,40 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
 
     this.setPullRequest = this.setPullRequest.bind(this);
     this.setRepository = this.setRepository.bind(this);
+    this.getUser = this.getUser.bind(this);
+    this.getRepositories = this.getRepositories.bind(this);
   }
 
   /**
    * getUser - Fetches the user from the backend
    *
-   * @param {function} callback - The callback function
    * @return {void}
    **/
-  getUser(callback) {
-    const getUser = new Request(`/v1/user/`, {
-      method: 'GET',
-    });
-    fetch(getUser)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((result) => {
-        callback(result);
-      })
-      .catch(() => {
-      // TODO better show a message and delete cookie?
-        window.location.replace('/');
+  async getUser() {
+    const response = await fetch(`/v1/user/`);
+    try {
+      const data = await response.json();
+      this.setState({
+        user: data.name,
       });
+    } catch (e) {
+      console.error(e);
+      location.href = '/';
+    }
   }
 
   /**
    * getRepositories - Fetches the repositories from the backend
    *
-   * @param {function} callback - The callback function
    * @return {void}
    **/
-  getRepositories(callback) {
-    const getRepositories = new Request(`/v1/repositories/`, {
-      method: 'GET',
+  async getRepositories() {
+    const response = await fetch(`/v1/repositories/`);
+    const data = await response.json();
+    this.setState({
+      repositories: data.sort((a, b) => (a.configured === b.configured)? 0 : a.configured? -1 : 1),
+      fetched: true,
     });
-    fetch(getRepositories)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((result) => {
-        callback(result);
-        this.setState({
-          repositories: result.sort((a, b) => (a.configured === b.configured)? 0 : a.configured? -1 : 1),
-          fetched: true,
-        });
-      })
-      .catch((e) => {
-      // TODO better show a message and delete cookie?
-        console.log(e);
-        window.location.replace('/');
-      });
   }
 
   /**
@@ -111,39 +88,29 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
    * @return {void}
    **/
   componentDidMount() {
-    this.getUser((result) => {
-      this.setState({
-        user: result.name,
-      });
-    });
-
-    this.getRepositories((result) => {
-      this.setState({
-        repositories: result.sort((a, b) => (a.configured === b.configured)? 0 : a.configured? -1 : 1),
-        fetched: true,
-      });
-    });
+    this.getUser();
+    this.getRepositories();
   }
 
   /**
    * setPullRequest - Sets the data of a pull request to the state
    *
-   * @param {int} repositoryIndex - The index of the repository list
-   * @param {object} pullRequest - The Pull Request data
+   * @param {string} repositoryName - The index of the repository list
+   * @param {string} pullRequestId - The Pull Request data
    * @return {void}
    **/
-  setPullRequest(repositoryIndex, pullRequest) {
-    this.setState({activeRepository: repositoryIndex, pullRequest: pullRequest});
+  setPullRequest(repositoryName, pullRequestId) {
+    this.setState({activeRepository: repositoryName, pullRequestId: pullRequestId});
   }
 
   /**
    * setRepository - Sets the data of a repository to the state
    *
-   * @param {int} repositoryIndex - The index of the repository list
+   * @param {int} repositoryName - The index of the repository list
    * @return {void}
    **/
-  setRepository(repositoryIndex) {
-    this.setState({activeRepository: repositoryIndex, pullRequest: undefined});
+  setRepository(repositoryName) {
+    this.setState({activeRepository: repositoryName, pullRequestId: undefined});
   }
 
   /**
@@ -156,13 +123,15 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
     }
 
     const repositories = [];
-    for (let repositoryIndex=0; repositoryIndex < this.state.repositories.length; repositoryIndex++) {
-      const repository = this.state.repositories[repositoryIndex];
-      repositories.push(<RepositoryListItem key={repository.full_name} repositoryIndex={repositoryIndex} repository={repository} getPullRequest={this.getPullRequest} setRepository={this.setRepository} setPullRequest={this.setPullRequest}/>);
+    for (const repository of this.state.repositories) {
+      repositories.push(<RepositoryListItem key={repository.fullName} repository={repository} setRepository={this.setRepository} setPullRequest={this.setPullRequest}/>);
     }
-
-    const repository = <Repository repository={this.state.repositories[this.state.activeRepository]} />;
-    const pullRequest = <PullRequestView pullRequest={this.state.pullRequest} />;
+    console.log(this.state.activeRepository);
+    const repository = <Repository repository={this.state.repositories.find((repository) => repository.fullName === this.state.activeRepository)} />;
+    let pullRequest = <div />;
+    if (this.state.pullRequestId) {
+      pullRequest = <PullRequestView repository={this.state.repositories.find((repository) => repository.fullName === this.state.activeRepository)} pullRequestId={this.state.pullRequestId} />;
+    }
     const main = <div>{repository}{pullRequest}</div>;
 
     return (
@@ -171,7 +140,7 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
           <div className="login">
             <a href="/logout">
               <span className="logintitle">Logout</span>
-              <img src="/static/images/GitHub-Mark-120px-plus.png" width="30" />
+              <img src="/images/GitHub-Mark-120px-plus.png" width="30" />
             </a>
           </div>
         </div>

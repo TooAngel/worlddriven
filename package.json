@@ -12,33 +12,43 @@
   },
   "license": "AGPL",
   "author": "Tobias Wilken",
-  "main": "",
+  "type": "module",
+  "main": "src/index.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
     "build": "webpack",
+    "dev": "nodemon",
     "test": "eslint . && sort-package-json package.json --check && mdspell --en-us --ignore-numbers --report \"*.md\" && write-good --no-adverb README.md CONTRIBUTING.md"
   },
   "dependencies": {
-    "markdown-spellcheck": "^1.3.1",
-    "react": "16.13.1",
-    "react-dom": "16.13.1",
-    "write-good": "^1.0.3"
+    "express": "^4.17.2",
+    "express-session": "^1.17.2",
+    "express-session-sequelize": "^2.3.0",
+    "got": "^12.0.1",
+    "mysql2": "^2.3.3",
+    "node-cron": "^3.0.2",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "sequelize": "^6.15.0",
+    "sequelize-cli": "^6.4.1"
   },
   "devDependencies": {
     "babel-cli": "6.26.0",
-    "babel-loader": "8.1.0",
-    "babel-preset-react-app": "9.1.2",
-    "css-loader": "^5.0.0",
-    "eslint": "7.10.0",
+    "babel-loader": "8.2.3",
+    "babel-preset-react-app": "10.0.1",
+    "css-loader": "6.6.0",
+    "eslint": "8.8.0",
     "eslint-config-google": "0.14.0",
-    "eslint-plugin-react": "7.21.2",
+    "eslint-plugin-react": "7.28.0",
     "jsx": "0.9.89",
+    "markdown-spellcheck": "^1.3.1",
     "nodemon": "2.0.20",
-    "sort-package-json": "1.46.0",
-    "style-loader": "^2.0.0",
-    "webpack": "4.44.2",
-    "webpack-cli": "3.3.12"
+    "sort-package-json": "1.54.0",
+    "style-loader": "3.3.1",
+    "webpack": "5.68.0",
+    "webpack-cli": "4.9.2",
+    "write-good": "1.0.8"
   }
 }
