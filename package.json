@@ -35,7 +35,7 @@
     "eslint-config-google": "0.14.0",
     "eslint-plugin-react": "7.21.2",
     "jsx": "0.9.89",
-    "nodemon": "2.0.4",
+    "nodemon": "2.0.20",
     "sort-package-json": "1.46.0",
     "style-loader": "^2.0.0",
     "webpack": "4.44.2",
