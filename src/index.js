@@ -290,11 +290,9 @@ app.get('/v1/repositories/:owner/:repo/pulls/:number', async function(req, res) 
 //     return static.send_static_file('dashboard.html')
 
 
-const server = app.listen(process.env.PORT || 3000, function() {
-  const host = server.address().address;
-  const port = server.address().port;
-
-  console.log('App listening at http://%s:%s', host, port);
+const server = app.listen(process.env.PORT || 3001, function() {
+  const {address, port} = server.address();
+  console.log('App listening at http://%s:%s', address, port);
 });
 
 process.on('uncaughtException', (error, source) => {
