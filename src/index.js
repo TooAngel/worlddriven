@@ -289,7 +289,7 @@ app.get('/v1/repositories/:owner/:repo/pulls/:number', async function(req, res) 
 // def testshow_pull_request(org_name, project_name, pull_request_number):
 //     return static.send_static_file('dashboard.html')
 
-
+console.log(JSON.stringify(process.env));
 const server = app.listen(process.env.PORT || 3001, function() {
   const {address, port} = server.address();
   console.log('App listening at http://%s:%s', address, port);
