@@ -19,6 +19,7 @@
   },
   "scripts": {
     "build": "webpack",
+    "start": "node src/index.js",
     "dev": "nodemon",
     "test": "eslint . && sort-package-json package.json --check && mdspell --en-us --ignore-numbers --report \"*.md\" && write-good --no-adverb README.md CONTRIBUTING.md"
   },
