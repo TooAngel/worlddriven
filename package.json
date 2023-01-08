@@ -19,8 +19,8 @@
   },
   "scripts": {
     "build": "webpack",
-    "start": "node src/index.js",
     "dev": "nodemon",
+    "start": "node src/index.js",
     "test": "eslint . && sort-package-json package.json --check && mdspell --en-us --ignore-numbers --report \"*.md\" && write-good --no-adverb README.md CONTRIBUTING.md"
   },
   "dependencies": {
