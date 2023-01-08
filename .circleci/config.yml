@@ -12,7 +12,6 @@ jobs:
             MYSQL_DATABASE: worlddriven
       steps:
       - checkout
-      - run: sudo pip install -r requirements.txt
       - run: npm install
       - run: npm test
       - run: npm run build
