@@ -14,6 +14,39 @@ export class PullRequestView extends React.Component { // eslint-disable-line no
    **/
   constructor(props) {
     super(props);
+    this.state = {};
+  }
+
+  /**
+   * getPullRequests
+   */
+  async getPullRequest() {
+    const response = await fetch(`/v1/repositories/${this.props.repository.fullName}/pulls/${this.props.pullRequestId}`);
+    const data = await response.json();
+    this.setState({
+      pullRequest: data,
+    });
+  }
+
+  /**
+   * componentDidMount - after component mount
+   *
+   * @return {void}
+   **/
+  componentDidMount() {
+    this.getPullRequest();
+  }
+
+  /**
+   * componentDidUpdate
+   *
+   * @param {object} prevProps
+   * @return {void}
+   */
+  componentDidUpdate(prevProps) {
+    if (prevProps.repository.fullName !== this.props.repository.fullName || prevProps.pullRequestId !== this.props.pullRequestId) {
+      this.getPullRequest();
+    }
   }
 
   /**
@@ -23,6 +56,7 @@ export class PullRequestView extends React.Component { // eslint-disable-line no
    * @return {string} - The formatted output
    **/
   getTimeDeltaString(value) {
+    console.log(value);
     const days = Math.floor(value / 86400);
     const daysRemainer = value % 86400;
     const hours = Math.floor(daysRemainer / 3600);
@@ -36,51 +70,51 @@ export class PullRequestView extends React.Component { // eslint-disable-line no
    * @return {object} - The element to be renderd
    **/
   render() {
-    if (!this.props.pullRequest) {
+    if (!this.state.pullRequest) {
       return <div>Here you can enable world driven for each of your repositories. When
-      enabled pull requests are watched and automatically merged based on the
+      enabled, pull requests are watched and automatically merged based on the
       reviews.</div>;
     }
 
     const contributors = [];
-    for (const contributor of this.props.pullRequest.stats.contributors) {
-      contributors.push(<tr key={contributor.name} className={styles[`review_value${contributor.review_value}`]}>
+    console.log(this.state.pullRequest.stats);
+    for (const contributor of this.state.pullRequest.stats.contributors) {
+      contributors.push(<tr key={contributor.name} className={styles[`review_value${contributor.reviewValue}`]}>
         <td>{ contributor.name }</td>
         <td>{ contributor.commits }</td>
-        <td>{ this.getTimeDeltaString(contributor.time_value) }</td>
+        <td>{ this.getTimeDeltaString(contributor.timeValue) }</td>
       </tr>);
     }
 
-    const githubPullRequestLink = `https://github.com/${this.props.pullRequest.org}/${this.props.pullRequest.repo}/pull/${this.props.pullRequest.number}`;
+    const githubPullRequestLink = `https://github.com/${this.state.pullRequest.org}/${this.state.pullRequest.repo}/pull/${this.state.pullRequest.number}`;
     return (
       <div className={styles.content}>
-        <h1><a href={githubPullRequestLink}>{ this.props.pullRequest.title } <span className={styles.pullRequestNumber}>#{ this.props.pullRequest.number }</span></a></h1>
-        <span className={styles.PullRequestSummary}>state: { this.props.pullRequest.state }</span>
+        <h1><a href={githubPullRequestLink}>{ this.state.pullRequest.title } <span className={styles.pullRequestNumber}>#{ this.state.pullRequest.number }</span></a></h1>
+        <span className={styles.PullRequestSummary}>state: { this.state.pullRequest.state }</span>
 
         <details>
           <summary className={styles.PullRequestSummary}>
-            <span title="The point in time when the countdown starts">Start date: { new Date(this.props.pullRequest.dates.max * 1000 || 0).toISOString() }</span>
+            <span title="The point in time when the countdown starts">Start date: { new Date(this.state.pullRequest.dates.max || 0).toISOString() }</span>
           </summary>
           <table>
             <tbody>
-              <tr title="The date when the labels changed"><td>Unlabel date:</td><td>{ new Date(this.props.pullRequest.dates.unlabel * 1000 || 0).toISOString() }</td></tr>
-              <tr title="The last date it was pushed"><td>Push date:</td><td>{ new Date(this.props.pullRequest.dates.push * 1000 || 0).toISOString() }</td></tr>
-              <tr title="The last date of the commits"><td>Commit date:</td><td>{ new Date(this.props.pullRequest.dates.commit * 1000 || 0).toISOString() }</td></tr>
-              <tr title="The last date it was ready for Review"><td>Ready For Review date:</td><td>{ new Date(this.props.pullRequest.dates.last_draft * 1000 || 0).toISOString() }</td></tr>
-              <tr title="The date when the pull request was opened"><td>Pull Request date:</td><td>{ new Date(this.props.pullRequest.dates.created * 1000 || 0).toISOString() }</td></tr>
+              <tr title="The last date it was pushed"><td>Push date:</td><td>{ new Date(this.state.pullRequest.dates.push || 0).toISOString() }</td></tr>
+              <tr title="The last date of the commits"><td>Commit date:</td><td>{ new Date(this.state.pullRequest.dates.commit || 0).toISOString() }</td></tr>
+              <tr title="The last date it was ready for Review"><td>Ready For Review date:</td><td>{ new Date(this.state.pullRequest.dates.lastDraft || 0).toISOString() }</td></tr>
+              <tr title="The date when the pull request was opened"><td>Pull Request date:</td><td>{ new Date(this.state.pullRequest.dates.created || 0).toISOString() }</td></tr>
               <tr><td><hr/></td><td><hr/></td></tr>
-              <tr title="The start date is the most recent one from the above"><td>Start date:</td><td>{ new Date(this.props.pullRequest.dates.max * 1000 || 0).toISOString() }</td></tr>
+              <tr title="The start date is the most recent one from the above"><td>Start date:</td><td>{ new Date(this.state.pullRequest.dates.max || 0).toISOString() }</td></tr>
             </tbody>
           </table>
         </details>
 
         <details>
-          <summary className={styles.PullRequestSummary}><span title="Pull Request reviews counted as votes">Positive votes: { this.props.pullRequest.stats.votes }/{ this.props.pullRequest.stats.votes_total } (~{ Math.round(this.props.pullRequest.stats.votes / this.props.pullRequest.stats.votes_total * 100) } %)</span></summary>
+          <summary className={styles.PullRequestSummary}><span title="Pull Request reviews counted as votes">Positive votes: { this.state.pullRequest.stats.votes }/{ this.state.pullRequest.stats.votesTotal } (~{ Math.round(this.state.pullRequest.stats.votes / this.state.pullRequest.stats.votesTotal * 100) } %)</span></summary>
           <table>
             <tbody>
-              <tr><td title="Number of votes due to pull request reviews">votes:</td><td>{ this.props.pullRequest.stats.votes }</td></tr>
-              <tr><td title="The total number of votes (commits)">votes_total:</td><td>{ this.props.pullRequest.stats.votes_total }</td></tr>
-              <tr><td title="The factor by which the total merge days are reduced">coefficient:</td><td>{ this.props.pullRequest.stats.coefficient }</td></tr>
+              <tr><td title="Number of votes due to pull request reviews">votes:</td><td>{ this.state.pullRequest.stats.votes }</td></tr>
+              <tr><td title="The total number of votes (commits)">votes total:</td><td>{ this.state.pullRequest.stats.votesTotal }</td></tr>
+              <tr><td title="The factor by which the total merge days are reduced">coefficient:</td><td>{ this.state.pullRequest.stats.coefficient }</td></tr>
             </tbody>
           </table>
           <table>
@@ -93,14 +127,14 @@ export class PullRequestView extends React.Component { // eslint-disable-line no
 
         <details>
           <summary className={styles.PullRequestSummary}>
-            <span title="The Pull Request will be automatically merged in">Time to merge: {this.getTimeDeltaString(this.props.pullRequest.times.days_to_merge.total_seconds)} ({ new Date(this.props.pullRequest.times.merge_date * 1000 || 0).toISOString() })</span>
+            <span title="The Pull Request will be automatically merged in">Time to merge: {this.getTimeDeltaString(this.state.pullRequest.times.daysToMerge)} ({ new Date(this.state.pullRequest.times.mergeDate * 1000 || 0).toISOString() })</span>
           </summary>
           <table>
             <tbody>
-              <tr><td title="For each commit the duration is extended by 5 days">Commits:</td><td>{ this.props.pullRequest.stats.commits }</td></tr>
-              <tr><td title="The total time until the Pull Request is merged. 5 days + commit days">Total duration:</td><td>{ this.props.pullRequest.times.total_merge_time }</td></tr>
-              <tr><td title="Total merge days multiplied by the voting coefficient to get the actual duration.">Reduce to:</td><td>{this.getTimeDeltaString(this.props.pullRequest.times.merge_duration.total_seconds)}</td></tr>
-              <tr><td title="How old is the pull request, based on max date">Age:</td><td>{this.getTimeDeltaString(this.props.pullRequest.stats.age.total_seconds)}</td></tr>
+              <tr><td title="For each commit the duration is extended by 5 days">Commits:</td><td>{ this.state.pullRequest.stats.commits }</td></tr>
+              <tr><td title="The total time until the Pull Request is merged. 5 days + commit days">Total duration:</td><td>{ this.getTimeDeltaString(this.state.pullRequest.times.totalMergeTime) }</td></tr>
+              <tr><td title="Total merge days multiplied by the voting coefficient to get the actual duration.">Reduce to:</td><td>{this.getTimeDeltaString(this.state.pullRequest.times.mergeDuration)}</td></tr>
+              <tr><td title="How old is the pull request, based on max date">Age:</td><td>{this.getTimeDeltaString(this.state.pullRequest.stats.age / 1000)}</td></tr>
             </tbody>
           </table>
         </details>
@@ -111,5 +145,6 @@ export class PullRequestView extends React.Component { // eslint-disable-line no
 }
 
 PullRequestView.propTypes = {
-  pullRequest: PropTypes.object,
+  repository: PropTypes.object,
+  pullRequestId: PropTypes.number,
 };

@@ -14,12 +14,22 @@ export class RepositoryListItem extends React.Component { // eslint-disable-line
    **/
   constructor(props) {
     super(props);
-    this.state = {};
-    for (const pullRequest of this.props.repository.pull_requests) {
-      this.state[pullRequest.title] = {fetched: false};
-    }
+    this.state = {
+      pullRequests: [],
+    };
     this.handleChange = this.handleChange.bind(this);
     this.selectPullRequest= this.selectPullRequest.bind(this);
+  }
+
+  /**
+   * getPullRequests
+   */
+  async getPullRequests() {
+    const response = await fetch(`/v1/repositories/${this.props.repository.fullName}/pulls`);
+    const data = await response.json();
+    this.setState({
+      pullRequests: data,
+    });
   }
 
   /**
@@ -28,24 +38,17 @@ export class RepositoryListItem extends React.Component { // eslint-disable-line
    * @return {void}
    **/
   componentDidMount() {
-    this.props.repository.pull_requests.forEach((pullRequest) => {
-      this.props.getPullRequest(this.props.repository.full_name, pullRequest.number, (result) => {
-        const pullRequestData = result.pull_request;
-        pullRequestData.fetched = true;
-        this.setState({[pullRequestData.title]: pullRequestData});
-      });
-    });
+    this.getPullRequests();
   }
 
   /**
    * selectPullRequest - selects a pull request
    *
-   * @param {object} event - the click event
-   * @param {string} pullRequestTitle - The title of a pull request
+   * @param {string} pullRequestNumber - The number of a pull request
    * @return {void}
    **/
-  selectPullRequest(event, pullRequestTitle) {
-    this.props.setPullRequest(this.props.repositoryIndex, this.state[pullRequestTitle]);
+  selectPullRequest(pullRequestNumber) {
+    this.props.setPullRequest(this.props.repository.fullName, pullRequestNumber);
   }
 
   /**
@@ -55,7 +58,7 @@ export class RepositoryListItem extends React.Component { // eslint-disable-line
    * @return {void}
    **/
   handleChange(event) {
-    const updateRepository = new Request(`/v1/${event.target.name}/`, {
+    const updateRepository = new Request(`/v1/repositories/${event.target.name}/`, {
       method: 'PUT',
       headers: {'content-type': 'application/json'},
       body: JSON.stringify({'checked': event.target.checked}),
@@ -69,38 +72,16 @@ export class RepositoryListItem extends React.Component { // eslint-disable-line
    **/
   render() {
     const pullRequests = [];
-    for (const pullRequest of Object.keys(this.state)) {
-      const pullRequestData = this.state[pullRequest];
-      if (!pullRequestData.fetched) {
-        continue;
-      }
-      let className = styles.pullRequestLine + ' ' + styles.gray;
-      let title = 'Not mergeable';
-      let content = pullRequestData.title;
-      if (pullRequestData.mergeable) {
-        className = styles.pullRequestLine + ' ' + styles.red;
-        title = 'Changes requested will not be merged';
-        if (pullRequestData.stats.coefficient > 0) {
-          className = styles.pullRequestLine + ' ' + styles.green;
-          title = 'Will be merged automatically';
-          content = <div className={styles.pullRequestListItem}>
-            <div>
-              <div>{pullRequestData.title}</div>
-              <div>merge</div>
-            </div>
-            <div>{new Date(pullRequestData.times.merge_date * 1000 || 0).toISOString().replace('T', ' ').replace('.000Z', ' UTC')}</div>
-          </div>;
-        }
-      }
-      pullRequests.push(<li key={pullRequestData.title} className={className} title={title} onClick={(e) => this.selectPullRequest(e, pullRequestData.title)}>{content}</li>);
+    for (const pullRequest of this.state.pullRequests) {
+      pullRequests.push(<li key={pullRequest.title} onClick={() => this.selectPullRequest(pullRequest.number)}>{pullRequest.title}</li>);
     }
     const pullRequestsTag = <div className={styles.repositoryList}><ul>{pullRequests}</ul></div>;
 
-    return (<div key={this.props.repository.full_name} className={styles.repository}>
-      <div className={styles.repositoryName} onClick={() => this.props.setRepository(this.props.repositoryIndex)}>{this.props.repository.full_name}</div>
+    return (<div key={this.props.repository.fullName} className={styles.repository}>
+      <div className={styles.repositoryName} onClick={() => this.props.setRepository(this.props.repository.fullName)}>{this.props.repository.fullName}</div>
       <div>
         <label className={styles.switch}>
-          <input type="checkbox" defaultChecked={this.props.repository.configured} name={this.props.repository.full_name} onClick={(e) => this.handleChange(e)}/>
+          <input type="checkbox" defaultChecked={this.props.repository.configured} name={this.props.repository.fullName} onClick={(e) => this.handleChange(e)}/>
           <span className={styles.slider + ' ' + styles.round}></span>
         </label>
       </div>

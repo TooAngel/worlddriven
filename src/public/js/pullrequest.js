@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {PullRequestView} from './pullrequestView'; // eslint-disable-line no-unused-vars
+import {PullRequestView} from './pullrequestView.js'; // eslint-disable-line no-unused-vars
 
 /**
  * PullRequest class

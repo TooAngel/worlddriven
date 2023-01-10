@@ -3,7 +3,6 @@
   "delay": "2500",
   "ext": "*",
   "events": {
-    "start": "npm run build",
-    "restart": "npm run build"
+    "start": "npm run build"
   }
 }

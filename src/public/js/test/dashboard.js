@@ -1,4 +1,4 @@
-import {Dashboard} from '../dashboard'; // eslint-disable-line no-unused-vars
+import {Dashboard} from '../dashboard.js'; // eslint-disable-line no-unused-vars
 
 /**
  * Dashboard class

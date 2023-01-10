@@ -12,12 +12,9 @@ jobs:
             MYSQL_DATABASE: worlddriven
       steps:
       - checkout
-      - run: sudo pip install -r requirements.txt
       - run: npm install
       - run: npm test
       - run: npm run build
-      - run: pycodestyle
-      - run: pytest --cov=src --cov-report xml
 workflows:
   version: 2
   test_and_deploy:
