@@ -17,7 +17,7 @@
     "test": "tests"
   },
   "scripts": {
-    "build": "webpack",
+    "build": "NODE_OPTIONS=--openssl-legacy-provider webpack",
     "test": "eslint . && sort-package-json package.json --check && mdspell --en-us --ignore-numbers --report \"*.md\" && write-good --no-adverb README.md CONTRIBUTING.md"
   },
   "dependencies": {
