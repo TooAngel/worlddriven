@@ -48,7 +48,7 @@
     "nodemon": "2.0.20",
     "sort-package-json": "1.54.0",
     "style-loader": "3.3.1",
-    "webpack": "5.68.0",
+    "webpack": "5.76.0",
     "webpack-cli": "4.9.2",
     "write-good": "1.0.8"
   }
