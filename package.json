@@ -24,7 +24,7 @@
     "test": "eslint . && sort-package-json package.json --check && mdspell --en-us --ignore-numbers --report \"*.md\" && write-good --no-adverb README.md CONTRIBUTING.md"
   },
   "dependencies": {
-    "express": "^4.21.0",
+    "express": "^4.21.2",
     "express-session": "^1.17.2",
     "express-session-sequelize": "^2.3.0",
     "got": "^12.0.1",
