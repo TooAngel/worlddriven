@@ -12,7 +12,12 @@ let sequelize;
 if (config.use_env_variable) {
   sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
+  sequelize = new Sequelize(
+    config.database,
+    config.username,
+    config.password,
+    config
+  );
 }
 
 const models = {
@@ -20,10 +25,10 @@ const models = {
   Repository: repository(sequelize, Sequelize.DataTypes),
 };
 
-Object.keys(models).forEach((modelName) => {
+Object.keys(models).forEach(modelName => {
   if (models[modelName].associate) {
     models[modelName].associate(models);
   }
 });
-export {models};
-export {sequelize, Sequelize};
+export { models };
+export { sequelize, Sequelize };

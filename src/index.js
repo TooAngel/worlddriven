@@ -1,37 +1,18 @@
 import express from 'express';
 import got from 'got';
 import session from 'express-session';
-import sessionSequelize from 'express-session-sequelize';
-import Umzug from 'umzug';
+import MongoStore from 'connect-mongo';
 
-import {getPullRequestData} from './helpers/pullRequest.js';
-import {sequelize, Sequelize, models} from '../models/index.js';
+import { client } from './database/database.js';
+import { User, Repository } from './database/models.js';
 import cron from 'node-cron';
-import {createIssueComment, getPullRequests, mergePullRequest} from './helpers/github.js';
+import { processPullRequests } from './helpers/pullRequestProcessor.js';
+import { getPullRequests, getPullRequestData } from './helpers/pullRequest.js';
 
-const SessionStore = sessionSequelize(session.Store);
-
-const umzug = new Umzug({
-  migrations: {
-    path: './migrations',
-    pattern: /(.*)\.cjs/,
-    params: [
-      sequelize.getQueryInterface(),
-      Sequelize,
-    ],
-  },
-  storage: 'sequelize',
-  storageOptions: {
-    sequelize: sequelize,
-  },
-});
-
-(async () => {
-  await umzug.up();
-})();
-
-const sequelizeSessionStore = new SessionStore({
-  db: sequelize,
+const mongoSessionStore = MongoStore.create({
+  clientPromise: client,
+  dbName: 'worlddriven',
+  touchAfter: 24 * 3600, // lazy session update
 });
 
 const app = express();
@@ -40,7 +21,7 @@ const sess = {
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  store: sequelizeSessionStore,
+  store: mongoSessionStore,
   cookie: {},
   name: 'session',
 };
@@ -55,41 +36,43 @@ app.use(session(sess));
 
 app.use(express.static('./static'));
 
-app.get('/', function(req, res) {
-  res.sendFile('./static/index.html', {root: '.'});
+app.get('/', function (req, res) {
+  res.sendFile('./static/index.html', { root: '.' });
 });
 
-app.get('/dashboard', function(req, res) {
-  res.sendFile('./static/dashboard.html', {root: '.'});
+app.get('/dashboard', function (req, res) {
+  res.sendFile('./static/dashboard.html', { root: '.' });
 });
 
 // Properly define favicon to not need this route
-app.get('/favicon.ico', function(req, res) {
-  res.sendFile('./static/images/favicon.png', {root: '.'});
+app.get('/favicon.ico', function (req, res) {
+  res.sendFile('./static/images/favicon.png', { root: '.' });
 });
 
-app.get('/imprint', function(req, res) {
-  res.sendFile('./static/imprint.html', {root: '.'});
+app.get('/imprint', function (req, res) {
+  res.sendFile('./static/imprint.html', { root: '.' });
 });
 
-app.get('/privacyPolicy', function(req, res) {
-  res.sendFile('./static/privacyPolicy.html', {root: '.'});
+app.get('/privacyPolicy', function (req, res) {
+  res.sendFile('./static/privacyPolicy.html', { root: '.' });
 });
 
-app.get('/js/main.js', function(req, res) {
-  res.sendFile('./dist/main.js', {root: '.'});
+app.get('/js/main.js', function (req, res) {
+  res.sendFile('./dist/main.js', { root: '.' });
 });
 
-app.get('/login', function(req, res) {
+app.get('/login', function (req, res) {
   if (req.session.userId) {
     res.redirect('/dashboard');
   } else {
     // TODO use `code`, too (https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps)
-    res.redirect(`https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&scope=public_repo,read:org,admin:repo_hook`);
+    res.redirect(
+      `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&scope=public_repo,read:org,admin:repo_hook`
+    );
   }
 });
 
-app.get('/github-callback', async function(req, res) {
+app.get('/github-callback', async function (req, res) {
   const url = 'https://github.com/login/oauth/access_token';
   const options = {
     json: {
@@ -104,22 +87,21 @@ app.get('/github-callback', async function(req, res) {
     return res.redirect('/');
   }
 
-  let user = await models.User.findOne({where: {githubAccessToken: response.body.access_token}});
+  let user = await User.findByGithubToken(response.body.access_token);
   if (!user) {
-    user = models.User.build({
+    user = await User.create({
       githubAccessToken: response.body.access_token,
     });
-    await user.save();
   }
-  req.session.userId = user.id;
+  req.session.userId = user._id.toString();
   res.redirect('/dashboard');
 });
 
-app.get('/v1/user', async function(req, res) {
+app.get('/v1/user', async function (req, res) {
   if (!req.session.userId) {
     return res.status(401).end();
   }
-  const user = await models.User.findOne({where: {id: req.session.userId}});
+  const user = await User.findById(req.session.userId);
   if (!user) {
     return res.status(401).end();
   }
@@ -145,11 +127,11 @@ app.get('/v1/user', async function(req, res) {
   }
 });
 
-app.get('/v1/repositories', async function(req, res) {
+app.get('/v1/repositories', async function (req, res) {
   if (!req.session.userId) {
     return res.status(401).end();
   }
-  const user = await models.User.findOne({where: {id: req.session.userId}});
+  const user = await User.findById(req.session.userId);
   if (!user) {
     return res.status(401).end();
   }
@@ -168,7 +150,7 @@ app.get('/v1/repositories', async function(req, res) {
     for (const repository of response.body) {
       const [owner, repo] = repository.full_name.split('/');
       let configured = false;
-      const dbRepository = await models.Repository.findOne({where: {owner: owner, repo: repo}});
+      const dbRepository = await Repository.findByOwnerAndRepo(owner, repo);
       if (dbRepository) {
         configured = dbRepository.configured;
       }
@@ -188,40 +170,41 @@ app.get('/v1/repositories', async function(req, res) {
   }
 });
 
-app.get('/v1/repositories/:owner/:repo/pulls', async function(req, res) {
+app.get('/v1/repositories/:owner/:repo/pulls', async function (req, res) {
   if (!req.session.userId) {
     return res.status(401).end();
   }
-  const user = await models.User.findOne({where: {id: req.session.userId}});
+  const user = await User.findById(req.session.userId);
   if (!user) {
     return res.status(401).end();
   }
   res.send(await getPullRequests(user, req.params.owner, req.params.repo));
 });
 
-app.put('/v1/repositories/:owner/:repo', async function(req, res) {
+app.put('/v1/repositories/:owner/:repo', async function (req, res) {
   if (!req.session.userId) {
     return res.status(401).end();
   }
-  const user = await models.User.findOne({where: {id: req.session.userId}});
+  const user = await User.findById(req.session.userId);
   if (!user) {
     return res.status(401).end();
   }
   console.log(req.body);
-  const repository = await models.Repository.findOne({where: {owner: req.params.owner, repo: req.params.repo}});
+  const repository = await Repository.findByOwnerAndRepo(
+    req.params.owner,
+    req.params.repo
+  );
   if (repository) {
-    repository.configured = req.body.checked;
-    repository.save();
+    await Repository.update(repository._id, { configured: req.body.checked });
     return;
   }
 
-  await models.Repository.create({
+  await Repository.create({
     owner: req.params.owner,
     repo: req.params.repo,
     configured: req.body.checked,
-    userId: user.id,
+    userId: user._id,
   });
-
 
   // TODO create or delete webhook
   // checked = request.json['checked']
@@ -261,36 +244,41 @@ app.put('/v1/repositories/:owner/:repo', async function(req, res) {
   res.end();
 });
 
+app.get(
+  '/v1/repositories/:owner/:repo/pulls/:number',
+  async function (req, res) {
+    if (!req.session.userId) {
+      return res.status(401).end();
+    }
 
-app.get('/v1/repositories/:owner/:repo/pulls/:number', async function(req, res) {
-  if (!req.session.userId) {
-    return res.status(401).end();
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.status(401).end();
+    }
+    const pullRequestData = await getPullRequestData(
+      user,
+      req.params.owner,
+      req.params.repo,
+      req.params.number
+    );
+    res.send(pullRequestData);
   }
-
-  const user = await models.User.findOne({where: {id: req.session.userId}});
-  if (!user) {
-    return res.status(401).end();
-  }
-  const pullRequestData = await getPullRequestData(user, req.params.owner, req.params.repo, req.params.number);
-  res.send(pullRequestData);
-});
+);
 
 // @static.route('/test/dashboard')
 // def testdashboard():
 //     return static.send_static_file('dashboard.html')
 
-
 // @static.route('/<org_name>/<project_name>/pull/<int:pull_request_number>', strict_slashes=False)
 // def show_pull_request(org_name, project_name, pull_request_number):
 //     return static.send_static_file('pull_request.html')
-
 
 // @static.route('/test/<org_name>/<project_name>/pull/<int:pull_request_number>', strict_slashes=False)
 // def testshow_pull_request(org_name, project_name, pull_request_number):
 //     return static.send_static_file('dashboard.html')
 
-const server = app.listen(process.env.PORT || 3000, function() {
-  const {address, port} = server.address();
+const server = app.listen(process.env.PORT || 3000, function () {
+  const { address, port } = server.address();
   console.log('App listening at http://%s:%s', address, port);
 });
 
@@ -298,34 +286,4 @@ process.on('uncaughtException', (error, source) => {
   console.log(error, source);
 });
 
-cron.schedule('51 * * * *', async () => {
-  console.log('-----------------------------------------------------------------');
-  const repositories = await models.Repository.findAll({
-    where: {configured: true},
-    include: [
-      {
-        model: models.User,
-        required: false,
-        attributes: ['githubAccessToken'],
-      },
-    ],
-  });
-  for (const repository of repositories) {
-    const pullRequests = await getPullRequests(repository.User.dataValues, repository.owner, repository.repo);
-    for (const pullRequest of pullRequests) {
-      const pullRequestData = await getPullRequestData(repository.User.dataValues, repository.owner, repository.repo, pullRequest.number);
-      if (pullRequestData.times.daysToMerge < 0) {
-        console.log(`Would merge ${repository.owner}/${repository.repo} - ${pullRequestData.title}`);
-        const mergeResponse = await mergePullRequest(repository.User.dataValues, repository.owner, repository.repo, pullRequest.number);
-        if (mergeResponse) {
-          const comment = 'This pull request was merged by [worlddriven](https://www.worlddriven.org).';
-          const issueResponse = await createIssueComment(repository.User.dataValues, repository.owner, repository.repo, pullRequest.number, comment);
-          console.log(issueResponse);
-          console.log('Merged');
-        } else {
-          console.log('Can not merge');
-        }
-      }
-    }
-  }
-});
+cron.schedule('51 * * * *', processPullRequests);

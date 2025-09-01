@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+*.log
+*.md
+package-lock.json
+yarn.lock
+.env
+.env.*
+migrations/*.cjs

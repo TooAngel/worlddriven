@@ -119,7 +119,6 @@ async function getBranchEvents(user, pull) {
   }
 }
 
-
 /**
  * getDates
  *
@@ -134,19 +133,28 @@ async function getDates(user, pull) {
     return Math.max(new Date(total), new Date(current.commit.author.date));
   }, new Date('January 1, 1970 00:00:00 UTC'));
   const repoEvents = await getBranchEvents(user, pull);
-  const push = repoEvents.reduce((total, current) => {
-    if (current.type !== 'PushEvent') {
-      return new Date(total);
-    }
-    return new Date(Math.max(new Date(total).getTime(), new Date(current.created_at).getTime()));
-  }, new Date('January 1, 1970 00:00:00 UTC')).getTime();
+  const push = repoEvents
+    .reduce((total, current) => {
+      if (current.type !== 'PushEvent') {
+        return new Date(total);
+      }
+      return new Date(
+        Math.max(
+          new Date(total).getTime(),
+          new Date(current.created_at).getTime()
+        )
+      );
+    }, new Date('January 1, 1970 00:00:00 UTC'))
+    .getTime();
   const pullIssueEvents = await getPullIssueEvents(user, pull);
-  const lastDraft = pullIssueEvents.reduce((total, current) => {
-    if (current.event !== 'ready_for_review') {
-      return new Date(total);
-    }
-    return Math.max(new Date(total), new Date(current.created_at));
-  }, new Date('January 1, 1970 00:00:00 UTC')).getTime();
+  const lastDraft = pullIssueEvents
+    .reduce((total, current) => {
+      if (current.event !== 'ready_for_review') {
+        return new Date(total);
+      }
+      return Math.max(new Date(total), new Date(current.created_at));
+    }, new Date('January 1, 1970 00:00:00 UTC'))
+    .getTime();
   return {
     push: push,
     commit: commit,
@@ -155,7 +163,6 @@ async function getDates(user, pull) {
     max: Math.max(push, commit, lastDraft, createdAt),
   };
 }
-
 
 /**
  * getPullRequest
@@ -222,19 +229,28 @@ async function getReviews(user, pull) {
  */
 export async function getPullRequestData(user, owner, repo, number) {
   const pull = await getPullRequest(user, owner, repo, number);
-  const contributors = await getContributors(user, pull.head.repo.contributors_url);
+  const contributors = await getContributors(
+    user,
+    pull.head.repo.contributors_url
+  );
   const reviews = await getReviews(user, pull);
   for (const review of reviews) {
     if (review.state === 'CHANGES_REQUESTED') {
-      const contributor = contributors.find((contributor) => contributor.name === review.user.login);
+      const contributor = contributors.find(
+        contributor => contributor.name === review.user.login
+      );
       contributor.reviewValue = -1;
     }
     if (review.state === 'APPROVED') {
-      const contributor = contributors.find((contributor) => contributor.name === review.user.login);
+      const contributor = contributors.find(
+        contributor => contributor.name === review.user.login
+      );
       contributor.reviewValue = 1;
     }
   }
-  const contributor = contributors.find((contributor) => contributor.name === pull.user.login);
+  const contributor = contributors.find(
+    contributor => contributor.name === pull.user.login
+  );
   if (contributor) {
     contributor.reviewValue = 1;
   }
@@ -252,20 +268,26 @@ export async function getPullRequestData(user, owner, repo, number) {
   }
 
   const dates = await getDates(user, pull);
-  const age = ((new Date()).getTime() - dates.max) / 1000;
+  const age = (new Date().getTime() - dates.max) / 1000;
 
   const config = {
-    'baseMergeTimeInHours': 240.,
-    'perCommitTimeInHours': 0.,
-    'merge_method': 'squash',
+    baseMergeTimeInHours: 240,
+    perCommitTimeInHours: 0,
+    merge_method: 'squash',
   };
 
-  const totalMergeTime = (config.baseMergeTimeInHours / 24 + pull.commits * config.perCommitTimeInHours / 24) * 24 * 60 * 60;
+  const totalMergeTime =
+    (config.baseMergeTimeInHours / 24 +
+      (pull.commits * config.perCommitTimeInHours) / 24) *
+    24 *
+    60 *
+    60;
   const mergeDuration = (1 - coefficient) * totalMergeTime;
   const daysToMerge = mergeDuration - age;
 
   for (const contributor of contributors) {
-    contributor.timeValue = contributor.commits / votesTotal * totalMergeTime * 24 * 60 * 60;
+    contributor.timeValue =
+      (contributor.commits / votesTotal) * totalMergeTime * 24 * 60 * 60;
   }
 
   const pullRequestData = {

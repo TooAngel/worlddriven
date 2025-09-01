@@ -1,14 +1,15 @@
 import React from 'react';
-import {Repository} from './repository.js'; // eslint-disable-line no-unused-vars
-import {RepositoryListItem} from './repositoryListItem.js'; // eslint-disable-line no-unused-vars
-import {PullRequestView} from './pullrequestView.js'; // eslint-disable-line no-unused-vars
+import { Repository } from './repository.jsx'; // eslint-disable-line no-unused-vars
+import { RepositoryListItem } from './repositoryListItem.js'; // eslint-disable-line no-unused-vars
+import { PullRequestView } from './pullrequestView.jsx'; // eslint-disable-line no-unused-vars
 
 import styles from '../../../static/css/dashboard.module.css';
 
 /**
  * Dashboard class
  **/
-export class Dashboard extends React.Component { // eslint-disable-line no-unused-vars
+export class Dashboard extends React.Component {
+  // eslint-disable-line no-unused-vars
   /**
    * contructor - The constructor
    *
@@ -56,7 +57,9 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
     const response = await fetch(`/v1/repositories/`);
     const data = await response.json();
     this.setState({
-      repositories: data.sort((a, b) => (a.configured === b.configured)? 0 : a.configured? -1 : 1),
+      repositories: data.sort((a, b) =>
+        a.configured === b.configured ? 0 : a.configured ? -1 : 1
+      ),
       fetched: true,
     });
   }
@@ -70,14 +73,18 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
    * @return {void}
    **/
   getPullRequest(repositoryFullName, pullRequestNumber, callback) {
-    const getPullRequest = new Request(`/v1/${repositoryFullName}/pull/${pullRequestNumber}/`, {
-      method: 'GET',
-    });
+    const getPullRequest = new Request(
+      `/v1/${repositoryFullName}/pull/${pullRequestNumber}/`,
+      {
+        method: 'GET',
+      }
+    );
     fetch(getPullRequest)
-      .then((res) => res.json())
-      .then((result) => {
+      .then(res => res.json())
+      .then(result => {
         callback(result);
-      }).catch(function(e) {
+      })
+      .catch(function (e) {
         console.log(`error: ${e}`);
       });
   }
@@ -100,7 +107,10 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
    * @return {void}
    **/
   setPullRequest(repositoryName, pullRequestId) {
-    this.setState({activeRepository: repositoryName, pullRequestId: pullRequestId});
+    this.setState({
+      activeRepository: repositoryName,
+      pullRequestId: pullRequestId,
+    });
   }
 
   /**
@@ -110,7 +120,10 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
    * @return {void}
    **/
   setRepository(repositoryName) {
-    this.setState({activeRepository: repositoryName, pullRequestId: undefined});
+    this.setState({
+      activeRepository: repositoryName,
+      pullRequestId: undefined,
+    });
   }
 
   /**
@@ -124,15 +137,40 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
 
     const repositories = [];
     for (const repository of this.state.repositories) {
-      repositories.push(<RepositoryListItem key={repository.fullName} repository={repository} setRepository={this.setRepository} setPullRequest={this.setPullRequest}/>);
+      repositories.push(
+        <RepositoryListItem
+          key={repository.fullName}
+          repository={repository}
+          setRepository={this.setRepository}
+          setPullRequest={this.setPullRequest}
+        />
+      );
     }
     console.log(this.state.activeRepository);
-    const repository = <Repository repository={this.state.repositories.find((repository) => repository.fullName === this.state.activeRepository)} />;
+    const repository = (
+      <Repository
+        repository={this.state.repositories.find(
+          repository => repository.fullName === this.state.activeRepository
+        )}
+      />
+    );
     let pullRequest = <div />;
     if (this.state.pullRequestId) {
-      pullRequest = <PullRequestView repository={this.state.repositories.find((repository) => repository.fullName === this.state.activeRepository)} pullRequestId={this.state.pullRequestId} />;
+      pullRequest = (
+        <PullRequestView
+          repository={this.state.repositories.find(
+            repository => repository.fullName === this.state.activeRepository
+          )}
+          pullRequestId={this.state.pullRequestId}
+        />
+      );
     }
-    const main = <div>{repository}{pullRequest}</div>;
+    const main = (
+      <div>
+        {repository}
+        {pullRequest}
+      </div>
+    );
 
     return (
       <div className={styles.content}>
@@ -144,13 +182,11 @@ export class Dashboard extends React.Component { // eslint-disable-line no-unuse
             </a>
           </div>
         </div>
-        <h1>{ this.state.user }</h1>
+        <h1>{this.state.user}</h1>
         <div className={styles.mainContent}>
           <div className={styles.sidebar}>
             <h2 onClick={() => this.setRepository()}>Repositories</h2>
-            <div>
-              {repositories}
-            </div>
+            <div>{repositories}</div>
           </div>
           {main}
         </div>

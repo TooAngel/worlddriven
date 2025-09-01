@@ -1,11 +1,12 @@
 import React from 'react';
 
-import {PullRequestView} from './pullrequestView.js'; // eslint-disable-line no-unused-vars
+import { PullRequestView } from './pullrequestView.jsx'; // eslint-disable-line no-unused-vars
 
 /**
  * PullRequest class
  **/
-export class PullRequest extends React.Component { // eslint-disable-line no-unused-vars
+export class PullRequest extends React.Component {
+  // eslint-disable-line no-unused-vars
   /**
    * contructor - The constructor
    *
@@ -40,8 +41,8 @@ export class PullRequest extends React.Component { // eslint-disable-line no-unu
       method: 'GET',
     });
     fetch(getPullRequest)
-      .then((res) => res.json())
-      .then((result) => {
+      .then(res => res.json())
+      .then(result => {
         this.setState({
           pullRequest: result.pull_request,
           fetched: true,
