@@ -4,7 +4,7 @@ import {
   getPullRequests,
   mergePullRequest,
 } from './github.js';
-import { User, Repository } from '../database/models.js';
+import { Repository } from '../database/models.js';
 
 /**
  * Process all pull requests for configured repositories
@@ -51,7 +51,7 @@ export async function processPullRequests() {
       // Create a user-like object with the repository's token for API calls
       const repoUser = {
         githubAccessToken: repository.githubAccessToken,
-        _id: repository._id // Use repository ID as user ID for logging
+        _id: repository._id, // Use repository ID as user ID for logging
       };
 
       try {
@@ -176,13 +176,15 @@ export async function processRepositoryPullRequests(owner, repo) {
   }
 
   if (!repository.githubAccessToken) {
-    throw new Error(`No GitHub access token found for repository ${owner}/${repo}`);
+    throw new Error(
+      `No GitHub access token found for repository ${owner}/${repo}`
+    );
   }
 
   // Create a user-like object with the repository's token for API calls
   const repoUser = {
     githubAccessToken: repository.githubAccessToken,
-    _id: repository._id
+    _id: repository._id,
   };
 
   const pullRequests = await getPullRequests(repoUser, owner, repo);
