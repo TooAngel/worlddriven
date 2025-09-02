@@ -31,7 +31,7 @@ async function getContributors(user, url) {
     console.log(e.response.body);
     console.log(options);
     console.log(url);
-    res.status(503).end();
+    throw e;
   }
 }
 
@@ -59,7 +59,7 @@ async function getCommits(user, pull) {
     console.log(e.response.body);
     console.log(options);
     console.log(url);
-    res.status(503).end();
+    throw e;
   }
 }
 
@@ -87,7 +87,7 @@ async function getPullIssueEvents(user, pull) {
     console.log(e.response.body);
     console.log(options);
     console.log(url);
-    res.status(503).end();
+    throw e;
   }
 }
 
@@ -115,7 +115,7 @@ async function getBranchEvents(user, pull) {
     console.log(e.response.body);
     console.log(options);
     console.log(url);
-    res.status(503).end();
+    throw e;
   }
 }
 
@@ -189,7 +189,7 @@ async function getPullRequest(user, owner, repo, number) {
     console.log(e.response.body);
     console.log(options);
     console.log(url);
-    res.status(503).end();
+    throw e;
   }
 }
 
@@ -216,7 +216,7 @@ async function getReviews(user, pull) {
     // console.log(e.response.body);
     console.log(options);
     console.log(url);
-    res.status(503).end();
+    throw e;
   }
 }
 

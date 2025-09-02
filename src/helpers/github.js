@@ -33,7 +33,7 @@ export async function getPullRequests(user, owner, repo) {
     console.log(e);
     console.log(e.response.body);
     console.log(options);
-    res.status(503).end();
+    throw e;
   }
 }
 
