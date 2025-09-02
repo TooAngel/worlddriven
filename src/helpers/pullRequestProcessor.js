@@ -4,7 +4,7 @@ import {
   getPullRequests,
   mergePullRequest,
 } from './github.js';
-import { Repository } from '../database/models.js';
+import { User, Repository } from '../database/models.js';
 
 /**
  * Process all pull requests for configured repositories
@@ -39,24 +39,18 @@ export async function processPullRequests() {
         `Processing repository: ${repository.owner}/${repository.repo}`
       );
 
-      // Check if repository has its own GitHub access token
-      if (!repository.githubAccessToken) {
-        const error = `No GitHub access token found for repository ${repository.owner}/${repository.repo}`;
+      const user = await User.findById(repository.userId);
+      if (!user) {
+        const error = `No user found for repository ${repository.owner}/${repository.repo}`;
         console.log(error);
         repoResult.errors.push(error);
         results.errors++;
         continue;
       }
 
-      // Create a user-like object with the repository's token for API calls
-      const repoUser = {
-        githubAccessToken: repository.githubAccessToken,
-        _id: repository._id, // Use repository ID as user ID for logging
-      };
-
       try {
         const pullRequests = await getPullRequests(
-          repoUser,
+          user,
           repository.owner,
           repository.repo
         );
@@ -77,7 +71,7 @@ export async function processPullRequests() {
 
           try {
             const pullRequestData = await getPullRequestData(
-              repoUser,
+              user,
               repository.owner,
               repository.repo,
               pullRequest.number
@@ -92,7 +86,7 @@ export async function processPullRequests() {
               );
 
               const mergeResponse = await mergePullRequest(
-                repoUser,
+                user,
                 repository.owner,
                 repository.repo,
                 pullRequest.number
@@ -102,7 +96,7 @@ export async function processPullRequests() {
                 const comment =
                   'This pull request was merged by [worlddriven](https://www.worlddriven.org).';
                 await createIssueComment(
-                  repoUser,
+                  user,
                   repository.owner,
                   repository.repo,
                   pullRequest.number,
@@ -175,24 +169,17 @@ export async function processRepositoryPullRequests(owner, repo) {
     throw new Error(`Repository ${owner}/${repo} not found or not configured`);
   }
 
-  if (!repository.githubAccessToken) {
-    throw new Error(
-      `No GitHub access token found for repository ${owner}/${repo}`
-    );
+  const user = await User.findById(repository.userId);
+  if (!user) {
+    throw new Error(`User not found for repository ${owner}/${repo}`);
   }
 
-  // Create a user-like object with the repository's token for API calls
-  const repoUser = {
-    githubAccessToken: repository.githubAccessToken,
-    _id: repository._id,
-  };
-
-  const pullRequests = await getPullRequests(repoUser, owner, repo);
+  const pullRequests = await getPullRequests(user, owner, repo);
   const results = [];
 
   for (const pullRequest of pullRequests) {
     const pullRequestData = await getPullRequestData(
-      repoUser,
+      user,
       owner,
       repo,
       pullRequest.number
