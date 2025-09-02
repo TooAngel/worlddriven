@@ -15,6 +15,7 @@
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { client, database } from './src/database/database.js';
+import { decryptToken } from './decrypt-tokens.js';
 
 const DRY_RUN = process.argv.includes('--dry-run');
 

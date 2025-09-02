@@ -20,7 +20,8 @@ export const client = new MongoClient(url);
  * @property {string} owner
  * @property {string} repo
  * @property {boolean} configured
- * @property {import("mongodb").ObjectId} userId
+ * @property {import("mongodb").ObjectId} [userId]
+ * @property {string} [githubAccessToken]
  * @property {Date} createdAt
  * @property {Date} updatedAt
  */
