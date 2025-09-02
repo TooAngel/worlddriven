@@ -1,7 +1,7 @@
 import React from 'react'; // eslint-disable-line no-unused-vars
 import ReactDOM from 'react-dom';
 
-import { Dashboard } from './dashboard.js'; // eslint-disable-line no-unused-vars
+import { Dashboard } from './dashboard.jsx'; // eslint-disable-line no-unused-vars
 import { TestDashboard } from './test/dashboard.js'; // eslint-disable-line no-unused-vars
 import { PullRequest } from './pullrequest.jsx'; // eslint-disable-line no-unused-vars
 import { TestPullRequest } from './test/pullrequest.js'; // eslint-disable-line no-unused-vars

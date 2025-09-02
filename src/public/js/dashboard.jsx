@@ -1,6 +1,6 @@
 import React from 'react';
 import { Repository } from './repository.jsx'; // eslint-disable-line no-unused-vars
-import { RepositoryListItem } from './repositoryListItem.js'; // eslint-disable-line no-unused-vars
+import { RepositoryListItem } from './repositoryListItem.jsx'; // eslint-disable-line no-unused-vars
 import { PullRequestView } from './pullrequestView.jsx'; // eslint-disable-line no-unused-vars
 
 import styles from '../../../static/css/dashboard.module.css';

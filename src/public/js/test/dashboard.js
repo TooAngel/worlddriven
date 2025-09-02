@@ -1,4 +1,4 @@
-import { Dashboard } from '../dashboard.js';
+import { Dashboard } from '../dashboard.jsx';
 
 /**
  * Dashboard class
