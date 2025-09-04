@@ -78,8 +78,11 @@ async function startServer() {
       res.redirect('/dashboard');
     } else {
       // TODO use `code`, too (https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps)
+      const redirectUri = isProduction
+        ? `${req.protocol}://${req.get('host')}/github-callback`
+        : 'http://localhost:3000/github-callback';
       res.redirect(
-        `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&scope=public_repo,read:org,admin:repo_hook`
+        `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=public_repo,read:org,admin:repo_hook`
       );
     }
   });
@@ -285,11 +288,6 @@ async function startServer() {
     });
   } else {
     // Development: use Vite to transform index.html
-    app.get('/js/main.js', (_req, res) => {
-      // Redirect to Vite dev server module
-      res.redirect('/src/public/js/script.jsx');
-    });
-
     app.get('*', async (req, res) => {
       try {
         // Special handling for specific HTML pages
@@ -323,6 +321,7 @@ async function startServer() {
   });
 
   cron.schedule('51 * * * *', processPullRequests);
+  setTimeout(processPullRequests, 1000 * 60 * 5);
 }
 
 startServer();
