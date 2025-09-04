@@ -46,7 +46,10 @@ async function startServer() {
 
   if (app.get('env') === 'production') {
     app.set('trust proxy', 2); // trust first 2 proxies
-    // sess.cookie.secure = true; // serve secure cookies - temporarily disabled for debugging
+    // Force secure cookies even though Express thinks connection is HTTP due to
+    // 2-level proxy setup. Browser correctly handles secure flag since external
+    // connection is HTTPS via www.worlddriven.org
+    sess.cookie.secure = true;
   }
 
   app.use(express.json());
@@ -113,9 +116,6 @@ async function startServer() {
   });
 
   app.get('/v1/user', async function (req, res) {
-    console.log('Session debug - ID:', req.sessionID, 'User ID:', req.session.userId, 'Secure:', req.secure, 'Protocol:', req.protocol);
-    console.log('Headers debug - X-Forwarded-Proto:', req.headers['x-forwarded-proto'], 'X-Forwarded-For:', req.headers['x-forwarded-for'], 'Host:', req.headers.host);
-    console.log('Trust proxy setting:', app.get('trust proxy'));
     if (!req.session.userId) {
       return res.status(401).end();
     }

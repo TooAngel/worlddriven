@@ -19,12 +19,12 @@
   },
   "scripts": {
     "build": "vite build",
+    "check": "prettier --check . && npm run lint",
     "dev": "nodemon",
-    "start": "node src/index.js",
+    "fix": "prettier --write . && eslint . --fix",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "lint:frontend": "eslint static/js --config frontend.eslint.config.cjs --report-unused-disable-directives --max-warnings 0",
-    "fix": "prettier --write . && eslint . --fix",
-    "check": "prettier --check . && npm run lint",
+    "start": "node src/index.js",
     "test": "npm run check && sort-package-json package.json --check && mdspell --en-us --ignore-numbers --report \"*.md\" && write-good --no-adverb README.md CONTRIBUTING.md"
   },
   "dependencies": {
