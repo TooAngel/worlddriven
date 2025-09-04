@@ -284,7 +284,8 @@ async function startServer() {
   if (isProduction) {
     // Production: serve built files
     app.get('/*', (_req, res) => {
-      res.sendFile('index.html', { root: './dist' });
+      // TODO why is this dashboard.html - while on development it's index.html?
+      res.sendFile('dashboard.html', { root: './dist/static' });
     });
   } else {
     // Development: use Vite to transform index.html

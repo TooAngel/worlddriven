@@ -1,21 +1,22 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
 
-  root: './src/public',
-  publicDir: '../../static',
-
   build: {
-    outDir: '../../dist',
+    outDir: './dist',
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: './src/public/js/script.jsx',
+        main: resolve(__dirname, 'src/public/js/script.jsx'),
+        dashboard: resolve(__dirname, 'static/dashboard.html'),
       },
     },
   },
+
+  publicDir: './static',
 
   server: {
     host: '0.0.0.0',
