@@ -46,7 +46,7 @@ async function startServer() {
 
   if (app.get('env') === 'production') {
     app.set('trust proxy', 1); // trust first proxy
-    sess.cookie.secure = true; // serve secure cookies
+    // sess.cookie.secure = true; // serve secure cookies - temporarily disabled for debugging
   }
 
   app.use(express.json());
@@ -113,6 +113,7 @@ async function startServer() {
   });
 
   app.get('/v1/user', async function (req, res) {
+    console.log('Session debug - ID:', req.sessionID, 'User ID:', req.session.userId, 'Secure:', req.secure, 'Protocol:', req.protocol);
     if (!req.session.userId) {
       return res.status(401).end();
     }
