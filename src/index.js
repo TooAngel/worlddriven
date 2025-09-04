@@ -114,6 +114,8 @@ async function startServer() {
 
   app.get('/v1/user', async function (req, res) {
     console.log('Session debug - ID:', req.sessionID, 'User ID:', req.session.userId, 'Secure:', req.secure, 'Protocol:', req.protocol);
+    console.log('Headers debug - X-Forwarded-Proto:', req.headers['x-forwarded-proto'], 'X-Forwarded-For:', req.headers['x-forwarded-for'], 'Host:', req.headers.host);
+    console.log('Trust proxy setting:', app.get('trust proxy'));
     if (!req.session.userId) {
       return res.status(401).end();
     }
