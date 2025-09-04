@@ -79,7 +79,7 @@ async function startServer() {
     } else {
       // TODO use `code`, too (https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps)
       const redirectUri = isProduction
-        ? `${req.protocol}://${req.get('host')}/github-callback`
+        ? `${req.protocol}://${process.env.DOMAIN || req.get('host')}/github-callback`
         : 'http://localhost:3000/github-callback';
       res.redirect(
         `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=public_repo,read:org,admin:repo_hook`
