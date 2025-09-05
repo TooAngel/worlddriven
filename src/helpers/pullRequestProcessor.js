@@ -3,8 +3,41 @@ import {
   createIssueComment,
   getPullRequests,
   mergePullRequest,
+  setCommitStatus,
+  getLatestCommitSha,
 } from './github.js';
 import { User, Repository } from '../database/models.js';
+
+/**
+ * Set GitHub status for a pull request
+ * @param {object} user
+ * @param {string} owner
+ * @param {string} repo
+ * @param {number} pullNumber
+ * @param {object} pullRequestData
+ */
+async function setPullRequestStatus(user, owner, repo, pullNumber, pullRequestData) {
+  try {
+    const sha = await getLatestCommitSha(user, owner, repo, pullNumber);
+    const coefficient = pullRequestData.stats.coefficient;
+    const targetUrl = `https://www.worlddriven.org/${owner}/${repo}/pull/${pullNumber}`;
+
+    let state, description;
+    
+    if (coefficient >= 0) {
+      const mergeDate = new Date(pullRequestData.times.mergeDate * 1000);
+      state = 'success';
+      description = `${coefficient.toFixed(2)} Merge at ${mergeDate.toISOString().split('T')[0]}`;
+    } else {
+      state = 'error';
+      description = `${coefficient.toFixed(2)} Will not merge`;
+    }
+
+    await setCommitStatus(user, owner, repo, sha, state, targetUrl, description, 'World driven');
+  } catch (error) {
+    console.error(`Failed to set status for PR ${owner}/${repo}#${pullNumber}:`, error.message);
+  }
+}
 
 /**
  * Process all pull requests for configured repositories
@@ -79,6 +112,9 @@ export async function processPullRequests() {
 
             prResult.daysToMerge = pullRequestData.times.daysToMerge;
             console.log(`Days to merge: ${pullRequestData.times.daysToMerge}`);
+
+            // Set GitHub status for this pull request
+            await setPullRequestStatus(user, repository.owner, repository.repo, pullRequest.number, pullRequestData);
 
             if (pullRequestData.times.daysToMerge < 0) {
               console.log(

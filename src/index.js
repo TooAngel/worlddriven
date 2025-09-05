@@ -1,5 +1,5 @@
 import express from 'express';
-import got from 'got';
+// Using native fetch API
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import { createServer } from 'vite';
@@ -92,27 +92,42 @@ async function startServer() {
 
   app.get('/github-callback', async function (req, res) {
     const url = 'https://github.com/login/oauth/access_token';
-    const options = {
-      json: {
-        client_id: process.env.GITHUB_CLIENT_ID,
-        client_secret: process.env.GITHUB_CLIENT_SECRET,
-        code: req.query.code,
-      },
-      responseType: 'json',
-    };
-    const response = await got.post(url, options);
-    if (!response.body.access_token) {
-      return res.redirect('/');
-    }
-
-    let user = await User.findByGithubToken(response.body.access_token);
-    if (!user) {
-      user = await User.create({
-        githubAccessToken: response.body.access_token,
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client_id: process.env.GITHUB_CLIENT_ID,
+          client_secret: process.env.GITHUB_CLIENT_SECRET,
+          code: req.query.code,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (!data.access_token) {
+        return res.redirect('/');
+      }
+
+      let user = await User.findByGithubToken(data.access_token);
+      if (!user) {
+        user = await User.create({
+          githubAccessToken: data.access_token,
+        });
+      }
+      req.session.userId = user._id.toString();
+      res.redirect('/dashboard');
+    } catch (e) {
+      console.error('GitHub OAuth error:', e);
+      res.redirect('/');
     }
-    req.session.userId = user._id.toString();
-    res.redirect('/dashboard');
   });
 
   app.get('/v1/user', async function (req, res) {
@@ -124,23 +139,26 @@ async function startServer() {
       return res.status(401).end();
     }
     const url = 'https://api.github.com/user';
-    const options = {
-      headers: {
-        Accept: 'application/vnd.github.v3+json',
-        Authorization: `token ${user.githubAccessToken}`,
-      },
-      responseType: 'json',
-    };
+    
     try {
-      const response = await got.get(url, options);
+      const response = await fetch(url, {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': `token ${user.githubAccessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const userData = await response.json();
       const data = {
-        name: response.body.name,
+        name: userData.name,
       };
       res.send(data);
     } catch (e) {
       console.log(e);
-      console.log(e.response.body);
-      console.log(options);
       res.status(503).end();
     }
   });
@@ -154,18 +172,23 @@ async function startServer() {
       return res.status(401).end();
     }
     const url = 'https://api.github.com/user/repos?type=public&per_page=100';
-    const options = {
-      headers: {
-        Accept: 'application/vnd.github.v3+json',
-        Authorization: `token ${user.githubAccessToken}`,
-      },
-      responseType: 'json',
-    };
+    
     try {
       // TODO handle pagination
-      const response = await got.get(url, options);
+      const response = await fetch(url, {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': `token ${user.githubAccessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
       const repositories = [];
-      for (const repository of response.body) {
+      for (const repository of data) {
         const [owner, repo] = repository.full_name.split('/');
         let configured = false;
         const dbRepository = await Repository.findByOwnerAndRepo(owner, repo);
@@ -182,8 +205,6 @@ async function startServer() {
       res.send(repositories);
     } catch (e) {
       console.log(e);
-      console.log(e.response.body);
-      console.log(options);
       res.status(503).end();
     }
   });
@@ -325,7 +346,7 @@ async function startServer() {
   });
 
   cron.schedule('51 * * * *', processPullRequests);
-  setTimeout(processPullRequests, 1000 * 60 * 5);
+  setTimeout(processPullRequests, 1000 * 30); // Run after 30 seconds on startup
 }
 
 startServer();

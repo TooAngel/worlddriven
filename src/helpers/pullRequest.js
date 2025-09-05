@@ -1,4 +1,4 @@
-import got from 'got';
+// Using native fetch API
 
 /**
  * getContributors
@@ -7,17 +7,21 @@ import got from 'got';
  * @param {string} url
  */
 async function getContributors(user, url) {
-  const options = {
-    headers: {
-      Accept: 'application/vnd.github.v3+json',
-      Authorization: `token ${user.githubAccessToken}`,
-    },
-    responseType: 'json',
-  };
   try {
-    const response = await got.get(url, options);
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `token ${user.githubAccessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
     const contributors = [];
-    for (const contributor of response.body) {
+    for (const contributor of data) {
       contributors.push({
         name: contributor.login,
         commits: contributor.contributions,
@@ -28,8 +32,6 @@ async function getContributors(user, url) {
     return contributors;
   } catch (e) {
     console.log(e);
-    console.log(e.response.body);
-    console.log(options);
     console.log(url);
     throw e;
   }
@@ -44,20 +46,22 @@ async function getContributors(user, url) {
  */
 async function getCommits(user, pull) {
   const url = pull.commits_url;
-  const options = {
-    headers: {
-      Accept: 'application/vnd.github.v3+json',
-      Authorization: `token ${user.githubAccessToken}`,
-    },
-    responseType: 'json',
-  };
+  
   try {
-    const response = await got.get(url, options);
-    return response.body;
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `token ${user.githubAccessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
   } catch (e) {
     console.log(e);
-    console.log(e.response.body);
-    console.log(options);
     console.log(url);
     throw e;
   }
@@ -72,20 +76,22 @@ async function getCommits(user, pull) {
  */
 async function getPullIssueEvents(user, pull) {
   const url = `${pull.issue_url}/events`;
-  const options = {
-    headers: {
-      Accept: 'application/vnd.github.v3+json',
-      Authorization: `token ${user.githubAccessToken}`,
-    },
-    responseType: 'json',
-  };
+  
   try {
-    const response = await got.get(url, options);
-    return response.body;
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `token ${user.githubAccessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
   } catch (e) {
     console.log(e);
-    console.log(e.response.body);
-    console.log(options);
     console.log(url);
     throw e;
   }
@@ -100,20 +106,22 @@ async function getPullIssueEvents(user, pull) {
  */
 async function getBranchEvents(user, pull) {
   const url = `${pull.head.repo.events_url}`;
-  const options = {
-    headers: {
-      Accept: 'application/vnd.github.v3+json',
-      Authorization: `token ${user.githubAccessToken}`,
-    },
-    responseType: 'json',
-  };
+  
   try {
-    const response = await got.get(url, options);
-    return response.body;
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `token ${user.githubAccessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
   } catch (e) {
     console.log(e);
-    console.log(e.response.body);
-    console.log(options);
     console.log(url);
     throw e;
   }
@@ -174,20 +182,22 @@ async function getDates(user, pull) {
  */
 async function getPullRequest(user, owner, repo, number) {
   const url = `https://api.github.com/repos/${owner}/${repo}/pulls/${number}`;
-  const options = {
-    headers: {
-      Accept: 'application/vnd.github.v3+json',
-      Authorization: `token ${user.githubAccessToken}`,
-    },
-    responseType: 'json',
-  };
+  
   try {
-    const response = await got.get(url, options);
-    return response.body;
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `token ${user.githubAccessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
   } catch (e) {
     console.log(e);
-    console.log(e.response.body);
-    console.log(options);
     console.log(url);
     throw e;
   }
@@ -201,20 +211,22 @@ async function getPullRequest(user, owner, repo, number) {
  */
 async function getReviews(user, pull) {
   const url = `${pull._links.self.href}/reviews`;
-  const options = {
-    headers: {
-      Accept: 'application/vnd.github.v3+json',
-      Authorization: `token ${user.githubAccessToken}`,
-    },
-    responseType: 'json',
-  };
+  
   try {
-    const response = await got.get(url, options);
-    return response.body;
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `token ${user.githubAccessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
   } catch (e) {
     console.log(e);
-    // console.log(e.response.body);
-    console.log(options);
     console.log(url);
     throw e;
   }
