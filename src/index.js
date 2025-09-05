@@ -9,8 +9,13 @@ import { client } from './database/database.js';
 import { User, Repository } from './database/models.js';
 import cron from 'node-cron';
 import { processPullRequests } from './helpers/pullRequestProcessor.js';
-import { getPullRequests } from './helpers/github.js';
+import { getPullRequests, createWebhook, deleteWebhook } from './helpers/github.js';
 import { getPullRequestData } from './helpers/pullRequest.js';
+import { 
+  handlePullRequestWebhook, 
+  handlePullRequestReviewWebhook, 
+  handlePushWebhook 
+} from './helpers/webhookHandler.js';
 
 const mongoSessionStore = MongoStore.create({
   clientPromise: client.connect(),
@@ -233,54 +238,38 @@ async function startServer() {
       req.params.owner,
       req.params.repo
     );
-    if (repository) {
-      await Repository.update(repository._id, { configured: req.body.checked });
-      return;
+
+    const webhookUrl = `https://www.worlddriven.org/github`;
+    const checked = req.body.checked;
+
+    try {
+      if (repository) {
+        // Update existing repository configuration
+        await Repository.update(repository._id, { configured: checked });
+      } else {
+        // Create new repository configuration
+        await Repository.create({
+          owner: req.params.owner,
+          repo: req.params.repo,
+          configured: checked,
+          userId: user._id,
+        });
+      }
+
+      // Create or delete webhook based on configuration
+      if (checked) {
+        console.log(`Creating webhook for ${req.params.owner}/${req.params.repo}`);
+        await createWebhook(user, req.params.owner, req.params.repo, webhookUrl);
+      } else {
+        console.log(`Deleting webhook for ${req.params.owner}/${req.params.repo}`);
+        await deleteWebhook(user, req.params.owner, req.params.repo, webhookUrl);
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Repository configuration error:', error);
+      res.status(500).json({ error: 'Failed to configure repository' });
     }
-
-    await Repository.create({
-      owner: req.params.owner,
-      repo: req.params.repo,
-      configured: req.body.checked,
-      userId: user._id,
-    });
-
-    // TODO create or delete webhook
-    // checked = request.json['checked']
-    // full_name = '{}/{}'.format(org, repo)
-    // github_client = github.Github(g.user.github_access_token)
-    // repository = github_client.get_repo('{}/{}'.format(org, repo))
-    // config = {
-    //     'url': '{}/github/'.format(DOMAIN),
-    //     'insecure_ssl': '0',
-    //     'content_type': 'json'
-    // }
-    // events = [u'commit_comment', u'pull_request', u'pull_request_review', u'push']
-    // db_repository = Repository.query.filter_by(full_name=full_name).first()
-    // if checked:
-    //     try:
-    //         repository.create_hook('web', config, events=events, active=True)
-    //     except github.GithubException as e:
-    //         logging.error(e)
-
-    //     if not db_repository:
-    //         db_repository = Repository(full_name=full_name, github_access_token=g.user.github_access_token)
-    //         db.session.add(db_repository)
-    //         db.session.commit()
-    // else:
-    //     for hook in repository.get_hooks():
-    //         if 'url' not in hook.config:
-    //             continue
-
-    //         if hook.config['url'] == '{}/github/'.format(DOMAIN):
-    //             hook.delete()
-
-    //     if db_repository:
-    //         db.session.delete(db_repository)
-    //         db.session.commit()
-    // return {}
-
-    res.end();
   });
 
   app.get(
@@ -303,6 +292,42 @@ async function startServer() {
       res.send(pullRequestData);
     }
   );
+
+  // GitHub webhook endpoint
+  app.post('/github', async function (req, res) {
+    const eventType = req.headers['x-github-event'];
+    const data = req.body;
+
+    console.log(`GitHub webhook received: ${eventType}`);
+
+    try {
+      let result;
+      
+      switch (eventType) {
+        case 'pull_request':
+          result = await handlePullRequestWebhook(data);
+          break;
+          
+        case 'pull_request_review':
+          result = await handlePullRequestReviewWebhook(data);
+          break;
+          
+        case 'push':
+          result = await handlePushWebhook(data);
+          break;
+          
+        default:
+          console.log(`Unhandled webhook event: ${eventType}`);
+          result = { info: `Event ${eventType} not handled` };
+      }
+      
+      res.json(result);
+      
+    } catch (error) {
+      console.error('Webhook processing error:', error);
+      res.status(500).json({ error: 'Webhook processing failed' });
+    }
+  });
 
   // Handle HTML serving - different for production vs development
   if (isProduction) {

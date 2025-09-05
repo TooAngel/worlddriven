@@ -191,3 +191,109 @@ export async function getLatestCommitSha(user, owner, repo, pullNumber) {
     throw e;
   }
 }
+
+/**
+ * createWebhook - Create a GitHub webhook for a repository
+ *
+ * @param {object} user
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} webhookUrl - The URL to receive webhooks
+ * @return {object} webhook response
+ */
+export async function createWebhook(user, owner, repo, webhookUrl) {
+  const url = `https://api.github.com/repos/${owner}/${repo}/hooks`;
+  
+  const webhookConfig = {
+    url: webhookUrl,
+    insecure_ssl: '0',
+    content_type: 'json'
+  };
+  
+  const events = ['pull_request', 'pull_request_review', 'push'];
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `token ${user.githubAccessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: 'web',
+        config: webhookConfig,
+        events: events,
+        active: true,
+      }),
+    });
+
+    if (!response.ok) {
+      // If webhook already exists, that's okay
+      if (response.status === 422) {
+        console.log(`Webhook already exists for ${owner}/${repo}`);
+        return { info: 'Webhook already exists' };
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(`✅ Created webhook for ${owner}/${repo} -> ${webhookUrl}`);
+    return data;
+  } catch (e) {
+    console.error(`❌ Failed to create webhook for ${owner}/${repo}:`, e.message);
+    throw e;
+  }
+}
+
+/**
+ * deleteWebhook - Delete GitHub webhooks for a repository
+ *
+ * @param {object} user
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} webhookUrl - The webhook URL to delete
+ * @return {void}
+ */
+export async function deleteWebhook(user, owner, repo, webhookUrl) {
+  const url = `https://api.github.com/repos/${owner}/${repo}/hooks`;
+  
+  try {
+    // First, get all hooks
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': `token ${user.githubAccessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const hooks = await response.json();
+    
+    // Find hooks that match our webhook URL
+    for (const hook of hooks) {
+      if (hook.config && hook.config.url === webhookUrl) {
+        const deleteUrl = `https://api.github.com/repos/${owner}/${repo}/hooks/${hook.id}`;
+        
+        const deleteResponse = await fetch(deleteUrl, {
+          method: 'DELETE',
+          headers: {
+            'Accept': 'application/vnd.github.v3+json',
+            'Authorization': `token ${user.githubAccessToken}`,
+          },
+        });
+
+        if (deleteResponse.ok) {
+          console.log(`✅ Deleted webhook ${hook.id} for ${owner}/${repo}`);
+        } else {
+          console.error(`❌ Failed to delete webhook ${hook.id} for ${owner}/${repo}`);
+        }
+      }
+    }
+  } catch (e) {
+    console.error(`❌ Failed to delete webhooks for ${owner}/${repo}:`, e.message);
+  }
+}
