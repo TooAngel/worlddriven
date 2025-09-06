@@ -24,6 +24,35 @@ The configuration for the repository is:
 
 Read more on https://www.worlddriven.org
 
+## Issue Labels
+
+We use a comprehensive labeling system to organize issues and pull requests:
+
+### Issue Types
+- **bug** - Something isn't working correctly
+- **enhancement** - New feature or improvement to existing functionality  
+- **question** - Requires further information or discussion
+
+### Issue Status
+- **duplicate** - This issue or pull request already exists
+- **invalid** - This doesn't seem right or is not actionable
+- **wontfix** - We will not work on or change this
+- **WIP** - Work in progress - do not merge yet
+
+### Community
+- **help wanted** - Community contributions welcome
+- **good first issue** - Good for newcomers - straightforward task for first-time contributors
+- **discussion** - Needs discussion or decision before implementation
+
+### Technical Categories
+- **dependencies** - Pull requests that update a dependency file
+- **javascript** - JavaScript code changes or improvements
+- **infrastructure** - Infrastructure, deployment, and DevOps tasks
+- **security** - Security-related issues and vulnerabilities
+- **modernization** - Modernizing code and dependencies
+- **technical-debt** - Code cleanup and refactoring tasks
+- **monitoring** - Monitoring, logging, and observability
+
 ## Setup
 
 ### Run with docker compose
