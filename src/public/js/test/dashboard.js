@@ -1,9 +1,9 @@
-import {Dashboard} from '../dashboard.js'; // eslint-disable-line no-unused-vars
+import { Dashboard } from '../dashboard.jsx';
 
 /**
  * Dashboard class
  **/
-export class TestDashboard extends Dashboard { // eslint-disable-line no-unused-vars
+export class TestDashboard extends Dashboard {
   /**
    * getUser - Returns dummy values
    *
@@ -11,7 +11,7 @@ export class TestDashboard extends Dashboard { // eslint-disable-line no-unused-
    * @return {void}
    **/
   getUser(callback) {
-    callback({name: 'Test'});
+    callback({ name: 'Test' });
   }
 
   /**
@@ -25,18 +25,14 @@ export class TestDashboard extends Dashboard { // eslint-disable-line no-unused-
       {
         full_name: 'TooAngel/screeps',
         configured: false,
-        pull_requests: [
-          {number: 11},
-        ],
+        pull_requests: [{ number: 11 }],
         description: 'Super cool screeps',
         html_url: 'https://github.com/TooAngel/screeps',
       },
       {
         full_name: 'TooAngel/worlddriven',
         configured: true,
-        pull_requests: [
-          {number: 11},
-        ],
+        pull_requests: [{ number: 11 }],
         description: 'Extreme cool World Driven',
         html_url: 'https://github.com/TooAngel/worlddriven',
       },
@@ -52,52 +48,51 @@ export class TestDashboard extends Dashboard { // eslint-disable-line no-unused-
    * @return {void}
    **/
   getPullRequest(repositoryFullName, pullRequestNumber, callback) {
-    let data = {pull_request: {
-      title: 'Perfect attack',
-      mergeable: true,
-      stats: {
-        contributors: [
-          {
-            name: 'contributor',
-            review_value: -1,
-            commits: '4',
-            time_value: 7,
-          },
-          {
-            name: 'contributor',
-            review_value: 0,
-            commits: '7',
-            time_value: 7,
-          },
-          {
-            name: 'contributor',
-            review_value: 1,
-            commits: '9',
-            time_value: 7,
-          },
-        ],
-        age: {},
-        coefficient: 0.3,
-        votes: 7,
-        votes_total: 12,
-      },
-      org: 'testorg',
-      repo: 'testrepo',
-      number: 5,
-      state: 'state',
-      dates: {
-        max: 123456789,
-      },
-      times: {
-        days_to_merge: {
-          merge_date: 1234567,
-
+    let data = {
+      pull_request: {
+        title: 'Perfect attack',
+        mergeable: true,
+        stats: {
+          contributors: [
+            {
+              name: 'contributor',
+              review_value: -1,
+              commits: '4',
+              time_value: 7,
+            },
+            {
+              name: 'contributor',
+              review_value: 0,
+              commits: '7',
+              time_value: 7,
+            },
+            {
+              name: 'contributor',
+              review_value: 1,
+              commits: '9',
+              time_value: 7,
+            },
+          ],
+          age: {},
+          coefficient: 0.3,
+          votes: 7,
+          votes_total: 12,
         },
-        merge_duration: {
-
+        org: 'testorg',
+        repo: 'testrepo',
+        number: 5,
+        state: 'state',
+        dates: {
+          max: 123456789,
+        },
+        times: {
+          days_to_merge: {
+            merge_date: 1234567,
+          },
+          merge_duration: {},
         },
       },
-    }};
+    };
     if (repositoryFullName === 'TooAngel/worlddriven') {
       data = {
         pull_request: {
@@ -139,11 +134,8 @@ export class TestDashboard extends Dashboard { // eslint-disable-line no-unused-
           times: {
             days_to_merge: {
               merge_date: 1234567,
-
             },
-            merge_duration: {
-
-            },
+            merge_duration: {},
           },
         },
       };
