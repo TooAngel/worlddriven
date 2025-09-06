@@ -13,15 +13,16 @@ jobs:
 
     services:
       mariadb:
-        image: mariadb:latest
+        image: mariadb:10.5 # stable version
         env:
+          MYSQL_ROOT_PASSWORD: root
           MYSQL_USER: worlddriven
           MYSQL_PASSWORD: password
           MYSQL_DATABASE: worlddriven
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -36,7 +37,19 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Modern Node.js (PR #265 upgrade)
+          node-version: '20'
+
+      - name: Wait for MariaDB
+        run: |
+          echo "Waiting for MariaDB to be ready..."
+          for i in {1..30}; do
+            if mysql -h 127.0.0.1 -uroot -proot -e "SELECT 1;" &> /dev/null; then
+              echo "MariaDB is up!"
+              break
+            fi
+            echo "Still waiting... ($i)"
+            sleep 2
+          done
 
       - name: Install dependencies
         run: npm install
