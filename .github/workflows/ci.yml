@@ -12,23 +12,18 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mariadb:
-        image: mariadb:10.5 # stable version
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_USER: worlddriven
-          MYSQL_PASSWORD: password
-          MYSQL_DATABASE: worlddriven
+      mongodb:
+        image: mongo:6.0
         ports:
-          - 3306:3306
+          - 27017:27017
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-cmd="mongosh --eval 'db.adminCommand(\"ping\")'"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
 
     env:
-      JAWSDB_MARIA_URL: mysql://worlddriven:password@127.0.0.1/worlddriven
+      MONGO_URL: mongodb://127.0.0.1:27017/worlddriven_test
 
     steps:
       - name: Checkout repository
@@ -39,23 +34,10 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Wait for MariaDB
-        run: |
-          echo "Waiting for MariaDB to be ready..."
-          for i in {1..30}; do
-            if mysql -h 127.0.0.1 -uroot -proot -e "SELECT 1;" &> /dev/null; then
-              echo "MariaDB is up!"
-              break
-            fi
-            echo "Still waiting... ($i)"
-            sleep 2
-          done
-
       - name: Install dependencies
         run: npm install
 
       - name: Run tests
         run: npm test
-
       - name: Build project
         run: npm run build
