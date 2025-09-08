@@ -1,16 +1,12 @@
 version: 2
 jobs:
-    test:
-      docker:
-        - image: circleci/python:3.7-stretch-node
-          environment:
-            JAWSDB_MARIA_URL: mysql://worlddriven:password@127.0.0.1/worlddriven
-        - image: circleci/mariadb:latest
-          environment:
-            MYSQL_USER: worlddriven
-            MYSQL_PASSWORD: password
-            MYSQL_DATABASE: worlddriven
-      steps:
+  test:
+    docker:
+      - image: cimg/node:20.17
+        environment:
+          MONGO_URL: mongodb://127.0.0.1:27017/worlddriven_test
+      - image: mongo:7.0
+    steps:
       - checkout
       - run: npm install
       - run: npm test

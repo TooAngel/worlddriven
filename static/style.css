@@ -1,6 +1,6 @@
 @media print {
   .noprint {
-    display:none;
+    display: none;
   }
 }
 
@@ -13,7 +13,6 @@ body {
     font-size: 18px;
   }
 }
-
 
 .bg {
   position: fixed;
@@ -42,7 +41,7 @@ body {
   margin: 0 auto;
 }
 
-@media only screen and (min-width:1025px) {
+@media only screen and (min-width: 1025px) {
   .container {
     width: 900px;
   }
@@ -68,10 +67,9 @@ footer a {
   }
 
   footer a {
-    margin-right: 1.0rem;
+    margin-right: 1rem;
   }
 }
-
 
 /* Links */
 
@@ -92,7 +90,6 @@ header {
   align-items: center;
 }
 
-
 .login {
   margin: 0 0 -30px auto;
 }
@@ -102,7 +99,6 @@ header {
   justify-content: center;
   margin-bottom: -1.6rem;
 }
-
 
 .logo a,
 .logo a:hover {
@@ -133,7 +129,6 @@ header {
 header h4 {
   margin: -8px auto 10px auto;
 }
-
 
 /* Index page titles and subtitles */
 
@@ -212,8 +207,12 @@ li h4 {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .challenge-bullets h4 {

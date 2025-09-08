@@ -1,5 +1,5 @@
 'use strict';
-import {Model} from 'sequelize';
+import { Model } from 'sequelize';
 
 export default (sequelize, DataTypes) => {
   /**
@@ -17,20 +17,23 @@ export default (sequelize, DataTypes) => {
       });
     }
   }
-  User.init({
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      allowNull: false,
-      primaryKey: true,
+  User.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        allowNull: false,
+        primaryKey: true,
+      },
+      githubAccessToken: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
     },
-    githubAccessToken: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-  }, {
-    sequelize,
-    modelName: 'User',
-  });
+    {
+      sequelize,
+      modelName: 'User',
+    }
+  );
   return User;
 };

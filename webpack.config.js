@@ -25,7 +25,10 @@ export default {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: [['@babel/preset-env', {targets: {node: '16.3.1'}}], '@babel/preset-react'],
+            presets: [
+              ['@babel/preset-env', { targets: { node: '16.3.1' } }],
+              '@babel/preset-react',
+            ],
           },
         },
       },

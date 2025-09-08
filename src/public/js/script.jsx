@@ -1,11 +1,11 @@
 import React from 'react'; // eslint-disable-line no-unused-vars
 import ReactDOM from 'react-dom';
 
-import {Dashboard} from './dashboard.js'; // eslint-disable-line no-unused-vars
-import {TestDashboard} from './test/dashboard.js'; // eslint-disable-line no-unused-vars
-import {PullRequest} from './pullrequest.js'; // eslint-disable-line no-unused-vars
-import {TestPullRequest} from './test/pullrequest.js'; // eslint-disable-line no-unused-vars
-import {Logs} from './logs.js'; // eslint-disable-line no-unused-vars
+import { Dashboard } from './dashboard.jsx'; // eslint-disable-line no-unused-vars
+import { TestDashboard } from './test/dashboard.js'; // eslint-disable-line no-unused-vars
+import { PullRequest } from './pullrequest.jsx'; // eslint-disable-line no-unused-vars
+import { TestPullRequest } from './test/pullrequest.js'; // eslint-disable-line no-unused-vars
+import { Logs } from './logs.jsx'; // eslint-disable-line no-unused-vars
 
 /**
  * main - The main method
@@ -25,10 +25,7 @@ function main() {
   if (window.location.pathname === '/admin') {
     tag = <Logs />;
   }
-  ReactDOM.render(
-    tag,
-    document.getElementById('app'),
-  );
+  ReactDOM.render(tag, document.getElementById('app'));
 }
 
 main();
