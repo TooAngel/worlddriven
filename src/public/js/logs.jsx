@@ -3,7 +3,8 @@ import React from 'react';
 /**
  * Logs class
  **/
-export class Logs extends React.Component { // eslint-disable-line no-unused-vars
+export class Logs extends React.Component {
+  // eslint-disable-line no-unused-vars
   /**
    * contructor - The constructor
    *
@@ -43,13 +44,13 @@ export class Logs extends React.Component { // eslint-disable-line no-unused-var
       console.log('connected');
     };
 
-    this.ws.onmessage = (event) => {
+    this.ws.onmessage = event => {
       const dataFromServer = this.state.dataFromServer;
       dataFromServer.push(event.data);
       if (dataFromServer.length > 100) {
         dataFromServer.shift();
       }
-      this.setState({dataFromServer: dataFromServer});
+      this.setState({ dataFromServer: dataFromServer });
     };
 
     this.ws.onclose = () => {
@@ -73,15 +74,22 @@ export class Logs extends React.Component { // eslint-disable-line no-unused-var
    **/
   render() {
     const lines = [];
-    for (let i=0; i<this.state.dataFromServer.length; i++) {
+    for (let i = 0; i < this.state.dataFromServer.length; i++) {
       lines.push(<li key={i}>{this.state.dataFromServer[i]}</li>);
     }
     const ulStyle = {
       listStyleType: 'none',
       paddingLeft: '0px',
     };
-    return <div className="log" ref={(node) => {
-      this.node = node;
-    }}><ul style={ulStyle}>{ lines }</ul></div>;
+    return (
+      <div
+        className="log"
+        ref={node => {
+          this.node = node;
+        }}
+      >
+        <ul style={ulStyle}>{lines}</ul>
+      </div>
+    );
   }
 }

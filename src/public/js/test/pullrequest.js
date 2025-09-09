@@ -1,9 +1,9 @@
-import {PullRequest} from '../pullrequest.js'; // eslint-disable-line no-unused-vars
+import { PullRequest } from '../pullrequest.jsx';
 
 /**
  * PullRequest class
  **/
-export class TestPullRequest extends PullRequest { // eslint-disable-line no-unused-vars
+export class TestPullRequest extends PullRequest {
   /**
    * componentDidMount - after component mount
    *
@@ -32,12 +32,8 @@ export class TestPullRequest extends PullRequest { // eslint-disable-line no-unu
         max: 123456789,
       },
       times: {
-        days_to_merge: {
-
-        },
-        merge_duration: {
-
-        },
+        days_to_merge: {},
+        merge_duration: {},
       },
     };
     this.setState({

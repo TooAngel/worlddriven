@@ -1,28 +1,22 @@
-version: '3.7'
-
 services:
   database:
-    image: mariadb
-    restart: always
-    environment:
-      MARIADB_ROOT_PASSWORD: eem9Phi1zeu3Eo6fai0r
-      MARIADB_DATABASE: worlddriven
-      MARIADB_USER: worlddriven
-      MARIADB_PASSWORD: zu8uSiuxohviePh8ohmi
+    image: mongo
     ports:
-      - 3306:3306
+      - 27017-27019:27017-27019
+    logging:
+      driver: 'none'
+    command: mongod --quiet --logpath /dev/null
   application:
-    image: node:16.13-bullseye
-    command: npm start
+    image: node:20-bullseye
+    command: sh -c "npm install && npm start"
     working_dir: /usr/src/api/
     volumes:
       - ./:/usr/src/api/
     ports:
-      - ${PORT:-3000}:3000
+      - '${PORT:-3000}:3000'
     environment:
       - DEBUG=true
-      - JAWSDB_MARIA_URL=mysql://worlddriven:zu8uSiuxohviePh8ohmi@database:3306/worlddriven
-      - PORT=3000
+      - NODE_ENV=${NODE_ENV:-development}
     env_file:
       - .env
     depends_on:
