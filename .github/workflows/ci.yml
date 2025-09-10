@@ -37,6 +37,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Auto format with Prettier
+        run: npm run format
+
+
       - name: Run tests
         run: npm test
       - name: Build project
