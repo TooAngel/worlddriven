@@ -25,12 +25,9 @@
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "lint:frontend": "eslint static/js --config frontend.eslint.config.cjs --report-unused-disable-directives --max-warnings 0",
     "start": "node src/index.js",
-    "test": "npm run check && sort-package-json package.json --check && mdspell --en-us --ignore-numbers --report \"*.md\" && write-good --no-adverb README.md CONTRIBUTING.md"
-  
-  "scripts": {
-  "format": "prettier --write .",
-  "check": "prettier --check . && npm run lint"
-},
+    "test": "npm run check && sort-package-json package.json --check && mdspell --en-us --ignore-numbers --report \"*.md\" && write-good --no-adverb README.md CONTRIBUTING.md",
+    "format": "prettier --write ."
+  },
   "dependencies": {
     "connect-mongo": "5.1.0",
     "express": "4.21.2",
