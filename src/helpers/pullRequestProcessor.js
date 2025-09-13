@@ -10,21 +10,21 @@ import { User, Repository } from '../database/models.js';
 
 /**
  * Set GitHub status for a pull request
- * @param {object} user
+ * @param {object|number} authMethod - User object or installationId
  * @param {string} owner
  * @param {string} repo
  * @param {number} pullNumber
  * @param {object} pullRequestData
  */
 async function setPullRequestStatus(
-  user,
+  authMethod,
   owner,
   repo,
   pullNumber,
   pullRequestData
 ) {
   try {
-    const sha = await getLatestCommitSha(user, owner, repo, pullNumber);
+    const sha = await getLatestCommitSha(authMethod, owner, repo, pullNumber);
     const coefficient = pullRequestData.stats.coefficient;
     const targetUrl = `https://www.worlddriven.org/${owner}/${repo}/pull/${pullNumber}`;
 
@@ -40,7 +40,7 @@ async function setPullRequestStatus(
     }
 
     await setCommitStatus(
-      user,
+      authMethod,
       owner,
       repo,
       sha,
@@ -90,9 +90,29 @@ export async function processPullRequests() {
         `Processing repository: ${repository.owner}/${repository.repo}`
       );
 
-      const user = await User.findById(repository.userId);
-      if (!user) {
-        const error = `No user found for repository ${repository.owner}/${repository.repo}`;
+      let authMethod;
+
+      // Determine authentication method
+      if (repository.installationId) {
+        // Use GitHub App
+        authMethod = repository.installationId;
+        console.log(
+          `Using GitHub App authentication (installation: ${repository.installationId})`
+        );
+      } else if (repository.userId) {
+        // Use PAT (legacy)
+        const user = await User.findById(repository.userId);
+        if (!user) {
+          const error = `No user found for repository ${repository.owner}/${repository.repo}`;
+          console.log(error);
+          repoResult.errors.push(error);
+          results.errors++;
+          continue;
+        }
+        authMethod = user;
+        console.log(`Using PAT authentication (user: ${user._id})`);
+      } else {
+        const error = `No authentication method configured for ${repository.owner}/${repository.repo}`;
         console.log(error);
         repoResult.errors.push(error);
         results.errors++;
@@ -101,7 +121,7 @@ export async function processPullRequests() {
 
       try {
         const pullRequests = await getPullRequests(
-          user,
+          authMethod,
           repository.owner,
           repository.repo
         );
@@ -122,7 +142,7 @@ export async function processPullRequests() {
 
           try {
             const pullRequestData = await getPullRequestData(
-              user,
+              authMethod,
               repository.owner,
               repository.repo,
               pullRequest.number
@@ -133,7 +153,7 @@ export async function processPullRequests() {
 
             // Set GitHub status for this pull request
             await setPullRequestStatus(
-              user,
+              authMethod,
               repository.owner,
               repository.repo,
               pullRequest.number,
@@ -146,7 +166,7 @@ export async function processPullRequests() {
               );
 
               const mergeResponse = await mergePullRequest(
-                user,
+                authMethod,
                 repository.owner,
                 repository.repo,
                 pullRequest.number
@@ -156,7 +176,7 @@ export async function processPullRequests() {
                 const comment =
                   'This pull request was merged by [worlddriven](https://www.worlddriven.org).';
                 await createIssueComment(
-                  user,
+                  authMethod,
                   repository.owner,
                   repository.repo,
                   pullRequest.number,
