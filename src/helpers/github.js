@@ -1,14 +1,37 @@
 // Using native fetch API
+import {
+  getPullRequestsApp,
+  mergePullRequestApp,
+  setCommitStatusApp,
+  getLatestCommitShaApp,
+  createIssueCommentApp,
+  createWebhookApp,
+  deleteWebhookApp,
+} from './githubApp.js';
 
 /**
- * getPullRequests
+ * getPullRequests - Hybrid authentication (GitHub App or PAT)
  *
- * @param {object} user
+ * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number
  * @param {string} owner
  * @param {string} repo
  * @return {void}
  */
-export async function getPullRequests(user, owner, repo) {
+export async function getPullRequests(userOrInstallationId, owner, repo) {
+  // If it's a number, treat as installationId (GitHub App)
+  if (
+    typeof userOrInstallationId === 'number' ||
+    (typeof userOrInstallationId === 'string' && !isNaN(userOrInstallationId))
+  ) {
+    return await getPullRequestsApp(
+      parseInt(userOrInstallationId),
+      owner,
+      repo
+    );
+  }
+
+  // Otherwise, use existing PAT logic
+  const user = userOrInstallationId;
   const url = `https://api.github.com/repos/${owner}/${repo}/pulls?state=open`;
 
   try {
@@ -41,15 +64,35 @@ export async function getPullRequests(user, owner, repo) {
 }
 
 /**
- * mergePullRequest
+ * mergePullRequest - Hybrid authentication (GitHub App or PAT)
  *
- * @param {object} user
+ * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number
  * @param {string} owner
  * @param {string} repo
  * @param {number} number
  * @return {void}
  */
-export async function mergePullRequest(user, owner, repo, number) {
+export async function mergePullRequest(
+  userOrInstallationId,
+  owner,
+  repo,
+  number
+) {
+  // If it's a number, treat as installationId (GitHub App)
+  if (
+    typeof userOrInstallationId === 'number' ||
+    (typeof userOrInstallationId === 'string' && !isNaN(userOrInstallationId))
+  ) {
+    return await mergePullRequestApp(
+      parseInt(userOrInstallationId),
+      owner,
+      repo,
+      number
+    );
+  }
+
+  // Otherwise, use existing PAT logic
+  const user = userOrInstallationId;
   const url = `https://api.github.com/repos/${owner}/${repo}/pulls/${number}/merge`;
 
   try {
@@ -77,16 +120,38 @@ export async function mergePullRequest(user, owner, repo, number) {
 }
 
 /**
- * createIssueComment
+ * createIssueComment - Hybrid authentication (GitHub App or PAT)
  *
- * @param {object} user
+ * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number
  * @param {string} owner
  * @param {string} repo
  * @param {number} number
  * @param {string} comment
  * @return {void}
  */
-export async function createIssueComment(user, owner, repo, number, comment) {
+export async function createIssueComment(
+  userOrInstallationId,
+  owner,
+  repo,
+  number,
+  comment
+) {
+  // If it's a number, treat as installationId (GitHub App)
+  if (
+    typeof userOrInstallationId === 'number' ||
+    (typeof userOrInstallationId === 'string' && !isNaN(userOrInstallationId))
+  ) {
+    return await createIssueCommentApp(
+      parseInt(userOrInstallationId),
+      owner,
+      repo,
+      number,
+      comment
+    );
+  }
+
+  // Otherwise, use existing PAT logic
+  const user = userOrInstallationId;
   const url = `https://api.github.com/repos/${owner}/${repo}/issues/${number}/comments`;
 
   try {
@@ -114,9 +179,9 @@ export async function createIssueComment(user, owner, repo, number, comment) {
 }
 
 /**
- * setCommitStatus
+ * setCommitStatus - Hybrid authentication (GitHub App or PAT)
  *
- * @param {object} user
+ * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number
  * @param {string} owner
  * @param {string} repo
  * @param {string} sha - commit SHA
@@ -127,7 +192,7 @@ export async function createIssueComment(user, owner, repo, number, comment) {
  * @return {void}
  */
 export async function setCommitStatus(
-  user,
+  userOrInstallationId,
   owner,
   repo,
   sha,
@@ -136,6 +201,25 @@ export async function setCommitStatus(
   description,
   context = 'World driven'
 ) {
+  // If it's a number, treat as installationId (GitHub App)
+  if (
+    typeof userOrInstallationId === 'number' ||
+    (typeof userOrInstallationId === 'string' && !isNaN(userOrInstallationId))
+  ) {
+    return await setCommitStatusApp(
+      parseInt(userOrInstallationId),
+      owner,
+      repo,
+      sha,
+      state,
+      targetUrl,
+      description,
+      context
+    );
+  }
+
+  // Otherwise, use existing PAT logic
+  const user = userOrInstallationId;
   const url = `https://api.github.com/repos/${owner}/${repo}/statuses/${sha}`;
 
   try {
@@ -172,15 +256,35 @@ export async function setCommitStatus(
 }
 
 /**
- * getLatestCommitSha
+ * getLatestCommitSha - Hybrid authentication (GitHub App or PAT)
  *
- * @param {object} user
+ * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number
  * @param {string} owner
  * @param {string} repo
  * @param {number} pullNumber
  * @return {string} commit SHA
  */
-export async function getLatestCommitSha(user, owner, repo, pullNumber) {
+export async function getLatestCommitSha(
+  userOrInstallationId,
+  owner,
+  repo,
+  pullNumber
+) {
+  // If it's a number, treat as installationId (GitHub App)
+  if (
+    typeof userOrInstallationId === 'number' ||
+    (typeof userOrInstallationId === 'string' && !isNaN(userOrInstallationId))
+  ) {
+    return await getLatestCommitShaApp(
+      parseInt(userOrInstallationId),
+      owner,
+      repo,
+      pullNumber
+    );
+  }
+
+  // Otherwise, use existing PAT logic
+  const user = userOrInstallationId;
   const url = `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}/commits`;
 
   try {
@@ -210,15 +314,35 @@ export async function getLatestCommitSha(user, owner, repo, pullNumber) {
 }
 
 /**
- * createWebhook - Create a GitHub webhook for a repository
+ * createWebhook - Create a GitHub webhook for a repository - Hybrid authentication (GitHub App or PAT)
  *
- * @param {object} user
+ * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number
  * @param {string} owner
  * @param {string} repo
  * @param {string} webhookUrl - The URL to receive webhooks
  * @return {object} webhook response
  */
-export async function createWebhook(user, owner, repo, webhookUrl) {
+export async function createWebhook(
+  userOrInstallationId,
+  owner,
+  repo,
+  webhookUrl
+) {
+  // If it's a number, treat as installationId (GitHub App)
+  if (
+    typeof userOrInstallationId === 'number' ||
+    (typeof userOrInstallationId === 'string' && !isNaN(userOrInstallationId))
+  ) {
+    return await createWebhookApp(
+      parseInt(userOrInstallationId),
+      owner,
+      repo,
+      webhookUrl
+    );
+  }
+
+  // Otherwise, use existing PAT logic
+  const user = userOrInstallationId;
   const url = `https://api.github.com/repos/${owner}/${repo}/hooks`;
 
   const webhookConfig = {
@@ -267,15 +391,35 @@ export async function createWebhook(user, owner, repo, webhookUrl) {
 }
 
 /**
- * deleteWebhook - Delete GitHub webhooks for a repository
+ * deleteWebhook - Delete GitHub webhooks for a repository - Hybrid authentication (GitHub App or PAT)
  *
- * @param {object} user
+ * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number
  * @param {string} owner
  * @param {string} repo
  * @param {string} webhookUrl - The webhook URL to delete
  * @return {void}
  */
-export async function deleteWebhook(user, owner, repo, webhookUrl) {
+export async function deleteWebhook(
+  userOrInstallationId,
+  owner,
+  repo,
+  webhookUrl
+) {
+  // If it's a number, treat as installationId (GitHub App)
+  if (
+    typeof userOrInstallationId === 'number' ||
+    (typeof userOrInstallationId === 'string' && !isNaN(userOrInstallationId))
+  ) {
+    return await deleteWebhookApp(
+      parseInt(userOrInstallationId),
+      owner,
+      repo,
+      webhookUrl
+    );
+  }
+
+  // Otherwise, use existing PAT logic
+  const user = userOrInstallationId;
   const url = `https://api.github.com/repos/${owner}/${repo}/hooks`;
 
   try {

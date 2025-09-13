@@ -74,16 +74,19 @@ export const Repository = {
    * @param {string} repoData.owner
    * @param {string} repoData.repo
    * @param {boolean} repoData.configured
-   * @param {string|ObjectId} repoData.userId
+   * @param {string|ObjectId} [repoData.userId] - Legacy PAT authentication
+   * @param {number} [repoData.installationId] - GitHub App authentication
    * @returns {Promise<import('./database.js').Repository>}
    */
   async create(repoData) {
     const repository = {
       ...repoData,
-      userId:
-        typeof repoData.userId === 'string'
+      userId: repoData.userId
+        ? typeof repoData.userId === 'string'
           ? new ObjectId(repoData.userId)
-          : repoData.userId,
+          : repoData.userId
+        : null,
+      installationId: repoData.installationId || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -130,6 +133,15 @@ export const Repository = {
   },
 
   /**
+   * Find repositories by installation ID
+   * @param {number} installationId
+   * @returns {Promise<import('./database.js').Repository[]>}
+   */
+  async findByInstallationId(installationId) {
+    return await database.repositories.find({ installationId }).toArray();
+  },
+
+  /**
    * Find all repositories
    * @returns {Promise<import('./database.js').Repository[]>}
    */
@@ -154,6 +166,9 @@ export const Repository = {
         typeof updates.userId === 'string'
           ? new ObjectId(updates.userId)
           : updates.userId;
+    }
+    if (updates.installationId !== undefined) {
+      updateData.installationId = updates.installationId;
     }
     await database.repositories.updateOne(
       { _id: objectId },
