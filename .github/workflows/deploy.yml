@@ -8,12 +8,12 @@ jobs:
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Deploy to Dokku
         run: |
           echo "Triggering deployment for commit ${{ github.sha }}"
-          
+
           response=$(curl -s -w "%{http_code}" -o response.json \
             -X POST https://sumalyze.tooangel.com/deploy/worlddriven \
             -H "Authorization: Bearer ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
@@ -23,29 +23,29 @@ jobs:
               "commit": "${{ github.sha }}",
               "branch": "${{ github.ref_name }}"
             }')
-          
+
           http_code="${response: -3}"
-          
+
           echo "HTTP Status Code: $http_code"
           echo "Response:"
           cat response.json
-          
+
           if [ "$http_code" -ne 200 ]; then
             echo "Deployment failed with HTTP status: $http_code"
             exit 1
           fi
-          
+
           echo "Deployment triggered successfully!"
 
       - name: Verify Deployment
         run: |
           echo "Waiting 30 seconds for deployment to complete..."
           sleep 30
-          
+
           echo "Checking if worlddriven service is responding..."
           response=$(curl -s -w "%{http_code}" -o health.json https://www.worlddriven.org/ || echo "000")
           http_code="${response: -3}"
-          
+
           if [ "$http_code" = "200" ]; then
             echo "✅ Deployment successful - worlddriven is responding"
           else
