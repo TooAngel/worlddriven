@@ -20,6 +20,10 @@ import {
   handlePullRequestReviewWebhook,
   handlePushWebhook,
 } from './helpers/webhookHandler.js';
+import {
+  handleInstallationWebhook,
+  handleInstallationRepositoriesWebhook,
+} from './helpers/installationHandler.js';
 
 const mongoSessionStore = MongoStore.create({
   clientPromise: client.connect(),
@@ -83,6 +87,13 @@ async function startServer() {
 
   app.get('/privacyPolicy', function (req, res) {
     res.sendFile('./static/privacyPolicy.html', { root: '.' });
+  });
+
+  app.get('/install-app', function (req, res) {
+    // Redirect to GitHub App installation page
+    const appName = process.env.GITHUB_APP_NAME || 'world-driven';
+    const installUrl = `https://github.com/apps/${appName}/installations/new`;
+    res.redirect(installUrl);
   });
 
   app.get('/login', function (req, res) {
@@ -322,6 +333,14 @@ async function startServer() {
       let result;
 
       switch (eventType) {
+        case 'installation':
+          result = await handleInstallationWebhook(data);
+          break;
+
+        case 'installation_repositories':
+          result = await handleInstallationRepositoriesWebhook(data);
+          break;
+
         case 'pull_request':
           result = await handlePullRequestWebhook(data);
           break;
