@@ -322,6 +322,56 @@ async function startServer() {
     }
   );
 
+  // Public API route for pull request data (matches frontend expectation)
+  app.get('/v1/:owner/:repo/pull/:number', async function (req, res) {
+    try {
+      // Find repository configuration to determine authentication method
+      const repository = await Repository.findByOwnerAndRepo(
+        req.params.owner,
+        req.params.repo
+      );
+
+      if (!repository || !repository.configured) {
+        return res
+          .status(404)
+          .json({ error: 'Repository not configured for worlddriven' });
+      }
+
+      let pullRequestData;
+
+      if (repository.installationId) {
+        // Use GitHub App authentication
+        pullRequestData = await getPullRequestData(
+          repository.installationId,
+          req.params.owner,
+          req.params.repo,
+          req.params.number
+        );
+      } else if (repository.userId) {
+        // Use PAT authentication
+        const user = await User.findById(repository.userId);
+        if (!user) {
+          return res.status(500).json({ error: 'Repository user not found' });
+        }
+        pullRequestData = await getPullRequestData(
+          user,
+          req.params.owner,
+          req.params.repo,
+          req.params.number
+        );
+      } else {
+        return res.status(500).json({
+          error: 'No authentication method configured for repository',
+        });
+      }
+
+      res.json({ pull_request: pullRequestData });
+    } catch (error) {
+      console.error('Public PR API error:', error);
+      res.status(500).json({ error: 'Failed to fetch pull request data' });
+    }
+  });
+
   // GitHub webhook endpoint
   app.post('/github', async function (req, res) {
     const eventType = req.headers['x-github-event'];
