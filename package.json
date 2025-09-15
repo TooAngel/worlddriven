@@ -26,7 +26,8 @@
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "lint:frontend": "eslint static/js --config frontend.eslint.config.cjs --report-unused-disable-directives --max-warnings 0",
     "start": "node src/index.js",
-    "test": "npm run check && sort-package-json package.json --check && mdspell --en-us --ignore-numbers --report \"*.md\" && write-good --no-adverb README.md CONTRIBUTING.md"
+    "test": "npm run check && sort-package-json package.json --check && mdspell --en-us --ignore-numbers --report \"*.md\" && write-good --no-adverb README.md CONTRIBUTING.md",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@octokit/auth-app": "8.1.0",
