@@ -365,7 +365,7 @@ async function startServer() {
         });
       }
 
-      res.json({ pull_request: pullRequestData });
+      res.json(pullRequestData);
     } catch (error) {
       console.error('Public PR API error:', error);
       res.status(500).json({ error: 'Failed to fetch pull request data' });

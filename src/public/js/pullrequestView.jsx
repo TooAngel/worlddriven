@@ -22,13 +22,31 @@ export class PullRequestView extends React.Component {
    * getPullRequests
    */
   async getPullRequest() {
-    const response = await fetch(
-      `/v1/repositories/${this.props.repository.fullName}/pulls/${this.props.pullRequestId}`
-    );
-    const data = await response.json();
-    this.setState({
-      pullRequest: data,
-    });
+    if (!this.props.repository?.fullName) {
+      console.error(
+        'Repository or fullName is missing:',
+        this.props.repository
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/v1/repositories/${this.props.repository.fullName}/pulls/${this.props.pullRequestId}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('PR data received:', data);
+      this.setState({
+        pullRequest: data,
+      });
+    } catch (error) {
+      console.error('Failed to fetch pull request data:', error);
+    }
   }
 
   /**

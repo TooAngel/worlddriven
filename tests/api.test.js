@@ -29,13 +29,11 @@ function simulateRoute(owner, repo, number) {
     return {
       status: 200,
       body: {
-        pull_request: {
-          number: parseInt(number),
-          title: 'Fix memory logic bug',
-          state: 'open',
-          stats: { votes: 5, votesTotal: 10 },
-          times: { daysToMerge: 86400 },
-        },
+        number: parseInt(number),
+        title: 'Fix memory logic bug',
+        state: 'open',
+        stats: { votes: 5, votesTotal: 10 },
+        times: { daysToMerge: 86400 },
       },
     };
   }
@@ -75,12 +73,9 @@ test('Public PR API Route Logic', async t => {
   await t.test('should return 200 for configured repository', async () => {
     const response = simulateRoute('TooAngel', 'screeps', '733');
     assert.strictEqual(response.status, 200);
-    assert.strictEqual(response.body.pull_request.number, 733);
-    assert.strictEqual(
-      response.body.pull_request.title,
-      'Fix memory logic bug'
-    );
-    assert.strictEqual(response.body.pull_request.state, 'open');
-    assert.strictEqual(response.body.pull_request.stats.votes, 5);
+    assert.strictEqual(response.body.number, 733);
+    assert.strictEqual(response.body.title, 'Fix memory logic bug');
+    assert.strictEqual(response.body.state, 'open');
+    assert.strictEqual(response.body.stats.votes, 5);
   });
 });
