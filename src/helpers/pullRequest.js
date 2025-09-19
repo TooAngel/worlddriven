@@ -305,6 +305,10 @@ export async function getPullRequestData(user, owner, repo, number) {
   const pullRequestData = {
     id: pull.id,
     title: pull.title,
+    org: owner,
+    repo: repo,
+    number: parseInt(number),
+    state: pull.state,
     stats: {
       contributors: contributors,
       age: age,
