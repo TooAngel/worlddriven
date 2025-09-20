@@ -31,7 +31,9 @@ const mongoSessionStore = MongoStore.create({
   touchAfter: 24 * 3600, // lazy session update
 });
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction =
+  process.env.NODE_ENV === 'production' ||
+  process.env.NODE_ENV === 'test-production';
 
 async function startServer() {
   const app = express();
@@ -418,13 +420,14 @@ async function startServer() {
   // Handle HTML serving - different for production vs development
   if (isProduction) {
     // Production: serve built files
-    app.get('/*', (_req, res) => {
+    // Catch-all route for SPA (Express 5.x requires named wildcards)
+    app.get('/*splat', (req, res) => {
       // TODO why is this dashboard.html - while on development it's index.html?
       res.sendFile('dashboard.html', { root: './dist/static' });
     });
   } else {
     // Development: use Vite to transform index.html
-    app.get('*', async (req, res) => {
+    app.get('/*splat', async (req, res) => {
       try {
         // Special handling for specific HTML pages
         let templatePath = 'index.html';
@@ -456,8 +459,19 @@ async function startServer() {
     console.log(error, source);
   });
 
-  cron.schedule('51 * * * *', processPullRequests);
-  setTimeout(processPullRequests, 1000 * 30); // Run after 30 seconds on startup
+  // Only schedule cron jobs in real production
+  if (process.env.NODE_ENV === 'production') {
+    cron.schedule('51 * * * *', processPullRequests);
+    setTimeout(processPullRequests, 1000 * 30); // Run after 30 seconds on startup
+  }
+
+  return server;
 }
 
-startServer();
+// Only start server if this file is run directly (not imported)
+let server;
+if (import.meta.url === `file://${process.argv[1]}`) {
+  server = await startServer();
+}
+
+export { startServer, server };
