@@ -332,9 +332,14 @@ async function startServer() {
   // Handle HTML serving - different for production vs development
   if (isProduction) {
     // Production: serve built files
-    app.get('/*', (_req, res) => {
-      // TODO why is this dashboard.html - while on development it's index.html?
-      res.sendFile('dashboard.html', { root: './dist/static' });
+    // Use middleware instead of route pattern to avoid path-to-regexp issues
+    app.use((req, res, next) => {
+      if (req.method === 'GET' && !req.path.startsWith('/v1/') && !req.path.startsWith('/github')) {
+        // TODO why is this dashboard.html - while on development it's index.html?
+        res.sendFile('dashboard.html', { root: './dist/static' });
+      } else {
+        next();
+      }
     });
   } else {
     // Development: use Vite to transform index.html
