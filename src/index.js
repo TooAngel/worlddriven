@@ -38,8 +38,8 @@ async function startServer() {
 
   // Setup Vite middleware for development
   /** @type {import('vite').ViteDevServer} */
-  let vite;
 
+  let vite;
   if (!isProduction) {
     vite = await createServer({
       server: { middlewareMode: true },
@@ -418,13 +418,14 @@ async function startServer() {
   // Handle HTML serving - different for production vs development
   if (isProduction) {
     // Production: serve built files
-    app.get('/*', (_req, res) => {
+    // Catch-all route for SPA (Express 5.x requires named wildcards)
+    app.get('/*splat', (req, res) => {
       // TODO why is this dashboard.html - while on development it's index.html?
       res.sendFile('dashboard.html', { root: './dist/static' });
     });
   } else {
     // Development: use Vite to transform index.html
-    app.get('*', async (req, res) => {
+    app.get('/*splat', async (req, res) => {
       try {
         // Special handling for specific HTML pages
         let templatePath = 'index.html';
@@ -456,8 +457,18 @@ async function startServer() {
     console.log(error, source);
   });
 
-  cron.schedule('51 * * * *', processPullRequests);
-  setTimeout(processPullRequests, 1000 * 30); // Run after 30 seconds on startup
+  // Only schedule cron jobs in real production
+  if (process.env.NODE_ENV === 'production') {
+    cron.schedule('51 * * * *', processPullRequests);
+    setTimeout(processPullRequests, 1000 * 30); // Run after 30 seconds on startup
+  }
+
+  return { server: server, vite: vite };
 }
 
-startServer();
+// TODO don't like or understand this properly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await startServer();
+}
+
+export { startServer };
