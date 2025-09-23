@@ -1,7 +1,6 @@
-import mongo from 'mongodb';
+import { MongoClient } from 'mongodb';
 export { ObjectId } from 'mongodb';
 
-const MongoClient = mongo.MongoClient;
 const url = process.env.MONGO_URL || 'mongodb://localhost:27017/worlddriven';
 const dbName = 'worlddriven';
 export const client = new MongoClient(url);
@@ -75,7 +74,6 @@ class Database {
 }
 
 export const database = new Database();
-
 client
   .connect()
   .then(() => {
