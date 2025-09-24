@@ -179,6 +179,147 @@ export async function createIssueComment(
 }
 
 /**
+ * listIssueComments - List comments on a PR/issue
+ *
+ * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number
+ * @param {string} owner
+ * @param {string} repo
+ * @param {number} number
+ * @return {Array} Array of comment objects
+ */
+export async function listIssueComments(
+  userOrInstallationId,
+  owner,
+  repo,
+  number
+) {
+  // If it's a number, treat as installationId (GitHub App)
+  if (
+    typeof userOrInstallationId === 'number' ||
+    (typeof userOrInstallationId === 'string' && !isNaN(userOrInstallationId))
+  ) {
+    // TODO: Implement GitHub App version when needed
+    throw new Error(
+      'GitHub App authentication not yet implemented for listIssueComments'
+    );
+  }
+
+  // Otherwise, use existing PAT logic
+  const user = userOrInstallationId;
+  const url = `https://api.github.com/repos/${owner}/${repo}/issues/${number}/comments`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `token ${user.githubAccessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (e) {
+    console.error('Failed to list issue comments:', e);
+    throw e;
+  }
+}
+
+/**
+ * updateIssueComment - Update an existing comment
+ *
+ * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number
+ * @param {string} owner
+ * @param {string} repo
+ * @param {number} commentId
+ * @param {string} comment
+ * @return {object} Updated comment object
+ */
+export async function updateIssueComment(
+  userOrInstallationId,
+  owner,
+  repo,
+  commentId,
+  comment
+) {
+  // If it's a number, treat as installationId (GitHub App)
+  if (
+    typeof userOrInstallationId === 'number' ||
+    (typeof userOrInstallationId === 'string' && !isNaN(userOrInstallationId))
+  ) {
+    // TODO: Implement GitHub App version when needed
+    throw new Error(
+      'GitHub App authentication not yet implemented for updateIssueComment'
+    );
+  }
+
+  // Otherwise, use existing PAT logic
+  const user = userOrInstallationId;
+  const url = `https://api.github.com/repos/${owner}/${repo}/issues/comments/${commentId}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `token ${user.githubAccessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        body: comment,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (e) {
+    console.error('Failed to update issue comment:', e);
+    throw e;
+  }
+}
+
+/**
+ * findWorlddrivenComment - Find existing worlddriven comment on PR
+ *
+ * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number
+ * @param {string} owner
+ * @param {string} repo
+ * @param {number} number
+ * @return {object|null} Comment object if found, null otherwise
+ */
+export async function findWorlddrivenComment(
+  userOrInstallationId,
+  owner,
+  repo,
+  number
+) {
+  try {
+    const comments = await listIssueComments(
+      userOrInstallationId,
+      owner,
+      repo,
+      number
+    );
+
+    // Look for comment containing worlddriven signature
+    const worlddrivenComment = comments.find(
+      comment =>
+        comment.body && comment.body.includes('🤖 **Worlddriven Status**')
+    );
+
+    return worlddrivenComment || null;
+  } catch (e) {
+    console.error('Failed to find worlddriven comment:', e);
+    return null;
+  }
+}
+
+/**
  * setCommitStatus - Hybrid authentication (GitHub App or PAT)
  *
  * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number

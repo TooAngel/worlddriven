@@ -1,11 +1,11 @@
 import { getPullRequestData } from './pullRequest.js';
 import {
-  createIssueComment,
   getPullRequests,
   mergePullRequest,
   setCommitStatus,
   getLatestCommitSha,
 } from './github.js';
+import { updateOrCreateWorlddrivenComment } from './commentManager.js';
 import { User, Repository } from '../database/models.js';
 
 /**
@@ -173,14 +173,13 @@ export async function processPullRequests() {
               );
 
               if (mergeResponse) {
-                const comment =
-                  'This pull request was merged by [worlddriven](https://www.worlddriven.org).';
-                await createIssueComment(
+                await updateOrCreateWorlddrivenComment(
                   authMethod,
                   repository.owner,
                   repository.repo,
                   pullRequest.number,
-                  comment
+                  pullRequestData,
+                  'Pull request merged by worlddriven ✅'
                 );
                 console.log('✅ Merged successfully');
                 prResult.action = 'merged';

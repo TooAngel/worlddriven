@@ -1,9 +1,6 @@
 import { getPullRequestData } from './pullRequest.js';
-import {
-  setCommitStatus,
-  getLatestCommitSha,
-  createIssueComment,
-} from './github.js';
+import { setCommitStatus, getLatestCommitSha } from './github.js';
+import { updateOrCreateWorlddrivenComment } from './commentManager.js';
 import { User, Repository } from '../database/models.js';
 
 /**
@@ -114,20 +111,14 @@ export async function handlePullRequestWebhook(data) {
         pullRequest.number
       );
 
-      const daysToMerge = Math.ceil(pullRequestData.times.daysToMerge / 86400);
-      const comment = `This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in ${daysToMerge} day(s).
-The start date is based on the latest Commit date / Pull Request created date / (force) Push date.
-The time to merge is ${Math.round(pullRequestData.times.totalMergeTime / (24 * 60 * 60))} days.
-Check the \`worlddriven\` status check or the [dashboard](https://www.worlddriven.org/${owner}/${repo}/pull/${pullRequest.number}) for actual stats.
-
-To speed up or delay the merge review the pull request:
-1. ![Files changed](https://www.worlddriven.org/static/images/github-files-changed.png)
-2. ![Review changes](https://www.worlddriven.org/static/images/github-review-changes.png)
-
-- Speed up: ![Approve](https://www.worlddriven.org/static/images/github-approve.png)
-- Delay or stop: ![Request changes](https://www.worlddriven.org/static/images/github-request-changes.png)`;
-
-      await createIssueComment(user, owner, repo, pullRequest.number, comment);
+      await updateOrCreateWorlddrivenComment(
+        user,
+        owner,
+        repo,
+        pullRequest.number,
+        pullRequestData,
+        'Pull request opened'
+      );
     } else if (action === 'synchronize') {
       const pullRequestData = await processPullRequest(
         user,
@@ -136,13 +127,14 @@ To speed up or delay the merge review the pull request:
         pullRequest.number
       );
 
-      const daysToMerge = Math.ceil(pullRequestData.times.daysToMerge / 86400);
-      const comment = `The branch of this pull request was updated so the auto-merge time has been reset.
-
-It will be automatically merged by [worlddriven](https://www.worlddriven.org) in ${daysToMerge} day(s).
-Check the \`worlddriven\` status check or the [dashboard](https://www.worlddriven.org/${owner}/${repo}/pull/${pullRequest.number}) for actual stats.`;
-
-      await createIssueComment(user, owner, repo, pullRequest.number, comment);
+      await updateOrCreateWorlddrivenComment(
+        user,
+        owner,
+        repo,
+        pullRequest.number,
+        pullRequestData,
+        'Branch synchronized (merge timer reset)'
+      );
     } else if (action === 'edited' || action === 'closed') {
       // For edited/closed, we might want to update status or clean up
       console.log(`PR ${action}: ${pullRequest.title}`);
@@ -199,13 +191,23 @@ export async function handlePullRequestReviewWebhook(data) {
       pullRequest.number
     );
 
-    const daysToMerge = Math.ceil(pullRequestData.times.daysToMerge / 86400);
-    const comment = `Thank you for the review.
-This pull request will be automatically merged by [worlddriven](https://www.worlddriven.org) in ${daysToMerge} day(s). Current votes: ${pullRequestData.stats.votes}/${pullRequestData.stats.votesTotal}.
+    let activityMessage = '';
+    if (review.state === 'approved') {
+      activityMessage = `@${review.user.login} **agreed** ✅`;
+    } else if (review.state === 'changes_requested') {
+      activityMessage = `@${review.user.login} **disagreed** ❌`;
+    } else {
+      activityMessage = `@${review.user.login} reviewed`;
+    }
 
-Check the \`worlddriven\` status checks or the [dashboard](https://www.worlddriven.org/${owner}/${repo}/pull/${pullRequest.number}) for actual stats.`;
-
-    await createIssueComment(user, owner, repo, pullRequest.number, comment);
+    await updateOrCreateWorlddrivenComment(
+      user,
+      owner,
+      repo,
+      pullRequest.number,
+      pullRequestData,
+      activityMessage
+    );
 
     return { info: 'Review webhook processed successfully' };
   } catch (error) {

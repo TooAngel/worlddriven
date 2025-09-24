@@ -1,5 +1,5 @@
 import React from 'react'; // eslint-disable-line no-unused-vars
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { Dashboard } from './dashboard.jsx'; // eslint-disable-line no-unused-vars
 import { TestDashboard } from './test/dashboard.js'; // eslint-disable-line no-unused-vars
@@ -25,7 +25,10 @@ function main() {
   if (window.location.pathname === '/admin') {
     tag = <Logs />;
   }
-  ReactDOM.render(tag, document.getElementById('app'));
+
+  const container = document.getElementById('app');
+  const root = createRoot(container);
+  root.render(tag);
 }
 
 main();
