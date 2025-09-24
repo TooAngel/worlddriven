@@ -67,9 +67,8 @@ function generateStatusSection(pullRequestData, _owner, _repo, _pullNumber) {
   const mergeDate = new Date(pullRequestData.times.mergeDate * 1000);
   const startDate = new Date(pullRequestData.dates.max);
   const { speedFactor, description } = calculateSpeedMetrics(pullRequestData);
-  const agrees = pullRequestData.stats.votes;
-  const total = pullRequestData.stats.votesTotal;
-  const disagrees = total - agrees; // Simplified - actual disagrees would need tracking
+  const agreeWeight = pullRequestData.stats.votes;
+  const totalWeight = pullRequestData.stats.votesTotal;
   const baseDays = Math.round(
     pullRequestData.times.totalMergeTime / (24 * 60 * 60)
   );
@@ -83,7 +82,7 @@ function generateStatusSection(pullRequestData, _owner, _repo, _pullNumber) {
 🗓️ **Merge Date:** ${formatDate(mergeDate)} (${formatRelativeTime(mergeDate)})
 📅 **Started:** ${formatDate(startDate)}
 ⚡ **Speed Factor:** ${speedFactor} (${description})
-✅ **Agrees:** ${agrees} contributors | ❌ **Disagrees:** ${disagrees} contributors (coefficient: ${pullRequestData.stats.coefficient.toFixed(2)})
+✅ **Positive votes:** ${agreeWeight}/${totalWeight} contribution weight (coefficient: ${pullRequestData.stats.coefficient.toFixed(2)})
 📈 **Base Merge Time:** ${baseDays} days → **Current:** ${currentDays} days`;
 }
 
