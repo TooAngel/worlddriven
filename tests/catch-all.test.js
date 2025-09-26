@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import sinon from 'sinon';
 import { MongoClient } from 'mongodb';
 import MongoStore from 'connect-mongo';
+import './setup.js';
 
 test('Catch all tests', async t => {
   let server;
