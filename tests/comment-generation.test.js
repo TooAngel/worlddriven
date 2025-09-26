@@ -294,7 +294,9 @@ test('Comment generation system', async t => {
         []
       );
 
-      assert.ok(result.includes('✅ **Positive votes:** 7/10 contribution weight'));
+      assert.ok(
+        result.includes('✅ **Positive votes:** 7/10 contribution weight')
+      );
       // The format shows total votes as "7/10" not separate agrees/disagrees
       assert.ok(result.includes('coefficient: 0.85'));
     }

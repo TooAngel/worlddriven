@@ -138,7 +138,12 @@ async function getDates(user, pull) {
   const createdAt = new Date(pull.created_at).getTime();
   const commits = await getCommits(user, pull);
   const commit = commits.reduce((total, current) => {
-    return Math.max(new Date(total), new Date(current.commit.author.date));
+    // For force pushes, committer.date is more recent than author.date
+    // We should use the latest of both to capture when the commit was actually pushed
+    const authorDate = new Date(current.commit.author.date);
+    const committerDate = new Date(current.commit.committer.date);
+    const latestCommitDate = Math.max(authorDate, committerDate);
+    return Math.max(new Date(total), latestCommitDate);
   }, new Date('January 1, 1970 00:00:00 UTC'));
   const repoEvents = await getBranchEvents(user, pull);
   const push = repoEvents
