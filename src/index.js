@@ -293,6 +293,89 @@ async function startServer() {
     }
   );
 
+  // Public API route for pull request data (matches frontend expectation)
+  app.get('/v1/:owner/:repo/pull/:number', async function (req, res) {
+    try {
+      let pullRequestData;
+      let authMethod = 'unknown';
+
+      // Authentication hierarchy: User session > GitHub App > Environment fallback
+
+      // Scenario 1: Use authenticated user's token if available
+      if (req.session.userId) {
+        try {
+          const user = await User.findById(req.session.userId);
+          if (user && user.githubAccessToken) {
+            pullRequestData = await getPullRequestData(
+              user,
+              req.params.owner,
+              req.params.repo,
+              req.params.number
+            );
+            authMethod = 'user_session';
+          }
+        } catch (error) {
+          console.log('User session auth failed, trying next method:', error.message);
+        }
+      }
+
+      // Scenario 2: Use GitHub App authentication for configured repositories
+      if (!pullRequestData) {
+        const repository = await Repository.findByOwnerAndRepo(
+          req.params.owner,
+          req.params.repo
+        );
+
+        if (repository && repository.configured && repository.installationId) {
+          try {
+            const { getPullRequestDataApp } = await import('./helpers/githubApp.js');
+            pullRequestData = await getPullRequestDataApp(
+              repository.installationId,
+              req.params.owner,
+              req.params.repo,
+              req.params.number
+            );
+            authMethod = 'github_app';
+          } catch (error) {
+            console.log('GitHub App auth failed, trying next method:', error.message);
+          }
+        }
+      }
+
+      // Scenario 3: Use environment fallback token for public repositories
+      if (!pullRequestData && process.env.GITHUB_FALLBACK_TOKEN) {
+        try {
+          const fallbackUser = {
+            githubAccessToken: process.env.GITHUB_FALLBACK_TOKEN
+          };
+          pullRequestData = await getPullRequestData(
+            fallbackUser,
+            req.params.owner,
+            req.params.repo,
+            req.params.number
+          );
+          authMethod = 'environment_fallback';
+        } catch (error) {
+          console.log('Environment fallback auth failed:', error.message);
+        }
+      }
+
+      if (!pullRequestData) {
+        return res.status(500).json({
+          error: 'Failed to authenticate with any available method',
+          details: 'Repository may be private or all authentication methods failed'
+        });
+      }
+
+      // Add auth method to response for debugging
+      pullRequestData.authMethod = authMethod;
+      res.json(pullRequestData);
+
+    } catch (error) {
+      console.error('Public PR API error:', error);
+      res.status(500).json({ error: 'Failed to fetch pull request data' });
+    }
+  });
   // GitHub webhook endpoint
   app.post('/github', async function (req, res) {
     const eventType = req.headers['x-github-event'];
