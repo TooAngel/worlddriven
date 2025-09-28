@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
 import sinon from 'sinon';
-import './setup.js';
+
+// Setup global fetch mock
+global.fetch = sinon.stub();
 
 test('GitHub API helpers', async t => {
   let listIssueComments, updateIssueComment, findWorlddrivenComment;

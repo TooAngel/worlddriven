@@ -218,8 +218,22 @@ function addActivityEntry(existingLog, message) {
   return [...existingLog, newEntry];
 }
 
+// In-memory lock to prevent race conditions
+const commentLocks = new Map();
+
 /**
- * Update or create worlddriven comment
+ * Get lock key for a specific PR
+ * @param {string} owner
+ * @param {string} repo
+ * @param {number} pullNumber
+ * @return {string}
+ */
+function getLockKey(owner, repo, pullNumber) {
+  return `${owner}/${repo}#${pullNumber}`;
+}
+
+/**
+ * Update or create worlddriven comment with race condition protection
  * @param {object|number} userOrInstallationId
  * @param {string} owner
  * @param {string} repo
@@ -236,6 +250,16 @@ export async function updateOrCreateWorlddrivenComment(
   pullRequestData,
   activityMessage
 ) {
+  const lockKey = getLockKey(owner, repo, pullNumber);
+
+  // Wait for any existing operation to complete
+  while (commentLocks.has(lockKey)) {
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+
+  // Acquire lock
+  commentLocks.set(lockKey, true);
+
   try {
     // Find existing comment
     const existingComment = await findWorlddrivenComment(
@@ -265,12 +289,13 @@ export async function updateOrCreateWorlddrivenComment(
       activityLog
     );
 
+    let result;
     if (existingComment) {
       // Update existing comment
       console.log(
         `Updating worlddriven comment #${existingComment.id} on ${owner}/${repo}#${pullNumber}`
       );
-      return await updateIssueComment(
+      result = await updateIssueComment(
         userOrInstallationId,
         owner,
         repo,
@@ -282,7 +307,7 @@ export async function updateOrCreateWorlddrivenComment(
       console.log(
         `Creating worlddriven comment on ${owner}/${repo}#${pullNumber}`
       );
-      return await createIssueComment(
+      result = await createIssueComment(
         userOrInstallationId,
         owner,
         repo,
@@ -290,8 +315,13 @@ export async function updateOrCreateWorlddrivenComment(
         commentBody
       );
     }
+
+    return result;
   } catch (error) {
     console.error('Failed to update or create worlddriven comment:', error);
     throw error;
+  } finally {
+    // Always release the lock
+    commentLocks.delete(lockKey);
   }
 }
