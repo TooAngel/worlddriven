@@ -7,97 +7,74 @@ global.fetch = sinon.stub();
 
 test('Pull request date calculation', async t => {
   let getPullRequestData;
+  let mockGitHubClient;
 
   t.before(async () => {
-    // Mock the fetch to return controlled data
-    global.fetch.callsFake(async (url, _options) => {
-      if (url.includes('/reviews')) {
-        return {
-          ok: true,
-          json: async () => [],
-        };
-      }
+    // Create a mock GitHub client that returns controlled data
+    mockGitHubClient = {
+      getPullRequest: sinon.stub().resolves({
+        id: 123,
+        title: 'Test PR',
+        created_at: '2025-09-24T06:03:07Z',
+        commits: 1,
+        user: { login: 'testuser' },
+        head: {
+          repo: {
+            contributors_url:
+              'https://api.github.com/repos/test/repo/contributors',
+            events_url: 'https://api.github.com/repos/test/repo/events',
+          },
+        },
+        commits_url: 'https://api.github.com/repos/test/repo/pulls/123/commits',
+        issue_url: 'https://api.github.com/repos/test/repo/issues/123',
+        _links: {
+          self: {
+            href: 'https://api.github.com/repos/test/repo/pulls/123',
+          },
+        },
+      }),
 
-      if (url.includes('/commits')) {
-        return {
-          ok: true,
-          json: async () => [
-            {
-              commit: {
-                author: { date: '2025-09-24T06:02:48Z' },
-                committer: { date: '2025-09-25T19:11:10Z' }, // Force push date
-              },
-            },
-          ],
-        };
-      }
+      getContributors: sinon.stub().resolves([
+        {
+          name: 'testuser',
+          commits: 10,
+          reviewValue: 0,
+          timeValue: '',
+        },
+      ]),
 
-      if (url.includes('/pulls/123')) {
-        // Mock PR data
-        return {
-          ok: true,
-          json: async () => ({
-            id: 123,
-            title: 'Test PR',
-            created_at: '2025-09-24T06:03:07Z',
-            commits: 1,
-            user: { login: 'testuser' },
-            head: {
-              repo: {
-                contributors_url:
-                  'https://api.github.com/repos/test/repo/contributors',
-                events_url: 'https://api.github.com/repos/test/repo/events',
-              },
-            },
-            commits_url:
-              'https://api.github.com/repos/test/repo/pulls/123/commits',
-            issue_url: 'https://api.github.com/repos/test/repo/issues/123',
-            _links: {
-              self: {
-                href: 'https://api.github.com/repos/test/repo/pulls/123',
-              },
-            },
-          }),
-        };
-      }
+      getReviews: sinon.stub().resolves([]),
 
-      if (url.includes('/contributors')) {
-        return {
-          ok: true,
-          json: async () => [{ login: 'testuser', contributions: 10 }],
-        };
-      }
+      getCommits: sinon.stub().resolves([
+        {
+          commit: {
+            author: { date: '2025-09-24T06:02:48Z' },
+            committer: { date: '2025-09-25T19:11:10Z' }, // Force push date
+          },
+        },
+      ]),
 
-      if (url.includes('/events')) {
-        return {
-          ok: true,
-          json: async () => [
-            {
-              type: 'PushEvent',
-              created_at: '2025-09-25T19:11:10Z', // Force push event
-            },
-          ],
-        };
-      }
+      getBranchEvents: sinon.stub().resolves([
+        {
+          type: 'PushEvent',
+          created_at: '2025-09-25T19:11:10Z', // Force push event
+        },
+      ]),
 
-      if (url.includes('/issues/123/events')) {
-        return {
-          ok: true,
-          json: async () => [],
-        };
-      }
-
-      // For any other URL, return empty array to be safe
-      return { ok: true, json: async () => [] };
-    });
+      getPullIssueEvents: sinon.stub().resolves([]),
+    };
 
     const pullRequestModule = await import('../src/helpers/pullRequest.js');
     getPullRequestData = pullRequestModule.getPullRequestData;
   });
 
   await t.test('should use latest commit/push date as start date', async () => {
-    const user = { githubAccessToken: 'test-token' };
-    const result = await getPullRequestData(user, 'test', 'repo', 123);
+    const result = await getPullRequestData(
+      mockGitHubClient,
+      'test',
+      'repo',
+      123
+    );
 
     // The max date should be the force push date (latest)
     const expectedMaxDate = new Date('2025-09-25T19:11:10Z').getTime();
@@ -127,8 +104,12 @@ test('Pull request date calculation', async t => {
   await t.test(
     'should calculate merge date from latest push/commit date',
     async () => {
-      const user = { githubAccessToken: 'test-token' };
-      const result = await getPullRequestData(user, 'test', 'repo', 123);
+      const result = await getPullRequestData(
+        mockGitHubClient,
+        'test',
+        'repo',
+        123
+      );
 
       // With coefficient 1.0 (perfect approval) and ~10 days base time
       // mergeDuration should be 0, so merge should be immediate

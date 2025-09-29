@@ -1,4 +1,29 @@
+// Set test environment BEFORE importing anything
+process.env.NODE_ENV = 'test';
+
 import sinon from 'sinon';
+import { MongoClient } from 'mongodb';
+
+// Create mock database and collection methods
+const mockDb = {
+  collection: () => ({
+    findOne: sinon.stub().resolves(null),
+    find: sinon.stub().returns({ toArray: sinon.stub().resolves([]) }),
+    insertOne: sinon.stub().resolves({ insertedId: 'mock-id' }),
+    updateOne: sinon.stub().resolves({ modifiedCount: 1 }),
+    deleteOne: sinon.stub().resolves({ deletedCount: 1 }),
+  }),
+};
+
+// Mock MongoClient constructor behavior by stubbing the prototype methods
+// This ensures ANY instance of MongoClient uses our mocks
+const connectStub = sinon.stub().resolves();
+const closeStub = sinon.stub().resolves();
+const dbStub = sinon.stub().returns(mockDb);
+
+sinon.stub(MongoClient.prototype, 'connect').callsFake(connectStub);
+sinon.stub(MongoClient.prototype, 'close').callsFake(closeStub);
+sinon.stub(MongoClient.prototype, 'db').callsFake(dbStub);
 
 // Store original fetch for restoration
 const originalFetch = globalThis.fetch;
@@ -59,6 +84,8 @@ export function resetFetchMock() {
     global.fetch.resetHistory();
   }
 }
+
+// MongoDB mocking is done at the top of this file
 
 // Auto-setup when this module is imported
 setupGlobalMocks();

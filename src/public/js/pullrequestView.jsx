@@ -15,13 +15,20 @@ export class PullRequestView extends React.Component {
    **/
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      pullRequest: props.pullRequest || null,
+    };
   }
 
   /**
    * getPullRequests
    */
   async getPullRequest() {
+    // If pullRequest was passed directly as a prop, don't fetch
+    if (this.props.pullRequest) {
+      return;
+    }
+
     if (!this.props.repository?.fullName) {
       console.error(
         'Repository or fullName is missing:',
@@ -305,6 +312,9 @@ export class PullRequestView extends React.Component {
 }
 
 PullRequestView.propTypes = {
+  // Used when fetching PR data (from Dashboard)
   repository: PropTypes.object,
   pullRequestId: PropTypes.number,
+  // Used when PR data is already available (from PullRequest component)
+  pullRequest: PropTypes.object,
 };

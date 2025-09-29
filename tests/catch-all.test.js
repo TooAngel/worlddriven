@@ -1,7 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
 import sinon from 'sinon';
-import { MongoClient } from 'mongodb';
 import MongoStore from 'connect-mongo';
 import './setup.js';
 
@@ -11,11 +10,8 @@ test('Catch all tests', async t => {
   let vite;
 
   t.before(async () => {
+    // Only stub MongoStore since MongoClient is already stubbed in setup.js
     sinon.stub(MongoStore, 'create').returns({ on: () => {} });
-    sinon.stub(MongoClient.prototype, 'connect').resolves({ db: () => {} });
-    sinon
-      .stub(MongoClient.prototype, 'db')
-      .resolves(() => ({ collection: {} }));
     process.env.NODE_ENV = 'test-production';
     process.env.SESSION_SECRET = 'test-secret-key';
     process.env.MONGO_URL = 'mongodb://127.0.0.1:27017/test';
@@ -29,12 +25,34 @@ test('Catch all tests', async t => {
     baseUrl = `http://localhost:${port}`;
   });
 
-  t.after(() => {
-    if (server) {
-      server.close();
-    }
-    if (vite) {
-      vite.close();
+  t.after(async () => {
+    try {
+      if (server) {
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(
+            () => reject(new Error('Server close timeout')),
+            5000
+          );
+          server.close(err => {
+            clearTimeout(timeout);
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+      }
+      if (vite) {
+        await vite.close();
+      }
+    } catch (error) {
+      console.warn('Error during cleanup:', error);
+    } finally {
+      // Clean up MongoDB connection stubs
+      sinon.restore();
+
+      // Force cleanup of any remaining handles
+      if (global.gc) {
+        global.gc();
+      }
     }
   });
 
