@@ -15,6 +15,8 @@ import {
   deleteWebhook,
 } from './helpers/github.js';
 import { getPullRequestData } from './helpers/pullRequest.js';
+import { Auth } from './helpers/auth.js';
+import { GitHubClient } from './helpers/github-client.js';
 import {
   handlePullRequestWebhook,
   handlePullRequestReviewWebhook,
@@ -324,50 +326,82 @@ async function startServer() {
 
   // Public API route for pull request data (matches frontend expectation)
   app.get('/v1/:owner/:repo/pull/:number', async function (req, res) {
+    const requestStart = Date.now();
+    const requestId = Math.random().toString(36).substr(2, 9);
+
+    console.log(
+      `[REQ-${requestId}] 🌐 GET /v1/${req.params.owner}/${req.params.repo}/pull/${req.params.number} from ${req.ip}`
+    );
+    console.log(
+      `[REQ-${requestId}] Session: ${req.session.userId ? 'authenticated' : 'anonymous'}, User-Agent: ${req.headers['user-agent']?.substring(0, 50)}...`
+    );
+
     try {
-      // Find repository configuration to determine authentication method
-      const repository = await Repository.findByOwnerAndRepo(
-        req.params.owner,
-        req.params.repo
-      );
+      // Create authentication context with request information
+      const auth = new Auth({
+        sessionId: req.session.userId,
+        owner: req.params.owner,
+        repo: req.params.repo,
+        strictUserAuth: false, // Allow fallbacks for better reliability
+      });
 
-      if (!repository || !repository.configured) {
-        return res
-          .status(404)
-          .json({ error: 'Repository not configured for worlddriven' });
-      }
+      // Log the authentication strategy that will be used
+      const authStrategy = await auth.getAuthStrategy();
+      console.log(
+        `[REQ-${requestId}] 🔐 Auth strategy: ${authStrategy.split('\n')[0]}`
+      ); // First line only
 
-      let pullRequestData;
-
-      if (repository.installationId) {
-        // Use GitHub App authentication
-        pullRequestData = await getPullRequestData(
-          repository.installationId,
-          req.params.owner,
-          req.params.repo,
-          req.params.number
+      // Check if any authentication methods are available
+      if (!(await auth.hasValidAuth())) {
+        console.warn(
+          `[REQ-${requestId}] ❌ No authentication available for ${req.params.owner}/${req.params.repo}`
         );
-      } else if (repository.userId) {
-        // Use PAT authentication
-        const user = await User.findById(repository.userId);
-        if (!user) {
-          return res.status(500).json({ error: 'Repository user not found' });
-        }
-        pullRequestData = await getPullRequestData(
-          user,
-          req.params.owner,
-          req.params.repo,
-          req.params.number
-        );
-      } else {
-        return res.status(500).json({
-          error: 'No authentication method configured for repository',
+        return res.status(404).json({
+          error:
+            'Repository not configured for worlddriven or no authentication available',
         });
       }
 
+      // Create GitHub client with automatic authentication fallback
+      const githubClient = new GitHubClient(auth);
+
+      // Get pull request data using clean business logic
+      const pullRequestData = await getPullRequestData(
+        githubClient,
+        req.params.owner,
+        req.params.repo,
+        req.params.number
+      );
+
+      const duration = Date.now() - requestStart;
+      console.log(
+        `[REQ-${requestId}] ✅ SUCCESS: Returned pull request data in ${duration}ms`
+      );
+
       res.json(pullRequestData);
     } catch (error) {
-      console.error('Public PR API error:', error);
+      const duration = Date.now() - requestStart;
+      console.error(
+        `[REQ-${requestId}] ❌ FAILED after ${duration}ms:`,
+        error.message
+      );
+
+      // Log authentication strategy for debugging failures
+      try {
+        const auth = new Auth({
+          sessionId: req.session.userId,
+          owner: req.params.owner,
+          repo: req.params.repo,
+        });
+        const strategy = await auth.getAuthStrategy();
+        console.error(`[REQ-${requestId}] 🔍 Auth strategy was:`, strategy);
+      } catch (authError) {
+        console.error(
+          `[REQ-${requestId}] Could not determine auth strategy:`,
+          authError.message
+        );
+      }
+
       res.status(500).json({ error: 'Failed to fetch pull request data' });
     }
   });

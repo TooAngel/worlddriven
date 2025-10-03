@@ -44,7 +44,7 @@ export class PullRequest extends React.Component {
       .then(res => res.json())
       .then(result => {
         this.setState({
-          pullRequest: result.pull_request,
+          pullRequest: result,
           fetched: true,
         });
       });

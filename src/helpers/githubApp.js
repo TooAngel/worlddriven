@@ -212,3 +212,7 @@ export async function deleteWebhookApp(
     );
   }
 }
+
+// Note: getPullRequestDataApp has been replaced by the new Auth/GitHubClient architecture.
+// All pull request data processing now goes through the GitHubClient abstraction layer
+// which automatically handles authentication fallback between PAT and GitHub App methods.

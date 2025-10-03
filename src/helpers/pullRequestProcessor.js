@@ -1,12 +1,13 @@
 import { getPullRequestData } from './pullRequest.js';
 import {
-  getPullRequests,
   mergePullRequest,
   setCommitStatus,
   getLatestCommitSha,
 } from './github.js';
 import { updateOrCreateWorlddrivenComment } from './commentManager.js';
 import { User, Repository } from '../database/models.js';
+import { Auth } from './auth.js';
+import { GitHubClient } from './github-client.js';
 
 /**
  * Set GitHub status for a pull request
@@ -90,17 +91,21 @@ export async function processPullRequests() {
         `Processing repository: ${repository.owner}/${repository.repo}`
       );
 
-      let authMethod;
+      // Create Auth and GitHubClient for this repository
+      const auth = new Auth({
+        owner: repository.owner,
+        repo: repository.repo,
+      });
+      const githubClient = new GitHubClient(auth);
 
-      // Determine authentication method
+      // Determine authentication method for legacy functions
+      let authMethod;
       if (repository.installationId) {
-        // Use GitHub App
         authMethod = repository.installationId;
         console.log(
           `Using GitHub App authentication (installation: ${repository.installationId})`
         );
       } else if (repository.userId) {
-        // Use PAT (legacy)
         const user = await User.findById(repository.userId);
         if (!user) {
           const error = `No user found for repository ${repository.owner}/${repository.repo}`;
@@ -120,8 +125,7 @@ export async function processPullRequests() {
       }
 
       try {
-        const pullRequests = await getPullRequests(
-          authMethod,
+        const pullRequests = await githubClient.getPullRequests(
           repository.owner,
           repository.repo
         );
@@ -142,7 +146,7 @@ export async function processPullRequests() {
 
           try {
             const pullRequestData = await getPullRequestData(
-              authMethod,
+              githubClient,
               repository.owner,
               repository.repo,
               pullRequest.number
@@ -248,17 +252,16 @@ export async function processRepositoryPullRequests(owner, repo) {
     throw new Error(`Repository ${owner}/${repo} not found or not configured`);
   }
 
-  const user = await User.findById(repository.userId);
-  if (!user) {
-    throw new Error(`User not found for repository ${owner}/${repo}`);
-  }
+  // Create Auth and GitHubClient for this repository
+  const auth = new Auth({ owner, repo });
+  const githubClient = new GitHubClient(auth);
 
-  const pullRequests = await getPullRequests(user, owner, repo);
+  const pullRequests = await githubClient.getPullRequests(owner, repo);
   const results = [];
 
   for (const pullRequest of pullRequests) {
     const pullRequestData = await getPullRequestData(
-      user,
+      githubClient,
       owner,
       repo,
       pullRequest.number
