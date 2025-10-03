@@ -16,11 +16,29 @@ contributions are the factor of this merge boost (think of number of commits).
 Voting against the Pull Request increases the time to merge. Reaching a certain
 threshold blocks the merge.
 
-The configuration for the repository is:
+The default configuration for repositories is:
 
-- Merge duration for a pull request: 10 days
+- Merge duration for a pull request: 10 days (240 hours)
 - Per commit time: 0 days
 - Merge method: squash
+
+### Per-Repository Configuration
+
+Repositories can customize their worlddriven settings by adding a `.worlddriven.ini` file to the default branch:
+
+```ini
+[DEFAULT]
+baseMergeTimeInHours = 240
+perCommitTimeInHours = 0
+merge_method = squash
+```
+
+**Configuration Options:**
+- `baseMergeTimeInHours`: Base time in hours before merging a PR (default: 240 = 10 days)
+- `perCommitTimeInHours`: Extra time in hours per commit (default: 0)
+- `merge_method`: GitHub merge method - `merge`, `squash`, or `rebase` (default: squash)
+
+Worlddriven reads the configuration from the repository's default branch when processing pull requests.
 
 Read more on https://www.worlddriven.org
 

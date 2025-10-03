@@ -166,14 +166,15 @@ export async function processPullRequests() {
 
             if (pullRequestData.times.daysToMerge < 0) {
               console.log(
-                `⚡ Merging ${repository.owner}/${repository.repo} - ${pullRequestData.title}`
+                `⚡ Merging ${repository.owner}/${repository.repo} - ${pullRequestData.title} using ${pullRequestData.config.merge_method} method`
               );
 
               const mergeResponse = await mergePullRequest(
                 authMethod,
                 repository.owner,
                 repository.repo,
-                pullRequest.number
+                pullRequest.number,
+                pullRequestData.config.merge_method
               );
 
               if (mergeResponse) {

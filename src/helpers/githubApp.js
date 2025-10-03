@@ -38,13 +38,20 @@ export async function getPullRequestsApp(installationId, owner, repo) {
   }));
 }
 
-export async function mergePullRequestApp(installationId, owner, repo, number) {
+export async function mergePullRequestApp(
+  installationId,
+  owner,
+  repo,
+  number,
+  mergeMethod = 'squash'
+) {
   const octokit = await getInstallationOctokit(installationId);
   try {
     return await octokit.rest.pulls.merge({
       owner,
       repo,
       pull_number: number,
+      merge_method: mergeMethod,
     });
   } catch (error) {
     if (error.status === 405) return; // Cannot merge

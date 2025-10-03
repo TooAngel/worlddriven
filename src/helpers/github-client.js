@@ -346,6 +346,81 @@ export class GitHubClient {
   }
 
   /**
+   * Get repository information
+   */
+  async getRepository(owner, repo) {
+    const url = `/repos/${owner}/${repo}`;
+    return await this.makeRequest(url);
+  }
+
+  /**
+   * Raw fetch method for direct API calls
+   * Exposes the underlying fetch with authentication
+   */
+  async fetch(url, options = {}) {
+    return await this._fetchRaw(url, options);
+  }
+
+  /**
+   * Internal raw fetch method
+   */
+  async _fetchRaw(url, options = {}) {
+    if (!this._authMethods) {
+      this._authMethods = await this.auth.getAllMethods();
+    }
+
+    if (this._authMethods.length === 0) {
+      throw new Error('No authentication methods available');
+    }
+
+    let lastError;
+
+    for (const method of this._authMethods) {
+      try {
+        let token;
+        switch (method.type) {
+          case 'PAT':
+          case 'ENV':
+            token = method.user?.githubAccessToken || method.token;
+            break;
+          case 'APP': {
+            const octokit = await getInstallationOctokit(method.installationId);
+            // Extract token from octokit
+            const auth = await octokit.auth({ type: 'installation' });
+            token = auth.token;
+            break;
+          }
+          default:
+            throw new Error(`Unknown auth method: ${method.type}`);
+        }
+
+        if (!url.startsWith('http')) {
+          url = `https://api.github.com${url}`;
+        }
+
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            Accept: 'application/vnd.github.v3+json',
+            Authorization: `token ${token}`,
+            ...options.headers,
+          },
+        });
+
+        // Return the response directly (caller handles status codes)
+        return response;
+      } catch (error) {
+        lastError = error;
+        continue;
+      }
+    }
+
+    throw new Error(
+      `All authentication methods failed. Last error: ${lastError?.message || 'Unknown error'}`
+    );
+  }
+
+  /**
    * Get authentication strategy info (for debugging)
    */
   async getAuthInfo() {

@@ -70,13 +70,15 @@ export async function getPullRequests(userOrInstallationId, owner, repo) {
  * @param {string} owner
  * @param {string} repo
  * @param {number} number
+ * @param {string} mergeMethod - Merge method: 'merge', 'squash', or 'rebase' (default: 'squash')
  * @return {void}
  */
 export async function mergePullRequest(
   userOrInstallationId,
   owner,
   repo,
-  number
+  number,
+  mergeMethod = 'squash'
 ) {
   // If it's a number, treat as installationId (GitHub App)
   if (
@@ -87,7 +89,8 @@ export async function mergePullRequest(
       parseInt(userOrInstallationId),
       owner,
       repo,
-      number
+      number,
+      mergeMethod
     );
   }
 
@@ -101,7 +104,11 @@ export async function mergePullRequest(
       headers: {
         Accept: 'application/vnd.github.v3+json',
         Authorization: `token ${user.githubAccessToken}`,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        merge_method: mergeMethod,
+      }),
     });
 
     if (response.status === 405) {

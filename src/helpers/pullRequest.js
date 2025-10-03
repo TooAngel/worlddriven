@@ -12,6 +12,8 @@
  * - Clear separation of concerns
  */
 
+import { fetchRepositoryConfig } from './config.js';
+
 /**
  * Calculate time-based metrics from pull request events and commits
  *
@@ -132,17 +134,11 @@ function processReviews(contributors, reviews, pull) {
  * @param {object} dates - Date metrics object
  * @param {object} pull - Pull request object
  * @param {number} coefficient - Voting coefficient
+ * @param {object} config - Repository configuration from .worlddriven.ini
  * @returns {object} Time metrics object
  */
-function calculateTimeMetrics(contributors, dates, pull, coefficient) {
+function calculateTimeMetrics(contributors, dates, pull, coefficient, config) {
   const age = (new Date().getTime() - dates.max) / 1000;
-
-  // Configuration for merge timing calculations
-  const config = {
-    baseMergeTimeInHours: 240,
-    perCommitTimeInHours: 0,
-    merge_method: 'squash',
-  };
 
   const totalMergeTime =
     (config.baseMergeTimeInHours / 24 +
@@ -187,6 +183,9 @@ function calculateTimeMetrics(contributors, dates, pull, coefficient) {
  * @returns {Promise<object>} Complete pull request data object
  */
 export async function getPullRequestData(githubClient, owner, repo, number) {
+  // Fetch repository configuration from .worlddriven.ini
+  const config = await fetchRepositoryConfig(githubClient, owner, repo);
+
   // Fetch all required data from GitHub
   const pull = await githubClient.getPullRequest(owner, repo, number);
   const contributors = await githubClient.getContributors(
@@ -211,7 +210,8 @@ export async function getPullRequestData(githubClient, owner, repo, number) {
     contributors,
     dates,
     pull,
-    coefficient
+    coefficient,
+    config
   );
 
   // Assemble the complete pull request data object
@@ -222,6 +222,7 @@ export async function getPullRequestData(githubClient, owner, repo, number) {
     repo: repo,
     number: parseInt(number),
     state: pull.state,
+    config: config,
     stats: {
       contributors: contributors,
       age: timeMetrics.age,
