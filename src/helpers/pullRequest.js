@@ -156,8 +156,7 @@ function calculateTimeMetrics(contributors, dates, pull, coefficient, config) {
   }, 0);
 
   for (const contributor of contributors) {
-    contributor.timeValue =
-      (contributor.commits / votesTotal) * totalMergeTime * 24 * 60 * 60;
+    contributor.timeValue = (contributor.commits / votesTotal) * totalMergeTime;
   }
 
   return {
@@ -189,7 +188,7 @@ export async function getPullRequestData(githubClient, owner, repo, number) {
   // Fetch all required data from GitHub
   const pull = await githubClient.getPullRequest(owner, repo, number);
   const contributors = await githubClient.getContributors(
-    pull.head.repo.contributors_url
+    pull.base.repo.contributors_url
   );
   const reviews = await githubClient.getReviews(
     `${pull._links.self.href}/reviews`

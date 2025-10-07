@@ -25,6 +25,12 @@ test('Pull request date calculation', async t => {
             events_url: 'https://api.github.com/repos/test/repo/events',
           },
         },
+        base: {
+          repo: {
+            contributors_url:
+              'https://api.github.com/repos/test/repo/contributors',
+          },
+        },
         commits_url: 'https://api.github.com/repos/test/repo/pulls/123/commits',
         issue_url: 'https://api.github.com/repos/test/repo/issues/123',
         _links: {
