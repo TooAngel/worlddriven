@@ -200,6 +200,17 @@ export async function processPullRequests() {
               console.log(
                 `⏳ PR not ready for merge (${daysRemaining} days remaining)`
               );
+
+              // Update comment to refresh merge countdown without adding activity log entry
+              await updateOrCreateWorlddrivenComment(
+                authMethod,
+                repository.owner,
+                repository.repo,
+                pullRequest.number,
+                pullRequestData,
+                null // Don't add activity log entry for scheduled updates
+              );
+
               prResult.action = 'waiting';
             }
 
