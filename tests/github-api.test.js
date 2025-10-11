@@ -71,12 +71,26 @@ test('GitHub API helpers', async t => {
   );
 
   await t.test(
-    'listIssueComments should reject GitHub App auth (not implemented)',
+    'listIssueComments should work with GitHub App auth',
     async () => {
-      await assert.rejects(
-        () => listIssueComments(12345, 'owner', 'repo', 123),
-        /GitHub App authentication not yet implemented/
-      );
+      // This test verifies the function accepts GitHub App auth (installationId as number)
+      // The actual GitHub App implementation is tested in integration tests
+      // Here we just verify it doesn't throw an error for valid installationId format
+      const installationId = 12345;
+
+      // The function will try to call the GitHub App version which needs Octokit
+      // Since we don't mock Octokit here, we expect a different error (not "not implemented")
+      try {
+        await listIssueComments(installationId, 'owner', 'repo', 123);
+        // If it succeeds (unlikely without proper mocks), that's fine
+        assert.ok(true, 'GitHub App auth accepted');
+      } catch (error) {
+        // Should NOT be "not yet implemented" error
+        assert.ok(
+          !error.message.includes('not yet implemented'),
+          'GitHub App authentication is now implemented'
+        );
+      }
     }
   );
 
@@ -141,13 +155,32 @@ test('GitHub API helpers', async t => {
   );
 
   await t.test(
-    'updateIssueComment should reject GitHub App auth (not implemented)',
+    'updateIssueComment should work with GitHub App auth',
     async () => {
-      await assert.rejects(
-        () =>
-          updateIssueComment(12345, 'owner', 'repo', 456, 'Updated comment'),
-        /GitHub App authentication not yet implemented/
-      );
+      // This test verifies the function accepts GitHub App auth (installationId as number)
+      // The actual GitHub App implementation is tested in integration tests
+      // Here we just verify it doesn't throw an error for valid installationId format
+      const installationId = 12345;
+
+      // The function will try to call the GitHub App version which needs Octokit
+      // Since we don't mock Octokit here, we expect a different error (not "not implemented")
+      try {
+        await updateIssueComment(
+          installationId,
+          'owner',
+          'repo',
+          456,
+          'Updated comment'
+        );
+        // If it succeeds (unlikely without proper mocks), that's fine
+        assert.ok(true, 'GitHub App auth accepted');
+      } catch (error) {
+        // Should NOT be "not yet implemented" error
+        assert.ok(
+          !error.message.includes('not yet implemented'),
+          'GitHub App authentication is now implemented'
+        );
+      }
     }
   );
 

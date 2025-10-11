@@ -4,51 +4,35 @@
  * DESIGN PHILOSOPHY:
  * ==================
  *
- * This Auth class implements a priority-based authentication system that automatically
- * falls back through multiple authentication methods to ensure maximum reliability
- * and optimal rate limit usage.
+ * This Auth class implements GitHub App authentication with an environment token
+ * fallback for maximum reliability and rate limit protection.
  *
  * AUTHENTICATION PRIORITY ORDER:
- * 1. Session User PAT (if user is logged in) - Highest priority for personalized access
- * 2. Repository GitHub App (if configured) - App-level authentication for repositories
- * 3. Repository Owner PAT (if different from session user) - Fallback to repo owner's access
- * 4. Environment Token (GITHUB_FALLBACK_TOKEN) - System-wide fallback for unauthenticated access
+ * 1. Repository GitHub App (if configured) - Primary authentication method
+ * 2. Environment Token (GITHUB_FALLBACK_TOKEN) - System-wide fallback for unauthenticated access
  *
  * FALLBACK BEHAVIOR:
- * - strictUserAuth: false (default) - Always allow fallbacks for reliability/rate limits
- * - strictUserAuth: true - If user is logged in, only use their authentication
+ * - If GitHub App authentication fails, falls back to environment token
+ * - Environment token provides basic access with reasonable rate limits
  *
  * WHY FALLBACKS MATTER:
- * - Rate limit protection: If user's PAT hits limits, fallback to app/environment token
+ * - Rate limit protection: If app hits limits, fallback to environment token
  * - Reliability: If any auth method fails, others can still work
- * - User experience: Logged-in users get priority but system stays functional
  * - Public access: Environment token enables unauthenticated access with reasonable limits
  *
  * USAGE EXAMPLES:
  *
- * // Default - allows all fallbacks
- * const auth = new Auth({ sessionId: req.session.userId, owner: 'user', repo: 'repo' });
- *
- * // Strict user mode - no fallbacks if user is logged in
- * const auth = new Auth({
- *   sessionId: req.session.userId,
- *   owner: 'user',
- *   repo: 'repo',
- *   strictUserAuth: true
- * });
- *
- * // Public access only
+ * // Standard usage
  * const auth = new Auth({ owner: 'user', repo: 'repo' });
+ * const methods = await auth.getAllMethods();
  */
 
-import { User, Repository } from '../database/models.js';
+import { Repository } from '../database/models.js';
 
 export class Auth {
-  constructor({ sessionId = null, owner, repo, strictUserAuth = false }) {
-    this.sessionId = sessionId;
+  constructor({ owner, repo }) {
     this.owner = owner;
     this.repo = repo;
-    this.strictUserAuth = strictUserAuth;
     this._methods = null; // Lazy loaded
   }
 
@@ -63,73 +47,31 @@ export class Auth {
 
     this._methods = [];
 
-    // Priority 1: Session user's PAT (if logged in)
-    if (this.sessionId) {
-      try {
-        const user = await User.findById(this.sessionId);
-        if (user && user.githubAccessToken) {
-          this._methods.push({
-            type: 'PAT',
-            user: user,
-            priority: 1,
-            description: 'Session user PAT',
-          });
-
-          // If strict user auth is enabled, stop here
-          if (this.strictUserAuth) {
-            return this._methods;
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to load session user:', error.message);
-      }
-    }
-
-    // Priority 2 & 3: Repository-based authentication
+    // Priority 1: Repository GitHub App authentication
     try {
       const repository = await Repository.findByOwnerAndRepo(
         this.owner,
         this.repo
       );
 
-      if (repository && repository.configured) {
-        // Priority 2: GitHub App authentication
-        if (repository.installationId) {
-          this._methods.push({
-            type: 'APP',
-            installationId: repository.installationId,
-            priority: 2,
-            description: 'Repository GitHub App',
-          });
-        }
-
-        // Priority 3: Repository owner's PAT (if different from session user)
-        if (repository.userId && repository.userId !== this.sessionId) {
-          try {
-            const repoUser = await User.findById(repository.userId);
-            if (repoUser && repoUser.githubAccessToken) {
-              this._methods.push({
-                type: 'PAT',
-                user: repoUser,
-                priority: 3,
-                description: 'Repository owner PAT',
-              });
-            }
-          } catch (error) {
-            console.warn('Failed to load repository user:', error.message);
-          }
-        }
+      if (repository && repository.configured && repository.installationId) {
+        this._methods.push({
+          type: 'APP',
+          installationId: repository.installationId,
+          priority: 1,
+          description: 'Repository GitHub App',
+        });
       }
     } catch (error) {
       console.warn('Failed to load repository config:', error.message);
     }
 
-    // Priority 4: Environment token fallback (if available and not in strict mode)
-    if (!this.strictUserAuth && process.env.GITHUB_FALLBACK_TOKEN) {
+    // Priority 2: Environment token fallback (if available)
+    if (process.env.GITHUB_FALLBACK_TOKEN) {
       this._methods.push({
         type: 'ENV',
         token: process.env.GITHUB_FALLBACK_TOKEN,
-        priority: 4,
+        priority: 2,
         description: 'Environment fallback token',
       });
     }
@@ -152,10 +94,7 @@ export class Auth {
     }
 
     const descriptions = methods.map(m => `${m.priority}. ${m.description}`);
-    const mode = this.strictUserAuth
-      ? ' (strict user mode)'
-      : ' (with fallbacks)';
-    return `Auth strategy${mode}:\n${descriptions.join('\n')}`;
+    return `Auth strategy (with fallbacks):\n${descriptions.join('\n')}`;
   }
 
   /**

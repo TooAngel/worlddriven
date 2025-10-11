@@ -26,6 +26,7 @@ import {
   handleInstallationWebhook,
   handleInstallationRepositoriesWebhook,
 } from './helpers/installationHandler.js';
+import { removePatAuthentication } from '../scripts/remove-pat-auth.js';
 
 const mongoSessionStore = MongoStore.create({
   clientPromise: client.connect(),
@@ -36,6 +37,17 @@ const mongoSessionStore = MongoStore.create({
 const isProduction = process.env.NODE_ENV === 'production';
 
 async function startServer() {
+  // Run database migrations on startup
+  try {
+    await removePatAuthentication();
+  } catch (error) {
+    console.error(
+      '[STARTUP] Failed to run PAT removal migration:',
+      error.message
+    );
+    // Continue anyway - migration failure shouldn't prevent app startup
+  }
+
   const app = express();
 
   // Setup Vite middleware for development

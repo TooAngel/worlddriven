@@ -5,6 +5,8 @@ import {
   setCommitStatusApp,
   getLatestCommitShaApp,
   createIssueCommentApp,
+  listIssueCommentsApp,
+  updateIssueCommentApp,
   createWebhookApp,
   deleteWebhookApp,
 } from './githubApp.js';
@@ -205,9 +207,11 @@ export async function listIssueComments(
     typeof userOrInstallationId === 'number' ||
     (typeof userOrInstallationId === 'string' && !isNaN(userOrInstallationId))
   ) {
-    // TODO: Implement GitHub App version when needed
-    throw new Error(
-      'GitHub App authentication not yet implemented for listIssueComments'
+    return await listIssueCommentsApp(
+      parseInt(userOrInstallationId),
+      owner,
+      repo,
+      number
     );
   }
 
@@ -256,9 +260,12 @@ export async function updateIssueComment(
     typeof userOrInstallationId === 'number' ||
     (typeof userOrInstallationId === 'string' && !isNaN(userOrInstallationId))
   ) {
-    // TODO: Implement GitHub App version when needed
-    throw new Error(
-      'GitHub App authentication not yet implemented for updateIssueComment'
+    return await updateIssueCommentApp(
+      parseInt(userOrInstallationId),
+      owner,
+      repo,
+      commentId,
+      comment
     );
   }
 

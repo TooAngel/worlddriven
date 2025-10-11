@@ -8,12 +8,12 @@
  * KEY FEATURES:
  * - Automatic fallback through available authentication methods
  * - Clean API methods with no authentication concerns
- * - Supports both PAT and GitHub App authentication transparently
+ * - Supports GitHub App authentication with environment token fallback
  * - Error handling with detailed logging
  * - Retry logic for transient failures
  *
  * USAGE:
- * const auth = new Auth({ sessionId, owner, repo });
+ * const auth = new Auth({ owner, repo });
  * const client = new GitHubClient(auth);
  * const data = await client.getPullRequest(owner, repo, number);
  */
@@ -71,13 +71,8 @@ export class GitHubClient {
 
         let result;
         switch (method.type) {
-          case 'PAT':
           case 'ENV':
-            result = await this._fetchWithToken(
-              url,
-              options,
-              method.user?.githubAccessToken || method.token
-            );
+            result = await this._fetchWithToken(url, options, method.token);
             break;
 
           case 'APP':
@@ -379,9 +374,8 @@ export class GitHubClient {
       try {
         let token;
         switch (method.type) {
-          case 'PAT':
           case 'ENV':
-            token = method.user?.githubAccessToken || method.token;
+            token = method.token;
             break;
           case 'APP': {
             const octokit = await getInstallationOctokit(method.installationId);
