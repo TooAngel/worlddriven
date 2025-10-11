@@ -66,6 +66,10 @@ export const User = {
 
 /**
  * Repository model functions
+ *
+ * IMPORTANT: As of 2025-10-11, userId field has been removed from repository schema.
+ * Repository operations use GitHub App authentication (installationId) exclusively.
+ * User OAuth tokens are only used for user-specific UI operations.
  */
 export const Repository = {
   /**
@@ -74,18 +78,12 @@ export const Repository = {
    * @param {string} repoData.owner
    * @param {string} repoData.repo
    * @param {boolean} repoData.configured
-   * @param {string|ObjectId} [repoData.userId] - Legacy PAT authentication
-   * @param {number} [repoData.installationId] - GitHub App authentication
+   * @param {number} [repoData.installationId] - GitHub App installation ID (required for repository operations)
    * @returns {Promise<import('./database.js').Repository>}
    */
   async create(repoData) {
     const repository = {
       ...repoData,
-      userId: repoData.userId
-        ? typeof repoData.userId === 'string'
-          ? new ObjectId(repoData.userId)
-          : repoData.userId
-        : null,
       installationId: repoData.installationId || null,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -124,12 +122,17 @@ export const Repository = {
 
   /**
    * Find repositories by user ID
-   * @param {string|ObjectId} userId
+   * @deprecated This method is deprecated as of 2025-10-11. The userId field has been removed from repositories.
+   * User OAuth tokens are no longer used for repository operations.
+   * Use findByInstallationId() for repository operations instead.
+   * @param {string|ObjectId} _userId - Unused parameter (deprecated)
    * @returns {Promise<import('./database.js').Repository[]>}
    */
-  async findByUserId(userId) {
-    const objectId = typeof userId === 'string' ? new ObjectId(userId) : userId;
-    return await database.repositories.find({ userId: objectId }).toArray();
+  async findByUserId(_userId) {
+    console.warn(
+      'Repository.findByUserId() is deprecated - userId field no longer exists in repositories'
+    );
+    return [];
   },
 
   /**
@@ -161,12 +164,6 @@ export const Repository = {
       ...updates,
       updatedAt: new Date(),
     };
-    if (updates.userId) {
-      updateData.userId =
-        typeof updates.userId === 'string'
-          ? new ObjectId(updates.userId)
-          : updates.userId;
-    }
     if (updates.installationId !== undefined) {
       updateData.installationId = updates.installationId;
     }

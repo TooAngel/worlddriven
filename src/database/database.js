@@ -19,7 +19,8 @@ export const client = new MongoClient(url);
  * @property {string} owner
  * @property {string} repo
  * @property {boolean} configured
- * @property {import("mongodb").ObjectId} userId
+ * @property {number} [installationId] - GitHub App installation ID (required for repository operations)
+ * @property {import("mongodb").ObjectId} [userId] - DEPRECATED: Removed as of 2025-10-11, use installationId instead
  * @property {Date} createdAt
  * @property {Date} updatedAt
  */
@@ -74,12 +75,16 @@ class Database {
 }
 
 export const database = new Database();
-client
+
+// Export connection promise for migrations to await
+export const connectionPromise = client
   .connect()
   .then(() => {
     database.setDB(client.db(dbName));
     console.log('Connected to MongoDB:', dbName);
+    return database;
   })
   .catch(error => {
     console.error('Failed to connect to MongoDB:', error);
+    throw error;
   });

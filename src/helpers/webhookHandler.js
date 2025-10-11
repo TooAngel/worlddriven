@@ -1,25 +1,30 @@
 import { getPullRequestData } from './pullRequest.js';
 import { setCommitStatus, getLatestCommitSha } from './github.js';
 import { updateOrCreateWorlddrivenComment } from './commentManager.js';
-import { User, Repository } from '../database/models.js';
+import { Repository } from '../database/models.js';
 
 /**
  * Set GitHub status for a pull request
- * @param {object} user
+ * @param {number} installationId
  * @param {string} owner
  * @param {string} repo
  * @param {number} pullNumber
  * @param {object} pullRequestData
  */
 async function setPullRequestStatus(
-  user,
+  installationId,
   owner,
   repo,
   pullNumber,
   pullRequestData
 ) {
   try {
-    const sha = await getLatestCommitSha(user, owner, repo, pullNumber);
+    const sha = await getLatestCommitSha(
+      installationId,
+      owner,
+      repo,
+      pullNumber
+    );
     const coefficient = pullRequestData.stats.coefficient;
     const targetUrl = `https://www.worlddriven.org/${owner}/${repo}/pull/${pullNumber}`;
 
@@ -35,7 +40,7 @@ async function setPullRequestStatus(
     }
 
     await setCommitStatus(
-      user,
+      installationId,
       owner,
       repo,
       sha,
@@ -54,22 +59,28 @@ async function setPullRequestStatus(
 
 /**
  * Process a pull request and update its status
- * @param {object} user
+ * @param {number} installationId
  * @param {string} owner
  * @param {string} repo
  * @param {number} pullNumber
  * @returns {object} Pull request data
  */
-async function processPullRequest(user, owner, repo, pullNumber) {
+async function processPullRequest(installationId, owner, repo, pullNumber) {
   console.log(`Processing PR ${owner}/${repo}#${pullNumber} from webhook`);
 
   const pullRequestData = await getPullRequestData(
-    user,
+    installationId,
     owner,
     repo,
     pullNumber
   );
-  await setPullRequestStatus(user, owner, repo, pullNumber, pullRequestData);
+  await setPullRequestStatus(
+    installationId,
+    owner,
+    repo,
+    pullNumber,
+    pullRequestData
+  );
 
   return pullRequestData;
 }
@@ -95,24 +106,27 @@ export async function handlePullRequestWebhook(data) {
     return { info: 'Repository not configured' };
   }
 
-  // Find user for this repository
-  const user = await User.findById(dbRepository.userId);
-  if (!user) {
-    console.error(`User not found for repository ${repository.full_name}`);
-    return { error: 'User not found' };
+  // Check for GitHub App installation
+  if (!dbRepository.installationId) {
+    console.error(
+      `No GitHub App configured for repository ${repository.full_name}`
+    );
+    return { error: 'No GitHub App configured' };
   }
 
   try {
+    const installationId = dbRepository.installationId;
+
     if (action === 'opened') {
       const pullRequestData = await processPullRequest(
-        user,
+        installationId,
         owner,
         repo,
         pullRequest.number
       );
 
       await updateOrCreateWorlddrivenComment(
-        user,
+        installationId,
         owner,
         repo,
         pullRequest.number,
@@ -121,14 +135,14 @@ export async function handlePullRequestWebhook(data) {
       );
     } else if (action === 'synchronize') {
       const pullRequestData = await processPullRequest(
-        user,
+        installationId,
         owner,
         repo,
         pullRequest.number
       );
 
       await updateOrCreateWorlddrivenComment(
-        user,
+        installationId,
         owner,
         repo,
         pullRequest.number,
@@ -176,16 +190,19 @@ export async function handlePullRequestReviewWebhook(data) {
     return { info: 'Repository not configured' };
   }
 
-  // Find user for this repository
-  const user = await User.findById(dbRepository.userId);
-  if (!user) {
-    console.error(`User not found for repository ${repository.full_name}`);
-    return { error: 'User not found' };
+  // Check for GitHub App installation
+  if (!dbRepository.installationId) {
+    console.error(
+      `No GitHub App configured for repository ${repository.full_name}`
+    );
+    return { error: 'No GitHub App configured' };
   }
 
   try {
+    const installationId = dbRepository.installationId;
+
     const pullRequestData = await processPullRequest(
-      user,
+      installationId,
       owner,
       repo,
       pullRequest.number
@@ -201,7 +218,7 @@ export async function handlePullRequestReviewWebhook(data) {
     }
 
     await updateOrCreateWorlddrivenComment(
-      user,
+      installationId,
       owner,
       repo,
       pullRequest.number,

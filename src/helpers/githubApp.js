@@ -144,6 +144,54 @@ export async function createIssueCommentApp(
   }
 }
 
+export async function listIssueCommentsApp(
+  installationId,
+  owner,
+  repo,
+  number
+) {
+  const octokit = await getInstallationOctokit(installationId);
+  try {
+    const { data: comments } = await octokit.rest.issues.listComments({
+      owner,
+      repo,
+      issue_number: number,
+    });
+    return comments;
+  } catch (error) {
+    console.error(
+      `❌ Failed to list comments for ${owner}/${repo}#${number}:`,
+      error.message
+    );
+    throw error;
+  }
+}
+
+export async function updateIssueCommentApp(
+  installationId,
+  owner,
+  repo,
+  commentId,
+  comment
+) {
+  const octokit = await getInstallationOctokit(installationId);
+  try {
+    const { data } = await octokit.rest.issues.updateComment({
+      owner,
+      repo,
+      comment_id: commentId,
+      body: comment,
+    });
+    return data;
+  } catch (error) {
+    console.error(
+      `❌ Failed to update comment ${commentId} for ${owner}/${repo}:`,
+      error.message
+    );
+    throw error;
+  }
+}
+
 export async function createWebhookApp(
   installationId,
   owner,

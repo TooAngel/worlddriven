@@ -22,28 +22,40 @@ test('GitHubClient class', async t => {
     mockAuth = {
       getAllMethods: sinon.stub().resolves([
         {
-          type: 'PAT',
-          user: { githubAccessToken: 'test-token' },
+          type: 'APP',
+          installationId: 12345,
           priority: 1,
-          description: 'Test PAT',
+          description: 'GitHub App',
         },
         {
           type: 'ENV',
           token: 'env-token',
-          priority: 4,
+          priority: 2,
           description: 'Environment token',
         },
       ]),
     };
   });
 
-  await t.test('should make successful PAT request', async () => {
+  await t.test('should make successful ENV request', async () => {
+    // Use simpler auth with only ENV token
+    const simpleAuth = {
+      getAllMethods: sinon.stub().resolves([
+        {
+          type: 'ENV',
+          token: 'test-token',
+          priority: 2,
+          description: 'Test ENV',
+        },
+      ]),
+    };
+
     global.fetch.resolves({
       ok: true,
       json: async () => ({ test: 'data' }),
     });
 
-    const client = new GitHubClient(mockAuth);
+    const client = new GitHubClient(simpleAuth);
     const result = await client.makeRequest('/test');
 
     assert.deepStrictEqual(result, { test: 'data' });
@@ -55,7 +67,26 @@ test('GitHubClient class', async t => {
   });
 
   await t.test('should fallback to next auth method on failure', async () => {
-    // First call fails (PAT), second succeeds (ENV)
+    // Need to use Octokit mock for APP, then fetch for ENV
+    // For simplicity, test ENV fallback with multiple ENV tokens
+    const fallbackAuth = {
+      getAllMethods: sinon.stub().resolves([
+        {
+          type: 'ENV',
+          token: 'primary-token',
+          priority: 1,
+          description: 'Primary ENV',
+        },
+        {
+          type: 'ENV',
+          token: 'fallback-token',
+          priority: 2,
+          description: 'Fallback ENV',
+        },
+      ]),
+    };
+
+    // First call fails, second succeeds
     global.fetch
       .onFirstCall()
       .resolves({
@@ -69,32 +100,53 @@ test('GitHubClient class', async t => {
         json: async () => ({ fallback: 'success' }),
       });
 
-    const client = new GitHubClient(mockAuth);
+    const client = new GitHubClient(fallbackAuth);
     const result = await client.makeRequest('/test');
 
     assert.deepStrictEqual(result, { fallback: 'success' });
     assert.strictEqual(global.fetch.callCount, 2);
 
-    // Check that second call used environment token
+    // Check that second call used fallback token
     const [, secondOptions] = global.fetch.getCall(1).args;
-    assert.strictEqual(secondOptions.headers.Authorization, 'token env-token');
+    assert.strictEqual(
+      secondOptions.headers.Authorization,
+      'token fallback-token'
+    );
   });
 
   await t.test('should throw error when all auth methods fail', async () => {
+    // Use ENV-only auth for this test since APP uses Octokit not fetch
+    const failAuth = {
+      getAllMethods: sinon.stub().resolves([
+        {
+          type: 'ENV',
+          token: 'token1',
+          priority: 1,
+          description: 'Primary ENV',
+        },
+        {
+          type: 'ENV',
+          token: 'token2',
+          priority: 2,
+          description: 'Fallback ENV',
+        },
+      ]),
+    };
+
     global.fetch.resolves({
       ok: false,
       status: 401,
       statusText: 'Unauthorized',
     });
 
-    const client = new GitHubClient(mockAuth);
+    const client = new GitHubClient(failAuth);
 
     await assert.rejects(
       () => client.makeRequest('/test'),
       /All authentication methods failed/
     );
 
-    assert.strictEqual(global.fetch.callCount, 2); // Tried both methods
+    assert.strictEqual(global.fetch.callCount, 2); // Tried both ENV tokens
   });
 
   await t.test('should handle no authentication methods', async () => {
@@ -176,10 +228,10 @@ test('GitHubClient class', async t => {
       const simpleAuth = {
         getAllMethods: sinon.stub().resolves([
           {
-            type: 'PAT',
-            user: { githubAccessToken: 'test-token' },
-            priority: 1,
-            description: 'Test PAT',
+            type: 'ENV',
+            token: 'test-token',
+            priority: 2,
+            description: 'Test ENV',
           },
         ]),
       };
