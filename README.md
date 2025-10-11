@@ -1,30 +1,35 @@
-# world driven
+# Worlddriven Core
 
 [![CircleCI](https://circleci.com/gh/TooAngel/worlddriven.svg?style=svg)](https://circleci.com/gh/TooAngel/worlddriven)
-[![discord](/static/images/Discord-Logo-small.png)](https://discord.gg/RrGFHKb)
-[![Code climate](https://api.codeclimate.com/v1/badges/ec4136b6d2eeff72f192/maintainability)](https://codeclimate.com/github/TooAngel/worlddriven/maintainability)
+[![Discord](https://img.shields.io/discord/496780499059572756?logo=discord&logoColor=white&label=Discord&color=7289da)](https://discord.gg/RrGFHKb)
+[![Code Climate Maintainability](https://api.codeclimate.com/v1/badges/ec4136b6d2eeff72f192/maintainability)](https://codeclimate.com/github/TooAngel/worlddriven/maintainability)
 
-World driven introduces a contribution based weighted voting system
-for time-based auto-merges. It defines a process and automates the process of
-merging Pull Requests based on Reviews.
+The core application for the Worlddriven time-based auto-merge system. A Node.js/Express web service that:
 
-World driven automatically merges Pull Requests after a certain amount of time,
-this gives interested people time to review and approve or request changes (in
-world driven speech: vote).
-Positive votes reduce the time to merge to speed up the release. Previous
-contributions are the factor of this merge boost (think of number of commits).
-Voting against the Pull Request increases the time to merge. Reaching a certain
-threshold blocks the merge.
+- Processes GitHub webhooks for pull requests and reviews
+- Calculates merge timelines based on contributor votes and activity
+- Automatically merges pull requests when conditions are met
+- Provides a React dashboard for repository management
+- Supports both GitHub App and OAuth authentication
 
-The default configuration for repositories is:
+## How It Works
 
-- Merge duration for a pull request: 10 days (240 hours)
-- Per commit time: 0 days
+Pull requests are scheduled to merge after a base time period (default: 10 days). Contributors can speed up or delay merges through reviews:
+- **Approve** reviews reduce merge time (weighted by contribution history)
+- **Request changes** reviews increase merge time or block the merge
+- Each repository can customize merge timing and method via `.worlddriven.ini`
+
+Read more about the concept at [worlddriven.org](https://www.worlddriven.org)
+
+## Default Configuration
+
+- Base merge time: 240 hours (10 days)
+- Per commit time: 0 hours
 - Merge method: squash
 
-### Per-Repository Configuration
+## Repository Configuration
 
-Repositories can customize their worlddriven settings by adding a `.worlddriven.ini` file to the default branch:
+Repositories can customize merge settings by adding a `.worlddriven.ini` file to the default branch:
 
 ```ini
 [DEFAULT]
@@ -38,9 +43,7 @@ merge_method = squash
 - `perCommitTimeInHours`: Extra time in hours per commit (default: 0)
 - `merge_method`: GitHub merge method - `merge`, `squash`, or `rebase` (default: squash)
 
-Worlddriven reads the configuration from the repository's default branch when processing pull requests.
-
-Read more on https://www.worlddriven.org
+The application fetches this configuration from the repository's default branch when processing pull requests. Configuration is loaded from the default branch (not the PR branch) for security.
 
 ## Issue Labels
 
@@ -73,57 +76,92 @@ We use a comprehensive labeling system to organize issues and pull requests:
 
 ## Setup
 
+### Prerequisites
+
+- Node.js (v18 or higher)
+- MongoDB (default: `localhost:27017`)
+- GitHub App or GitHub OAuth App credentials
+
 ### Run with docker compose
+
 Copy `.env-example` to `.env` and add your environment variables.
 ```sh
 docker compose up
 ```
 
-### Manual
+### Manual Setup
 
-The application uses MongoDB as back end, the default configuration is `localhost:27017`
-This can be overwritten with the environment variable: `MONGODB_URI`
+1. **Install dependencies:**
+   ```sh
+   npm install
+   ```
 
-Gunicorn serves as the server, checkout the `Procfile` or use
-`gunicorn --workers=1 --worker-class=flask_sockets.worker server:app --chdir src`.
+2. **Configure MongoDB:**
 
-The authentication and authorization uses GitHub OAuth and API.
+   The application uses MongoDB as the database. Set the connection URI:
+   ```sh
+   export MONGODB_URI=mongodb://localhost:27017/worlddriven
+   ```
 
-For OAuth and merging of pull requests create an GitHub OAuth App
-(https://docs.github.com/en/free-pro-team@latest/developers/apps/creating-an-oauth-app)
-and set `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` as environment variable.
-The GitHub callback path is: `/github-callback`.
+3. **Configure GitHub Authentication:**
 
-For commenting create and set a personal token
-(https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)
-as: `GITHUB_USER_TOKEN`
+   **Option A: GitHub App (Recommended)**
+   - Create a GitHub App: https://docs.github.com/en/developers/apps/creating-a-github-app
+   - Required permissions: Repository (Read & Write), Pull Requests (Read & Write), Checks (Read & Write)
+   - Set environment variables:
+     ```sh
+     export GITHUB_APP_ID=your_app_id
+     export GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
+     export GITHUB_APP_NAME=your-app-name
+     ```
 
-Set Session secret as `SESSION_SECRET` initial a random string.
+   **Option B: GitHub OAuth App (Legacy)**
+   - Create an OAuth App: https://docs.github.com/en/developers/apps/creating-an-oauth-app
+   - Callback URL: `https://your-domain.com/github-callback`
+   - Set environment variables:
+     ```sh
+     export GITHUB_CLIENT_ID=your_client_id
+     export GITHUB_CLIENT_SECRET=your_client_secret
+     ```
 
-To disable https in a local environment set `DEBUG=true` as environment variable.
+4. **Set session secret:**
+   ```sh
+   export SESSION_SECRET=your_random_secret_string
+   ```
 
-#### Prepare PostgreSQL server
+5. **Start the application:**
 
-```
-sudo -u postgres psql
-postgres=# create database mydb;
-postgres=# create user myuser with encrypted password 'mypass';
-postgres=# grant all privileges on database mydb to myuser;
-```
+   Development mode:
+   ```sh
+   npm run dev
+   ```
+
+   Production mode:
+   ```sh
+   NODE_ENV=production npm start
+   ```
 
 ## Testing
 
-Run JavaScript tests with: `npm run test`
-Run python tests with: `pytest`
+Run tests with:
+```sh
+npm test
+```
 
-## Configuration
+Run only unit tests:
+```sh
+npm run test:unit
+```
 
-To allow different configurations on different repositories you can place a
-`.worlddriven.ini` (see `.worlddriven.ini-example`) in the root of your
-repository and adapt the values.
-When World Driven checks new Pull Requests it fetches the `.worlddriven.ini` from
-your default branch (fetching from the Pull Request could be a security issue)
-and applies the configuration.
+Run linter:
+```sh
+npm run lint
+```
+
+Format code:
+```sh
+npm run format
+```
 
 ## Front end
 
@@ -140,10 +178,40 @@ Use the following endpoints to more easily work on the dashboard with mock data:
 - `/test/dashboard` - for the dashboard
 - `/test/:org/:repo/pull/:pull_number` - for the pull request view
 
-## Production environment
+## Development
 
-The World Driven auto-merge service is:
+### Frontend Development
 
-- hosted on Heroku
-- tested via CircleCI,
-- merged via World Driven and automatically deployed.
+The frontend uses React with Vite for development:
+
+```sh
+npm run dev
+```
+
+This starts both the Node.js server and Vite dev server with hot module replacement.
+
+### Project Structure
+
+- `src/` - Backend Node.js/Express application
+  - `src/database/` - MongoDB models and database connection
+  - `src/helpers/` - GitHub API integration, authentication, and business logic
+  - `src/public/` - Frontend React application source
+- `static/` - Static assets (images, HTML)
+- `tests/` - Unit tests
+- `dist/` - Built frontend (production only)
+
+## Deployment
+
+The application is a Node.js Express server that:
+- Serves the React frontend (built with Vite)
+- Provides REST API endpoints
+- Handles GitHub webhooks
+- Runs scheduled cron jobs for PR processing
+
+**Environment variables required:**
+- `MONGODB_URI` - MongoDB connection string
+- `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, `GITHUB_APP_NAME` - GitHub App credentials
+- `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` - OAuth credentials (legacy)
+- `SESSION_SECRET` - Session encryption key
+- `NODE_ENV` - Set to `production` for production builds
+- `PORT` - Server port (default: 3000)
