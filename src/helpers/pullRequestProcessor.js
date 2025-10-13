@@ -5,7 +5,7 @@ import {
   getLatestCommitSha,
 } from './github.js';
 import { updateOrCreateWorlddrivenComment } from './commentManager.js';
-import { User, Repository } from '../database/models.js';
+import { Repository } from '../database/models.js';
 import { Auth } from './auth.js';
 import { GitHubClient } from './github-client.js';
 
@@ -98,31 +98,19 @@ export async function processPullRequests() {
       });
       const githubClient = new GitHubClient(auth);
 
-      // Determine authentication method for legacy functions
-      let authMethod;
-      if (repository.installationId) {
-        authMethod = repository.installationId;
-        console.log(
-          `Using GitHub App authentication (installation: ${repository.installationId})`
-        );
-      } else if (repository.userId) {
-        const user = await User.findById(repository.userId);
-        if (!user) {
-          const error = `No user found for repository ${repository.owner}/${repository.repo}`;
-          console.log(error);
-          repoResult.errors.push(error);
-          results.errors++;
-          continue;
-        }
-        authMethod = user;
-        console.log(`Using PAT authentication (user: ${user._id})`);
-      } else {
-        const error = `No authentication method configured for ${repository.owner}/${repository.repo}`;
+      // Verify GitHub App authentication is configured
+      if (!repository.installationId) {
+        const error = `No GitHub App configured for ${repository.owner}/${repository.repo}`;
         console.log(error);
         repoResult.errors.push(error);
         results.errors++;
         continue;
       }
+
+      const authMethod = repository.installationId;
+      console.log(
+        `Using GitHub App authentication (installation: ${repository.installationId})`
+      );
 
       try {
         const pullRequests = await githubClient.getPullRequests(
