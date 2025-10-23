@@ -1,4 +1,5 @@
 import { Repository } from '../database/models.js';
+import { createWebhookApp, deleteWebhookApp } from './githubApp.js';
 
 /**
  * Handle GitHub App installation webhook
@@ -40,6 +41,21 @@ export async function handleInstallationWebhook(payload) {
           });
           console.log(`Added ${owner}/${repoName} via GitHub App`);
         }
+
+        // Create webhook for the repository
+        try {
+          await createWebhookApp(
+            installation.id,
+            owner,
+            repoName,
+            'https://www.worlddriven.org/github'
+          );
+        } catch (error) {
+          console.error(
+            `Failed to create webhook for ${owner}/${repoName}:`,
+            error.message
+          );
+        }
       }
     }
   } else if (action === 'deleted') {
@@ -50,6 +66,21 @@ export async function handleInstallationWebhook(payload) {
     // Disable repositories for this installation
     const repos = await Repository.findByInstallationId(installation.id);
     for (const repo of repos) {
+      // Delete webhook before disabling
+      try {
+        await deleteWebhookApp(
+          installation.id,
+          repo.owner,
+          repo.repo,
+          'https://www.worlddriven.org/github'
+        );
+      } catch (error) {
+        console.error(
+          `Failed to delete webhook for ${repo.owner}/${repo.repo}:`,
+          error.message
+        );
+      }
+
       await Repository.update(repo._id, {
         configured: false,
         installationId: null,
@@ -91,12 +122,42 @@ export async function handleInstallationRepositoriesWebhook(payload) {
         });
         console.log(`Added ${owner}/${repoName} to installation`);
       }
+
+      // Create webhook for the repository
+      try {
+        await createWebhookApp(
+          installation.id,
+          owner,
+          repoName,
+          'https://www.worlddriven.org/github'
+        );
+      } catch (error) {
+        console.error(
+          `Failed to create webhook for ${owner}/${repoName}:`,
+          error.message
+        );
+      }
     }
   } else if (action === 'removed') {
     for (const repo of repositories_removed) {
       const [owner, repoName] = repo.full_name.split('/');
       const existingRepo = await Repository.findByOwnerAndRepo(owner, repoName);
       if (existingRepo && existingRepo.installationId === installation.id) {
+        // Delete webhook before removing from installation
+        try {
+          await deleteWebhookApp(
+            installation.id,
+            owner,
+            repoName,
+            'https://www.worlddriven.org/github'
+          );
+        } catch (error) {
+          console.error(
+            `Failed to delete webhook for ${owner}/${repoName}:`,
+            error.message
+          );
+        }
+
         await Repository.update(existingRepo._id, {
           configured: false,
           installationId: null,
