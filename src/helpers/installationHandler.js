@@ -37,7 +37,6 @@ export async function handleInstallationWebhook(payload) {
             owner,
             repo: repoName,
             installationId: installation.id,
-            configured: true,
           });
           console.log(`Added ${owner}/${repoName} via GitHub App`);
         }
@@ -63,10 +62,10 @@ export async function handleInstallationWebhook(payload) {
       `GitHub App uninstalled by ${installation.account.login} (ID: ${installation.id})`
     );
 
-    // Disable repositories for this installation
+    // Delete repositories for this installation
     const repos = await Repository.findByInstallationId(installation.id);
     for (const repo of repos) {
-      // Delete webhook before disabling
+      // Delete webhook before removing repository
       try {
         await deleteWebhookApp(
           installation.id,
@@ -81,11 +80,8 @@ export async function handleInstallationWebhook(payload) {
         );
       }
 
-      await Repository.update(repo._id, {
-        configured: false,
-        installationId: null,
-      });
-      console.log(`Disabled ${repo.owner}/${repo.repo} (app uninstalled)`);
+      await Repository.delete(repo._id);
+      console.log(`Removed ${repo.owner}/${repo.repo} (app uninstalled)`);
     }
   }
 }
@@ -109,7 +105,6 @@ export async function handleInstallationRepositoriesWebhook(payload) {
         // Update existing repository to use GitHub App
         await Repository.update(existingRepo._id, {
           installationId: installation.id,
-          configured: true,
         });
         console.log(`Updated ${owner}/${repoName} to use GitHub App`);
       } else {
@@ -118,7 +113,6 @@ export async function handleInstallationRepositoriesWebhook(payload) {
           owner,
           repo: repoName,
           installationId: installation.id,
-          configured: true,
         });
         console.log(`Added ${owner}/${repoName} to installation`);
       }
@@ -158,10 +152,7 @@ export async function handleInstallationRepositoriesWebhook(payload) {
           );
         }
 
-        await Repository.update(existingRepo._id, {
-          configured: false,
-          installationId: null,
-        });
+        await Repository.delete(existingRepo._id);
         console.log(`Removed ${owner}/${repoName} from installation`);
       }
     }

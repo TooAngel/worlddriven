@@ -77,7 +77,6 @@ export const Repository = {
    * @param {object} repoData
    * @param {string} repoData.owner
    * @param {string} repoData.repo
-   * @param {boolean} repoData.configured
    * @param {number} [repoData.installationId] - GitHub App installation ID (required for repository operations)
    * @returns {Promise<import('./database.js').Repository>}
    */
@@ -110,14 +109,6 @@ export const Repository = {
    */
   async findByOwnerAndRepo(owner, repo) {
     return await database.repositories.findOne({ owner, repo });
-  },
-
-  /**
-   * Find all configured repositories
-   * @returns {Promise<import('./database.js').Repository[]>}
-   */
-  async findConfigured() {
-    return await database.repositories.find({ configured: true }).toArray();
   },
 
   /**

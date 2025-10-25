@@ -76,9 +76,9 @@ export async function processPullRequests() {
   };
 
   try {
-    const repositories = await Repository.findConfigured();
+    const repositories = await Repository.findAll();
 
-    console.log(`Found ${repositories.length} configured repositories`);
+    console.log(`Found ${repositories.length} repositories`);
 
     for (const repository of repositories) {
       const repoResult = {
@@ -248,8 +248,8 @@ export async function processRepositoryPullRequests(owner, repo) {
 
   const repository = await Repository.findByOwnerAndRepo(owner, repo);
 
-  if (!repository || !repository.configured) {
-    throw new Error(`Repository ${owner}/${repo} not found or not configured`);
+  if (!repository) {
+    throw new Error(`Repository ${owner}/${repo} not found`);
   }
 
   // Create Auth and GitHubClient for this repository
