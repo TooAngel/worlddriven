@@ -95,15 +95,15 @@ export async function handlePullRequestWebhook(data) {
     `Webhook: pull_request ${action} for ${repository.full_name}#${pullRequest.number}`
   );
 
-  // Find configured repository
+  // Find repository in database
   const [owner, repo] = repository.full_name.split('/');
   const dbRepository = await Repository.findByOwnerAndRepo(owner, repo);
 
-  if (!dbRepository || !dbRepository.configured) {
+  if (!dbRepository) {
     console.log(
-      `Repository ${repository.full_name} not configured, ignoring webhook`
+      `Repository ${repository.full_name} not found in database, ignoring webhook`
     );
-    return { info: 'Repository not configured' };
+    return { info: 'Repository not found in database' };
   }
 
   // Check for GitHub App installation
@@ -179,15 +179,15 @@ export async function handlePullRequestReviewWebhook(data) {
     `Webhook: pull_request_review ${review.state} for ${repository.full_name}#${pullRequest.number} by ${review.user.login}`
   );
 
-  // Find configured repository
+  // Find repository in database
   const [owner, repo] = repository.full_name.split('/');
   const dbRepository = await Repository.findByOwnerAndRepo(owner, repo);
 
-  if (!dbRepository || !dbRepository.configured) {
+  if (!dbRepository) {
     console.log(
-      `Repository ${repository.full_name} not configured, ignoring webhook`
+      `Repository ${repository.full_name} not found in database, ignoring webhook`
     );
-    return { info: 'Repository not configured' };
+    return { info: 'Repository not found in database' };
   }
 
   // Check for GitHub App installation
