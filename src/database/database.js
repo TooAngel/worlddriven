@@ -8,6 +8,7 @@ export const client = new MongoClient(url);
 /**
  * @typedef {object} User
  * @property {import("mongodb").ObjectId} [_id]
+ * @property {number} githubUserId - GitHub user ID (stable identifier)
  * @property {string} githubAccessToken
  * @property {Date} createdAt
  * @property {Date} updatedAt
