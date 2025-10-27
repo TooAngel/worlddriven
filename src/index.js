@@ -27,6 +27,7 @@ import {
   handleInstallationRepositoriesWebhook,
 } from './helpers/installationHandler.js';
 import { removePatAuthentication } from '../scripts/remove-pat-auth.js';
+import { removeConfiguredField } from '../scripts/remove-configured-field.js';
 
 const mongoSessionStore = MongoStore.create({
   clientPromise: client.connect(),
@@ -43,6 +44,16 @@ async function startServer() {
   } catch (error) {
     console.error(
       '[STARTUP] Failed to run PAT removal migration:',
+      error.message
+    );
+    // Continue anyway - migration failure shouldn't prevent app startup
+  }
+
+  try {
+    await removeConfiguredField();
+  } catch (error) {
+    console.error(
+      '[STARTUP] Failed to run configured field removal migration:',
       error.message
     );
     // Continue anyway - migration failure shouldn't prevent app startup
@@ -224,11 +235,9 @@ async function startServer() {
       const repositories = [];
       for (const repository of data) {
         const [owner, repo] = repository.full_name.split('/');
-        let configured = false;
+        // Repository is configured if it exists in database
         const dbRepository = await Repository.findByOwnerAndRepo(owner, repo);
-        if (dbRepository) {
-          configured = dbRepository.configured;
-        }
+        const configured = dbRepository !== null;
         repositories.push({
           fullName: repository.full_name,
           configured: configured,
@@ -272,21 +281,15 @@ async function startServer() {
     const checked = req.body.checked;
 
     try {
-      if (repository) {
-        // Update existing repository configuration
-        await Repository.update(repository._id, { configured: checked });
-      } else {
-        // Create new repository configuration
-        await Repository.create({
-          owner: req.params.owner,
-          repo: req.params.repo,
-          configured: checked,
-          userId: user._id,
-        });
-      }
-
-      // Create or delete webhook based on configuration
       if (checked) {
+        // Enable repository - create if doesn't exist
+        if (!repository) {
+          await Repository.create({
+            owner: req.params.owner,
+            repo: req.params.repo,
+            userId: user._id,
+          });
+        }
         console.log(
           `Creating webhook for ${req.params.owner}/${req.params.repo}`
         );
@@ -297,6 +300,10 @@ async function startServer() {
           webhookUrl
         );
       } else {
+        // Disable repository - delete from database
+        if (repository) {
+          await Repository.delete(repository._id);
+        }
         console.log(
           `Deleting webhook for ${req.params.owner}/${req.params.repo}`
         );
