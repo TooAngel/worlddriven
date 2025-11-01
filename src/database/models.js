@@ -7,6 +7,7 @@ export const User = {
   /**
    * Create a new user
    * @param {object} userData
+   * @param {number} userData.githubUserId - GitHub user ID (stable identifier)
    * @param {string} userData.githubAccessToken
    * @returns {Promise<import('./database.js').User>}
    */
@@ -37,6 +38,15 @@ export const User = {
    */
   async findByGithubToken(githubAccessToken) {
     return await database.users.findOne({ githubAccessToken });
+  },
+
+  /**
+   * Find user by GitHub user ID
+   * @param {number} githubUserId
+   * @returns {Promise<import('./database.js').User|null>}
+   */
+  async findByGithubUserId(githubUserId) {
+    return await database.users.findOne({ githubUserId });
   },
 
   /**

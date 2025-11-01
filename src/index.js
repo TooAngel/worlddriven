@@ -28,6 +28,7 @@ import {
 } from './helpers/installationHandler.js';
 import { removePatAuthentication } from '../scripts/remove-pat-auth.js';
 import { removeConfiguredField } from '../scripts/remove-configured-field.js';
+import { migrateDatabase as migrateUserGithubIds } from '../scripts/migrate-user-github-ids.js';
 
 const mongoSessionStore = MongoStore.create({
   clientPromise: client.connect(),
@@ -54,6 +55,16 @@ async function startServer() {
   } catch (error) {
     console.error(
       '[STARTUP] Failed to run configured field removal migration:',
+      error.message
+    );
+    // Continue anyway - migration failure shouldn't prevent app startup
+  }
+
+  try {
+    await migrateUserGithubIds();
+  } catch (error) {
+    console.error(
+      '[STARTUP] Failed to run user GitHub ID migration:',
       error.message
     );
     // Continue anyway - migration failure shouldn't prevent app startup
@@ -161,9 +172,40 @@ async function startServer() {
         return res.redirect('/');
       }
 
-      let user = await User.findByGithubToken(data.access_token);
-      if (!user) {
+      // Fetch GitHub user info to get the user ID
+      const githubUserResponse = await fetch('https://api.github.com/user', {
+        headers: {
+          Authorization: `Bearer ${data.access_token}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      });
+
+      if (!githubUserResponse.ok) {
+        console.error(
+          'Failed to fetch GitHub user info:',
+          githubUserResponse.status,
+          githubUserResponse.statusText
+        );
+        return res.redirect('/');
+      }
+
+      const githubUser = await githubUserResponse.json();
+      if (!githubUser.id) {
+        console.error('GitHub user response missing ID');
+        return res.redirect('/');
+      }
+
+      // Find user by GitHub user ID
+      let user = await User.findByGithubUserId(githubUser.id);
+      if (user) {
+        // Update existing user's access token
+        user = await User.update(user._id, {
+          githubAccessToken: data.access_token,
+        });
+      } else {
+        // Create new user with GitHub user ID and access token
         user = await User.create({
+          githubUserId: githubUser.id,
           githubAccessToken: data.access_token,
         });
       }
