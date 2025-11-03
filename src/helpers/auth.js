@@ -54,7 +54,7 @@ export class Auth {
         this.repo
       );
 
-      if (repository && repository.configured && repository.installationId) {
+      if (repository && repository.installationId) {
         this._methods.push({
           type: 'APP',
           installationId: repository.installationId,

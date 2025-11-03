@@ -2,87 +2,27 @@ import { test } from 'node:test';
 import assert from 'node:assert';
 import sinon from 'sinon';
 import './setup.js';
-
-// Mock the models by setting up stubs directly
-const mockUser = {
-  findById: sinon.stub(),
-};
-
-const mockRepository = {
-  findByOwnerAndRepo: sinon.stub(),
-};
-
-// We'll override the imports in the Auth module by mocking the module loading
-const originalImport = await import('../src/helpers/auth.js');
-
-// Create a test-specific Auth class that uses our mocks
-class TestAuth extends originalImport.Auth {
-  constructor(options) {
-    super(options);
-    // Override the models used by the Auth class
-    this._testRepository = mockRepository;
-  }
-
-  async getAllMethods() {
-    // Copy the original method but use our mocked models
-    if (this._methods) return this._methods;
-
-    this._methods = [];
-
-    // Priority 1: Repository GitHub App authentication
-    try {
-      const repository = await this._testRepository.findByOwnerAndRepo(
-        this.owner,
-        this.repo
-      );
-
-      if (repository && repository.configured && repository.installationId) {
-        this._methods.push({
-          type: 'APP',
-          installationId: repository.installationId,
-          priority: 1,
-          description: 'Repository GitHub App',
-        });
-      }
-    } catch (error) {
-      console.warn('Failed to load repository config:', error.message);
-    }
-
-    // Priority 2: Environment token fallback (if available)
-    if (process.env.GITHUB_FALLBACK_TOKEN) {
-      this._methods.push({
-        type: 'ENV',
-        token: process.env.GITHUB_FALLBACK_TOKEN,
-        priority: 2,
-        description: 'Environment fallback token',
-      });
-    }
-
-    // Sort by priority and return
-    this._methods.sort((a, b) => a.priority - b.priority);
-    return this._methods;
-  }
-}
+import { Repository } from '../src/database/models.js';
+import { Auth } from '../src/helpers/auth.js';
 
 test('Auth class', async t => {
+  let findByOwnerAndRepoStub;
+
   t.beforeEach(() => {
-    // Reset all stubs before each test
-    mockUser.findById.reset();
-    mockRepository.findByOwnerAndRepo.reset();
+    // Mock Repository.findByOwnerAndRepo at module level
+    findByOwnerAndRepoStub = sinon.stub(Repository, 'findByOwnerAndRepo');
 
     // Clear environment variable
     delete process.env.GITHUB_FALLBACK_TOKEN;
   });
 
-  t.after(() => {
-    // Clear any remaining timers or handles
-    if (global.gc) {
-      global.gc();
-    }
+  t.afterEach(() => {
+    // Restore original implementation
+    findByOwnerAndRepoStub.restore();
   });
 
   await t.test('should create auth with minimal parameters', async () => {
-    const auth = new TestAuth({ owner: 'test', repo: 'repo' });
+    const auth = new Auth({ owner: 'test', repo: 'repo' });
     assert.ok(auth);
     assert.strictEqual(auth.owner, 'test');
     assert.strictEqual(auth.repo, 'repo');
@@ -91,9 +31,9 @@ test('Auth class', async t => {
   await t.test(
     'should return empty methods when no auth available',
     async () => {
-      mockRepository.findByOwnerAndRepo.resolves(null);
+      findByOwnerAndRepoStub.resolves(null);
 
-      const auth = new TestAuth({ owner: 'test', repo: 'repo' });
+      const auth = new Auth({ owner: 'test', repo: 'repo' });
       const methods = await auth.getAllMethods();
 
       assert.strictEqual(methods.length, 0);
@@ -102,13 +42,15 @@ test('Auth class', async t => {
   );
 
   await t.test('should prioritize GitHub App when available', async () => {
+    // Mock repository WITHOUT 'configured' field (matches actual schema after PR #306)
     const mockRepo = {
-      configured: true,
+      owner: 'test',
+      repo: 'repo',
       installationId: 12345,
     };
-    mockRepository.findByOwnerAndRepo.resolves(mockRepo);
+    findByOwnerAndRepoStub.resolves(mockRepo);
 
-    const auth = new TestAuth({ owner: 'test', repo: 'repo' });
+    const auth = new Auth({ owner: 'test', repo: 'repo' });
     const methods = await auth.getAllMethods();
 
     assert.strictEqual(methods.length, 1);
@@ -119,14 +61,16 @@ test('Auth class', async t => {
   });
 
   await t.test('should use both GitHub App and fallback token', async () => {
+    // Mock repository WITHOUT 'configured' field
     const mockRepo = {
-      configured: true,
+      owner: 'test',
+      repo: 'repo',
       installationId: 12345,
     };
-    mockRepository.findByOwnerAndRepo.resolves(mockRepo);
+    findByOwnerAndRepoStub.resolves(mockRepo);
     process.env.GITHUB_FALLBACK_TOKEN = 'env-token';
 
-    const auth = new TestAuth({ owner: 'test', repo: 'repo' });
+    const auth = new Auth({ owner: 'test', repo: 'repo' });
     const methods = await auth.getAllMethods();
 
     assert.strictEqual(methods.length, 2);
@@ -138,9 +82,9 @@ test('Auth class', async t => {
 
   await t.test('should add environment token when available', async () => {
     process.env.GITHUB_FALLBACK_TOKEN = 'env-token';
-    mockRepository.findByOwnerAndRepo.resolves(null);
+    findByOwnerAndRepoStub.resolves(null);
 
-    const auth = new TestAuth({ owner: 'test', repo: 'repo' });
+    const auth = new Auth({ owner: 'test', repo: 'repo' });
     const methods = await auth.getAllMethods();
 
     assert.strictEqual(methods.length, 1);
@@ -151,14 +95,16 @@ test('Auth class', async t => {
   });
 
   await t.test('should provide auth strategy description', async () => {
+    // Mock repository WITHOUT 'configured' field
     const mockRepo = {
-      configured: true,
+      owner: 'test',
+      repo: 'repo',
       installationId: 12345,
     };
-    mockRepository.findByOwnerAndRepo.resolves(mockRepo);
+    findByOwnerAndRepoStub.resolves(mockRepo);
     process.env.GITHUB_FALLBACK_TOKEN = 'env-token';
 
-    const auth = new TestAuth({ owner: 'test', repo: 'repo' });
+    const auth = new Auth({ owner: 'test', repo: 'repo' });
     const strategy = await auth.getAuthStrategy();
 
     assert.ok(strategy.includes('Auth strategy (with fallbacks)'));
@@ -167,13 +113,15 @@ test('Auth class', async t => {
   });
 
   await t.test('should cache methods on repeated calls', async () => {
+    // Mock repository WITHOUT 'configured' field
     const mockRepo = {
-      configured: true,
+      owner: 'test',
+      repo: 'repo',
       installationId: 12345,
     };
-    mockRepository.findByOwnerAndRepo.resolves(mockRepo);
+    findByOwnerAndRepoStub.resolves(mockRepo);
 
-    const auth = new TestAuth({ owner: 'test', repo: 'repo' });
+    const auth = new Auth({ owner: 'test', repo: 'repo' });
 
     // First call
     const methods1 = await auth.getAllMethods();
@@ -181,6 +129,47 @@ test('Auth class', async t => {
     const methods2 = await auth.getAllMethods();
 
     assert.strictEqual(methods1, methods2); // Same reference
-    assert.strictEqual(mockRepository.findByOwnerAndRepo.callCount, 1); // Only called once
+    assert.strictEqual(findByOwnerAndRepoStub.callCount, 1); // Only called once
   });
+
+  await t.test('should handle repository without installationId', async () => {
+    // Repository exists but has no installationId
+    const mockRepo = {
+      owner: 'test',
+      repo: 'repo',
+      // No installationId
+    };
+    findByOwnerAndRepoStub.resolves(mockRepo);
+
+    const auth = new Auth({ owner: 'test', repo: 'repo' });
+    const methods = await auth.getAllMethods();
+
+    // Should have no GitHub App method
+    assert.strictEqual(methods.length, 0);
+    assert.strictEqual(await auth.hasValidAuth(), false);
+  });
+
+  await t.test(
+    'REGRESSION: should work with installationId but no configured field',
+    async () => {
+      // This is the exact scenario that caused the bug:
+      // After PR #306, 'configured' field was removed from schema
+      // Auth class was still checking for it, causing all repos to fail
+      const mockRepo = {
+        owner: 'test',
+        repo: 'repo',
+        installationId: 12345,
+        // NOTE: No 'configured' field - this matches the actual schema
+      };
+      findByOwnerAndRepoStub.resolves(mockRepo);
+
+      const auth = new Auth({ owner: 'test', repo: 'repo' });
+      const methods = await auth.getAllMethods();
+
+      // Should work correctly - the fix removed the configured check
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].type, 'APP');
+      assert.strictEqual(methods[0].installationId, 12345);
+    }
+  );
 });
