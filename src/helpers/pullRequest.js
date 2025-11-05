@@ -128,7 +128,7 @@ function processReviews(contributors, reviews, pull) {
 }
 
 /**
- * Calculate time-based metrics for pull request merging
+ * Calculate time-based metrics for pull request merging or closing
  *
  * @param {Array} contributors - Array of contributor objects
  * @param {object} dates - Date metrics object
@@ -140,32 +140,57 @@ function processReviews(contributors, reviews, pull) {
 function calculateTimeMetrics(contributors, dates, pull, coefficient, config) {
   const age = (new Date().getTime() - dates.max) / 1000;
 
-  const totalMergeTime =
-    (config.baseMergeTimeInHours / 24 +
-      (pull.commits * config.perCommitTimeInHours) / 24) *
-    24 *
-    60 *
-    60;
-
-  const mergeDuration = (1 - coefficient) * totalMergeTime;
-  const daysToMerge = mergeDuration - age;
-
-  // Calculate individual contributor time values
+  // Calculate individual contributor time values (for merge path)
   const votesTotal = contributors.reduce((total, current) => {
     return total + current.commits;
   }, 0);
 
-  for (const contributor of contributors) {
-    contributor.timeValue = (contributor.commits / votesTotal) * totalMergeTime;
-  }
+  if (coefficient >= 0) {
+    // MERGE PATH: Positive or neutral coefficient
+    const totalMergeTime =
+      (config.baseMergeTimeInHours / 24 +
+        (pull.commits * config.perCommitTimeInHours) / 24) *
+      24 *
+      60 *
+      60;
 
-  return {
-    age,
-    daysToMerge,
-    mergeDuration,
-    totalMergeTime,
-    mergeDate: (new Date(dates.max).getTime() + mergeDuration * 1000) / 1000,
-  };
+    const mergeDuration = (1 - coefficient) * totalMergeTime;
+    const daysToMerge = mergeDuration - age;
+
+    for (const contributor of contributors) {
+      contributor.timeValue =
+        (contributor.commits / votesTotal) * totalMergeTime;
+    }
+
+    return {
+      action: 'merge',
+      age,
+      daysToMerge,
+      mergeDuration,
+      totalMergeTime,
+      mergeDate: (new Date(dates.max).getTime() + mergeDuration * 1000) / 1000,
+    };
+  } else {
+    // CLOSE PATH: Negative coefficient
+    const totalCloseTime = (config.baseCloseTimeInHours / 24) * 24 * 60 * 60;
+
+    const closeDuration = (1 + coefficient) * totalCloseTime;
+    const daysToClose = closeDuration - age;
+
+    // Set contributor time values to 0 for close path (not applicable)
+    for (const contributor of contributors) {
+      contributor.timeValue = 0;
+    }
+
+    return {
+      action: 'close',
+      age,
+      daysToClose,
+      closeDuration,
+      totalCloseTime,
+      closeDate: (new Date(dates.max).getTime() + closeDuration * 1000) / 1000,
+    };
+  }
 }
 
 /**
@@ -231,12 +256,7 @@ export async function getPullRequestData(githubClient, owner, repo, number) {
       coefficient: coefficient,
     },
     dates: dates,
-    times: {
-      daysToMerge: timeMetrics.daysToMerge,
-      mergeDuration: timeMetrics.mergeDuration,
-      totalMergeTime: timeMetrics.totalMergeTime,
-      mergeDate: timeMetrics.mergeDate,
-    },
+    times: timeMetrics,
   };
 
   return pullRequestData;

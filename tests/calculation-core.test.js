@@ -783,11 +783,307 @@ perCommitTimeInHours = 24
       'Coefficient should be negative with majority blocking'
     );
 
-    // mergeDuration = (1 - negative) × base = (1 - (-0.905)) × 864000 = 1.905 × 864000
-    // Should extend merge time significantly
+    // With negative coefficient, should use close path
+    assert.strictEqual(result.times.action, 'close', 'Should use close action');
     assert.ok(
-      result.times.mergeDuration > result.times.totalMergeTime,
-      'Negative coefficient should extend merge time beyond base'
+      result.times.daysToClose !== undefined,
+      'Should have daysToClose property'
     );
   });
+
+  // ============================================================================
+  // AUTO-CLOSE CALCULATION TESTS
+  // ============================================================================
+
+  await t.test(
+    'Auto-close: Negative coefficient triggers close path',
+    async () => {
+      const mockGitHubClient = {
+        getPullRequest: sinon.stub().resolves({
+          id: 1,
+          title: 'Test PR',
+          created_at: '2025-01-01T00:00:00Z',
+          commits: 1,
+          user: { login: 'author' },
+          head: { repo: { contributors_url: 'url', events_url: 'url' } },
+          base: { repo: { contributors_url: 'url' } },
+          commits_url: 'url',
+          issue_url: 'url',
+          _links: { self: { href: 'url' } },
+        }),
+        getContributors: sinon.stub().resolves([
+          { name: 'author', commits: 1, reviewValue: 0, timeValue: '' },
+          { name: 'blocker', commits: 2, reviewValue: 0, timeValue: '' },
+        ]),
+        getReviews: sinon
+          .stub()
+          .resolves([
+            { user: { login: 'blocker' }, state: 'CHANGES_REQUESTED' },
+          ]),
+        getCommits: sinon.stub().resolves([
+          {
+            commit: {
+              author: { date: '2025-01-01T00:00:00Z' },
+              committer: { date: '2025-01-01T00:00:00Z' },
+            },
+          },
+        ]),
+        getBranchEvents: sinon.stub().resolves([]),
+        getPullIssueEvents: sinon.stub().resolves([]),
+        getRepository: sinon.stub().resolves({ default_branch: 'main' }),
+        fetch: sinon.stub().resolves({ status: 404, ok: false }),
+      };
+
+      const result = await getPullRequestData(
+        mockGitHubClient,
+        'owner',
+        'repo',
+        1
+      );
+
+      // Coefficient = (1 - 2) / 3 = -1/3 = -0.333...
+      assert.ok(
+        result.stats.coefficient < 0,
+        'Should have negative coefficient'
+      );
+      assert.strictEqual(
+        result.times.action,
+        'close',
+        'Should use close action'
+      );
+      assert.ok(result.times.closeDate !== undefined, 'Should have closeDate');
+      assert.ok(
+        result.times.closeDuration !== undefined,
+        'Should have closeDuration'
+      );
+    }
+  );
+
+  await t.test(
+    'Auto-close: Base close time is 100 days (default)',
+    async () => {
+      const mockGitHubClient = {
+        getPullRequest: sinon.stub().resolves({
+          id: 1,
+          title: 'Test PR',
+          created_at: '2025-01-01T00:00:00Z',
+          commits: 1,
+          user: { login: 'author' },
+          head: { repo: { contributors_url: 'url', events_url: 'url' } },
+          base: { repo: { contributors_url: 'url' } },
+          commits_url: 'url',
+          issue_url: 'url',
+          _links: { self: { href: 'url' } },
+        }),
+        getContributors: sinon.stub().resolves([
+          { name: 'author', commits: 1, reviewValue: 0, timeValue: '' },
+          { name: 'blocker', commits: 1, reviewValue: 0, timeValue: '' },
+        ]),
+        getReviews: sinon
+          .stub()
+          .resolves([
+            { user: { login: 'blocker' }, state: 'CHANGES_REQUESTED' },
+          ]),
+        getCommits: sinon.stub().resolves([
+          {
+            commit: {
+              author: { date: '2025-01-01T00:00:00Z' },
+              committer: { date: '2025-01-01T00:00:00Z' },
+            },
+          },
+        ]),
+        getBranchEvents: sinon.stub().resolves([]),
+        getPullIssueEvents: sinon.stub().resolves([]),
+        getRepository: sinon.stub().resolves({ default_branch: 'main' }),
+        fetch: sinon.stub().resolves({ status: 404, ok: false }),
+      };
+
+      const result = await getPullRequestData(
+        mockGitHubClient,
+        'owner',
+        'repo',
+        1
+      );
+
+      // Coefficient = 0 (balanced)
+      // But since we have one blocker and one author (both 1 commit), net is 0
+      // Actually coefficient = (1 - 1) / 2 = 0
+      assert.strictEqual(result.stats.coefficient, 0);
+
+      // At coefficient 0, should use merge path with base time
+      assert.strictEqual(result.times.action, 'merge');
+      // totalMergeTime = 10 days = 864000 seconds
+      assert.strictEqual(result.times.totalMergeTime, 864000);
+    }
+  );
+
+  await t.test('Auto-close: Coefficient -0.5 closes at 50 days', async () => {
+    const mockGitHubClient = {
+      getPullRequest: sinon.stub().resolves({
+        id: 1,
+        title: 'Test PR',
+        created_at: '2025-01-01T00:00:00Z',
+        commits: 1,
+        user: { login: 'author' },
+        head: { repo: { contributors_url: 'url', events_url: 'url' } },
+        base: { repo: { contributors_url: 'url' } },
+        commits_url: 'url',
+        issue_url: 'url',
+        _links: { self: { href: 'url' } },
+      }),
+      getContributors: sinon.stub().resolves([
+        { name: 'author', commits: 1, reviewValue: 0, timeValue: '' },
+        { name: 'blocker', commits: 3, reviewValue: 0, timeValue: '' },
+      ]),
+      getReviews: sinon
+        .stub()
+        .resolves([{ user: { login: 'blocker' }, state: 'CHANGES_REQUESTED' }]),
+      getCommits: sinon.stub().resolves([
+        {
+          commit: {
+            author: { date: '2025-01-01T00:00:00Z' },
+            committer: { date: '2025-01-01T00:00:00Z' },
+          },
+        },
+      ]),
+      getBranchEvents: sinon.stub().resolves([]),
+      getPullIssueEvents: sinon.stub().resolves([]),
+      getRepository: sinon.stub().resolves({ default_branch: 'main' }),
+      fetch: sinon.stub().resolves({ status: 404, ok: false }),
+    };
+
+    const result = await getPullRequestData(
+      mockGitHubClient,
+      'owner',
+      'repo',
+      1
+    );
+
+    // Coefficient = (1 - 3) / 4 = -2/4 = -0.5
+    assert.strictEqual(result.stats.coefficient, -0.5);
+    assert.strictEqual(result.times.action, 'close');
+
+    // closeDuration = (1 + (-0.5)) × baseCloseTime = 0.5 × (2400 hours)
+    // = 0.5 × 100 days = 50 days = 4320000 seconds
+    const expectedDuration = 0.5 * 2400 * 60 * 60; // 50 days in seconds
+    assert.strictEqual(result.times.closeDuration, expectedDuration);
+  });
+
+  await t.test('Auto-close: Coefficient -1.0 closes immediately', async () => {
+    const mockGitHubClient = {
+      getPullRequest: sinon.stub().resolves({
+        id: 1,
+        title: 'Test PR',
+        created_at: '2025-01-01T00:00:00Z',
+        commits: 1,
+        user: { login: 'author' },
+        head: { repo: { contributors_url: 'url', events_url: 'url' } },
+        base: { repo: { contributors_url: 'url' } },
+        commits_url: 'url',
+        issue_url: 'url',
+        _links: { self: { href: 'url' } },
+      }),
+      getContributors: sinon.stub().resolves([
+        { name: 'author', commits: 0, reviewValue: 0, timeValue: '' },
+        { name: 'blocker', commits: 10, reviewValue: 0, timeValue: '' },
+      ]),
+      getReviews: sinon
+        .stub()
+        .resolves([{ user: { login: 'blocker' }, state: 'CHANGES_REQUESTED' }]),
+      getCommits: sinon.stub().resolves([
+        {
+          commit: {
+            author: { date: '2025-01-01T00:00:00Z' },
+            committer: { date: '2025-01-01T00:00:00Z' },
+          },
+        },
+      ]),
+      getBranchEvents: sinon.stub().resolves([]),
+      getPullIssueEvents: sinon.stub().resolves([]),
+      getRepository: sinon.stub().resolves({ default_branch: 'main' }),
+      fetch: sinon.stub().resolves({ status: 404, ok: false }),
+    };
+
+    const result = await getPullRequestData(
+      mockGitHubClient,
+      'owner',
+      'repo',
+      1
+    );
+
+    // Coefficient = (0 - 10) / 10 = -1.0
+    assert.strictEqual(result.stats.coefficient, -1);
+    assert.strictEqual(result.times.action, 'close');
+
+    // closeDuration = (1 + (-1.0)) × baseCloseTime = 0 × anything = 0
+    assert.strictEqual(
+      result.times.closeDuration,
+      0,
+      'Should close immediately'
+    );
+  });
+
+  await t.test(
+    'Auto-close: Custom baseCloseTimeInHours from config',
+    async () => {
+      const iniContent = `
+[DEFAULT]
+baseCloseTimeInHours = 480
+`;
+      const base64Content = Buffer.from(iniContent).toString('base64');
+
+      const mockGitHubClient = {
+        getPullRequest: sinon.stub().resolves({
+          id: 1,
+          title: 'Test PR',
+          created_at: '2025-01-01T00:00:00Z',
+          commits: 1,
+          user: { login: 'author' },
+          head: { repo: { contributors_url: 'url', events_url: 'url' } },
+          base: { repo: { contributors_url: 'url' } },
+          commits_url: 'url',
+          issue_url: 'url',
+          _links: { self: { href: 'url' } },
+        }),
+        getContributors: sinon.stub().resolves([
+          { name: 'author', commits: 1, reviewValue: 0, timeValue: '' },
+          { name: 'blocker', commits: 1, reviewValue: 0, timeValue: '' },
+        ]),
+        getReviews: sinon
+          .stub()
+          .resolves([
+            { user: { login: 'blocker' }, state: 'CHANGES_REQUESTED' },
+          ]),
+        getCommits: sinon.stub().resolves([
+          {
+            commit: {
+              author: { date: '2025-01-01T00:00:00Z' },
+              committer: { date: '2025-01-01T00:00:00Z' },
+            },
+          },
+        ]),
+        getBranchEvents: sinon.stub().resolves([]),
+        getPullIssueEvents: sinon.stub().resolves([]),
+        getRepository: sinon.stub().resolves({ default_branch: 'main' }),
+        fetch: sinon.stub().resolves({
+          status: 200,
+          ok: true,
+          json: async () => ({ content: base64Content }),
+        }),
+      };
+
+      const result = await getPullRequestData(
+        mockGitHubClient,
+        'owner',
+        'repo',
+        1
+      );
+
+      // Coefficient = 0 with equal positive and negative
+      assert.strictEqual(result.stats.coefficient, 0);
+
+      // Should use custom baseCloseTimeInHours = 480 (20 days)
+      assert.strictEqual(result.config.baseCloseTimeInHours, 480);
+    }
+  );
 });

@@ -58,6 +58,7 @@ export function parseIniFile(content) {
 export async function fetchRepositoryConfig(githubClient, owner, repo) {
   const defaultConfig = {
     baseMergeTimeInHours: 240,
+    baseCloseTimeInHours: 2400,
     perCommitTimeInHours: 0,
     merge_method: 'squash',
   };
@@ -118,6 +119,13 @@ export async function fetchRepositoryConfig(githubClient, owner, repo) {
       const value = parseFloat(defaultSection.perCommitTimeInHours);
       if (!isNaN(value) && value >= 0) {
         config.perCommitTimeInHours = value;
+      }
+    }
+
+    if (defaultSection.baseCloseTimeInHours) {
+      const value = parseFloat(defaultSection.baseCloseTimeInHours);
+      if (!isNaN(value) && value >= 0) {
+        config.baseCloseTimeInHours = value;
       }
     }
 

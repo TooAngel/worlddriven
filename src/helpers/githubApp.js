@@ -59,6 +59,24 @@ export async function mergePullRequestApp(
   }
 }
 
+export async function closePullRequestApp(installationId, owner, repo, number) {
+  const octokit = await getInstallationOctokit(installationId);
+  try {
+    return await octokit.rest.pulls.update({
+      owner,
+      repo,
+      pull_number: number,
+      state: 'closed',
+    });
+  } catch (error) {
+    console.error(
+      `Failed to close PR ${owner}/${repo}#${number}:`,
+      error.message
+    );
+    throw error;
+  }
+}
+
 export async function setCommitStatusApp(
   installationId,
   owner,
