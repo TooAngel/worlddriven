@@ -1,6 +1,7 @@
 import { getPullRequestData } from './pullRequest.js';
 import {
   mergePullRequest,
+  closePullRequest,
   setCommitStatus,
   getLatestCommitSha,
 } from './github.js';
@@ -31,13 +32,14 @@ async function setPullRequestStatus(
 
     let state, description;
 
-    if (coefficient >= 0) {
+    if (pullRequestData.times.action === 'merge') {
       const mergeDate = new Date(pullRequestData.times.mergeDate * 1000);
       state = 'success';
       description = `${coefficient.toFixed(2)} Merge at ${mergeDate.toISOString().split('T')[0]}`;
-    } else {
+    } else if (pullRequestData.times.action === 'close') {
+      const closeDate = new Date(pullRequestData.times.closeDate * 1000);
       state = 'error';
-      description = `${coefficient.toFixed(2)} Will not merge`;
+      description = `${coefficient.toFixed(2)} Close at ${closeDate.toISOString().split('T')[0]}`;
     }
 
     await setCommitStatus(
@@ -140,8 +142,14 @@ export async function processPullRequests() {
               pullRequest.number
             );
 
-            prResult.daysToMerge = pullRequestData.times.daysToMerge;
-            console.log(`Days to merge: ${pullRequestData.times.daysToMerge}`);
+            prResult.daysToMerge = pullRequestData.times.daysToMerge || null;
+            prResult.daysToClose = pullRequestData.times.daysToClose || null;
+            const actionDays =
+              pullRequestData.times.daysToMerge ||
+              pullRequestData.times.daysToClose;
+            console.log(
+              `Days to ${pullRequestData.times.action}: ${actionDays}`
+            );
 
             // Set GitHub status for this pull request
             await setPullRequestStatus(
@@ -152,7 +160,10 @@ export async function processPullRequests() {
               pullRequestData
             );
 
-            if (pullRequestData.times.daysToMerge < 0) {
+            if (
+              pullRequestData.times.action === 'merge' &&
+              pullRequestData.times.daysToMerge < 0
+            ) {
               console.log(
                 `⚡ Merging ${repository.owner}/${repository.repo} - ${pullRequestData.title} using ${pullRequestData.config.merge_method} method`
               );
@@ -181,15 +192,47 @@ export async function processPullRequests() {
                 console.log('❌ Cannot merge PR');
                 prResult.action = 'merge_failed';
               }
-            } else {
-              const daysRemaining = Math.ceil(
-                pullRequestData.times.daysToMerge / 86400
-              );
+            } else if (
+              pullRequestData.times.action === 'close' &&
+              pullRequestData.times.daysToClose < 0
+            ) {
               console.log(
-                `⏳ PR not ready for merge (${daysRemaining} days remaining)`
+                `🗑️  Closing ${repository.owner}/${repository.repo} - ${pullRequestData.title} due to negative feedback`
               );
 
-              // Update comment to refresh merge countdown without adding activity log entry
+              const closeResponse = await closePullRequest(
+                authMethod,
+                repository.owner,
+                repository.repo,
+                pullRequest.number
+              );
+
+              if (closeResponse) {
+                await updateOrCreateWorlddrivenComment(
+                  authMethod,
+                  repository.owner,
+                  repository.repo,
+                  pullRequest.number,
+                  pullRequestData,
+                  'Pull request closed by worlddriven ❌'
+                );
+                console.log('✅ Closed successfully');
+                prResult.action = 'closed';
+              } else {
+                console.log('❌ Cannot close PR');
+                prResult.action = 'close_failed';
+              }
+            } else {
+              const daysRemaining = Math.ceil(
+                (pullRequestData.times.daysToMerge ||
+                  pullRequestData.times.daysToClose) / 86400
+              );
+              const action = pullRequestData.times.action;
+              console.log(
+                `⏳ PR not ready for ${action} (${daysRemaining} days remaining)`
+              );
+
+              // Update comment to refresh countdown without adding activity log entry
               await updateOrCreateWorlddrivenComment(
                 authMethod,
                 repository.owner,

@@ -2,6 +2,7 @@
 import {
   getPullRequestsApp,
   mergePullRequestApp,
+  closePullRequestApp,
   setCommitStatusApp,
   getLatestCommitShaApp,
   createIssueCommentApp,
@@ -116,6 +117,62 @@ export async function mergePullRequest(
     if (response.status === 405) {
       return;
     }
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response;
+  } catch (e) {
+    console.log(e);
+    return;
+  }
+}
+
+/**
+ * closePullRequest - Hybrid authentication (GitHub App or PAT)
+ *
+ * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number
+ * @param {string} owner
+ * @param {string} repo
+ * @param {number} number
+ * @return {void}
+ */
+export async function closePullRequest(
+  userOrInstallationId,
+  owner,
+  repo,
+  number
+) {
+  // If it's a number, treat as installationId (GitHub App)
+  if (
+    typeof userOrInstallationId === 'number' ||
+    (typeof userOrInstallationId === 'string' && !isNaN(userOrInstallationId))
+  ) {
+    return await closePullRequestApp(
+      parseInt(userOrInstallationId),
+      owner,
+      repo,
+      number
+    );
+  }
+
+  // Otherwise, use existing PAT logic
+  const user = userOrInstallationId;
+  const url = `https://api.github.com/repos/${owner}/${repo}/pulls/${number}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `token ${user.githubAccessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        state: 'closed',
+      }),
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
