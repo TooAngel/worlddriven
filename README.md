@@ -1,6 +1,6 @@
 # Worlddriven Core
 
-[![CircleCI](https://circleci.com/gh/TooAngel/worlddriven.svg?style=svg)](https://circleci.com/gh/TooAngel/worlddriven)
+[![CI](https://github.com/TooAngel/worlddriven/actions/workflows/ci.yml/badge.svg)](https://github.com/TooAngel/worlddriven/actions/workflows/ci.yml)
 [![Discord](https://img.shields.io/discord/496780499059572756?logo=discord&logoColor=white&label=Discord&color=7289da)](https://discord.gg/RrGFHKb)
 [![Code Climate Maintainability](https://api.codeclimate.com/v1/badges/ec4136b6d2eeff72f192/maintainability)](https://codeclimate.com/github/TooAngel/worlddriven/maintainability)
 
