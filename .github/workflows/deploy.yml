@@ -15,7 +15,7 @@ jobs:
           echo "Triggering deployment for commit ${{ github.sha }}"
 
           response=$(curl -s -w "%{http_code}" -o response.json \
-            -X POST https://sumalyze.tooangel.com/deploy/worlddriven \
+            -X POST https://server.tooangel.com/deploy/worlddriven-core \
             -H "Authorization: Bearer ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
             -H "Content-Type: application/json" \
             -d '{
