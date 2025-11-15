@@ -2,6 +2,8 @@ import { getPullRequestData } from './pullRequest.js';
 import { setCommitStatus, getLatestCommitSha } from './github.js';
 import { updateOrCreateWorlddrivenComment } from './commentManager.js';
 import { Repository } from '../database/models.js';
+import { Auth } from './auth.js';
+import { GitHubClient } from './github-client.js';
 
 /**
  * Set GitHub status for a pull request
@@ -68,8 +70,12 @@ async function setPullRequestStatus(
 async function processPullRequest(installationId, owner, repo, pullNumber) {
   console.log(`Processing PR ${owner}/${repo}#${pullNumber} from webhook`);
 
+  // Create Auth and GitHubClient for this repository
+  const auth = new Auth({ owner, repo });
+  const githubClient = new GitHubClient(auth);
+
   const pullRequestData = await getPullRequestData(
-    installationId,
+    githubClient,
     owner,
     repo,
     pullNumber
