@@ -29,6 +29,7 @@ import {
 import { removePatAuthentication } from '../scripts/remove-pat-auth.js';
 import { removeConfiguredField } from '../scripts/remove-configured-field.js';
 import { migrateDatabase as migrateUserGithubIds } from '../scripts/migrate-user-github-ids.js';
+import { sessionAuthMiddleware } from './middleware/sessionAuth.js';
 
 const mongoSessionStore = MongoStore.create({
   clientPromise: client.connect(),
@@ -103,6 +104,9 @@ async function startServer() {
 
   app.use(express.json());
   app.use(session(sess));
+
+  // Session authentication middleware (supports both cookies and Authorization header)
+  app.use(sessionAuthMiddleware);
 
   // Static file serving
   app.use(express.static('./static'));
@@ -215,6 +219,54 @@ async function startServer() {
       console.error('GitHub OAuth error:', e);
       res.redirect('/');
     }
+  });
+
+  // API Authentication endpoints (for webapp compatibility)
+  app.get('/api/auth/status', async function (req, res) {
+    if (!req.session.userId) {
+      return res.status(401).json({ authenticated: false });
+    }
+
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.status(401).json({ authenticated: false });
+    }
+
+    try {
+      const response = await fetch('https://api.github.com/user', {
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+          Authorization: `token ${user.githubAccessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const userData = await response.json();
+      res.json({
+        authenticated: true,
+        user: {
+          name: userData.name,
+          login: userData.login,
+          avatarUrl: userData.avatar_url,
+        },
+      });
+    } catch (e) {
+      console.error('Failed to fetch user data:', e);
+      res.status(503).json({ error: 'Failed to fetch user data' });
+    }
+  });
+
+  app.post('/api/auth/logout', function (req, res) {
+    req.session.destroy(err => {
+      if (err) {
+        console.error('Session destruction error:', err);
+        return res.status(500).json({ error: 'Failed to logout' });
+      }
+      res.json({ success: true });
+    });
   });
 
   app.get('/v1/user', async function (req, res) {
