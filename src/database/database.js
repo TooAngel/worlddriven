@@ -27,9 +27,17 @@ export const client = new MongoClient(url);
  */
 
 /**
+ * @typedef {object} Session
+ * @property {string} _id - Session ID (prefixed with "sess:")
+ * @property {string | object} session - Session data (JSON string or object)
+ * @property {Date} expires - Session expiration date
+ */
+
+/**
  * @typedef {object} DatabaseConnection
  * @property {mongo.Collection<User>} users
  * @property {mongo.Collection<Repository>} repositories
+ * @property {mongo.Collection<Session>} sessions
  */
 
 /**
@@ -72,6 +80,13 @@ class Database {
    */
   get repositories() {
     return this.getCollection('repositories');
+  }
+
+  /**
+   * @return {mongo.Collection<Session>}
+   */
+  get sessions() {
+    return this.getCollection('sessions');
   }
 }
 
