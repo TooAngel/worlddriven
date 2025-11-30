@@ -137,8 +137,16 @@ async function startServer() {
   });
 
   app.get('/login', function (req, res) {
+    // Store redirect URL for webapp integration (redirect back after OAuth)
+    if (req.query.redirect) {
+      req.session.authRedirect = req.query.redirect;
+    }
+
     if (req.session.userId) {
-      res.redirect('/dashboard');
+      // Already logged in - redirect to stored URL or dashboard
+      const redirectUrl = req.session.authRedirect || '/dashboard';
+      delete req.session.authRedirect;
+      res.redirect(redirectUrl);
     } else {
       // TODO use `code`, too (https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps)
       const redirectUri = isProduction
@@ -214,14 +222,36 @@ async function startServer() {
         });
       }
       req.session.userId = user._id.toString();
-      res.redirect('/dashboard');
+
+      // Redirect to stored URL (webapp) or default to dashboard
+      const redirectUrl = req.session.authRedirect || '/dashboard';
+      delete req.session.authRedirect;
+      res.redirect(redirectUrl);
     } catch (e) {
       console.error('GitHub OAuth error:', e);
-      res.redirect('/');
+      // On error, redirect to stored error URL or home
+      const errorRedirect = req.session.authRedirect
+        ? `${req.session.authRedirect}?error=oauth_failed`
+        : '/';
+      delete req.session.authRedirect;
+      res.redirect(errorRedirect);
     }
   });
 
-  // API Authentication endpoints (for webapp compatibility)
+  // ============================================================================
+  // API Authentication Endpoints
+  // ============================================================================
+  // Webapp Integration Pattern:
+  // 1. Webapp redirects browser to /login?redirect=<webapp-callback-url>
+  // 2. OAuth flow completes, user redirected back to webapp callback
+  // 3. Webapp calls GET /api/auth/session to get sessionId
+  // 4. Webapp sets sessionId as httpOnly cookie
+  // 5. Subsequent requests: proxy converts cookie to SESSION header
+  //
+  // Deprecated endpoints (remove after webapp migration complete):
+  // - POST /api/auth/logout -> use GET /user/logout or GET /api/user/logout
+  // ============================================================================
+
   app.get('/api/auth/status', async function (req, res) {
     if (!req.session.userId) {
       return res.status(401).json({ authenticated: false });
@@ -259,6 +289,7 @@ async function startServer() {
     }
   });
 
+  // @deprecated - Use GET /api/user/logout instead (webapp uses this)
   app.post('/api/auth/logout', function (req, res) {
     req.session.destroy(err => {
       if (err) {
@@ -266,6 +297,33 @@ async function startServer() {
         return res.status(500).json({ error: 'Failed to logout' });
       }
       res.json({ success: true });
+    });
+  });
+
+  // Logout endpoints for webapp compatibility
+  // Webapp proxy intercepts /user/logout to clear httpOnly cookie
+  const logoutHandler = function (req, res) {
+    req.session.destroy(err => {
+      if (err) {
+        console.error('Session destruction error:', err);
+        return res.status(500).json({ error: 'Failed to logout' });
+      }
+      res.json({ success: true });
+    });
+  };
+  app.get('/user/logout', logoutHandler);
+  app.get('/api/user/logout', logoutHandler);
+
+  // Session endpoint for webapp - returns sessionId for httpOnly cookie setup
+  // Used after OAuth callback redirects back to webapp
+  app.get('/api/auth/session', function (req, res) {
+    if (!req.session.userId) {
+      return res.status(401).json({ authenticated: false });
+    }
+    // Return the session ID so webapp can set it as httpOnly cookie
+    res.json({
+      authenticated: true,
+      sessionId: req.sessionID,
     });
   });
 
