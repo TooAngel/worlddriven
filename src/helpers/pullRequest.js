@@ -35,13 +35,20 @@ async function getDates(githubClient, pull) {
     return Math.max(new Date(total), latestCommitDate);
   }, new Date('January 1, 1970 00:00:00 UTC'));
 
-  // Get push events
+  // Get push events - filter to only include pushes to this PR's branch
+  // The GitHub Events API returns all repo events, so we must filter by ref
+  // to avoid other branch pushes (like merges to master) affecting this PR's timer
+  const prBranchRef = `refs/heads/${pull.head.ref}`;
   const repoEvents = await githubClient.getBranchEvents(
     pull.head.repo.events_url
   );
   const push = repoEvents
     .reduce((total, current) => {
       if (current.type !== 'PushEvent') {
+        return new Date(total);
+      }
+      // Only consider push events to this PR's branch
+      if (current.payload?.ref !== prBranchRef) {
         return new Date(total);
       }
       return new Date(
