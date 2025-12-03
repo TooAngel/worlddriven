@@ -578,46 +578,57 @@ async function startServer() {
   });
 
   // GitHub webhook endpoint
-  app.post('/github', async function (req, res) {
+  // Respond immediately to avoid GitHub's 10-second timeout and retries
+  app.post('/github', function (req, res) {
     const eventType = req.headers['x-github-event'];
+    const deliveryId = req.headers['x-github-delivery'];
     const data = req.body;
 
-    console.log(`GitHub webhook received: ${eventType}`);
+    console.log(
+      `GitHub webhook received: ${eventType} (delivery: ${deliveryId})`
+    );
 
-    try {
-      let result;
+    // Respond immediately to prevent GitHub timeout/retry
+    res.json({ info: 'Webhook received, processing asynchronously' });
 
-      switch (eventType) {
-        case 'installation':
-          result = await handleInstallationWebhook(data);
-          break;
+    // Process webhook asynchronously
+    (async () => {
+      try {
+        switch (eventType) {
+          case 'installation':
+            await handleInstallationWebhook(data);
+            break;
 
-        case 'installation_repositories':
-          result = await handleInstallationRepositoriesWebhook(data);
-          break;
+          case 'installation_repositories':
+            await handleInstallationRepositoriesWebhook(data);
+            break;
 
-        case 'pull_request':
-          result = await handlePullRequestWebhook(data);
-          break;
+          case 'pull_request':
+            await handlePullRequestWebhook(data);
+            break;
 
-        case 'pull_request_review':
-          result = await handlePullRequestReviewWebhook(data);
-          break;
+          case 'pull_request_review':
+            await handlePullRequestReviewWebhook(data);
+            break;
 
-        case 'push':
-          result = await handlePushWebhook(data);
-          break;
+          case 'push':
+            await handlePushWebhook(data);
+            break;
 
-        default:
-          console.log(`Unhandled webhook event: ${eventType}`);
-          result = { info: `Event ${eventType} not handled` };
+          default:
+            console.log(`Unhandled webhook event: ${eventType}`);
+        }
+
+        console.log(
+          `Webhook ${eventType} (${deliveryId}) processed successfully`
+        );
+      } catch (error) {
+        console.error(
+          `Webhook ${eventType} (${deliveryId}) processing error:`,
+          error
+        );
       }
-
-      res.json(result);
-    } catch (error) {
-      console.error('Webhook processing error:', error);
-      res.status(500).json({ error: 'Webhook processing failed' });
-    }
+    })();
   });
 
   // Handle HTML serving - different for production vs development
