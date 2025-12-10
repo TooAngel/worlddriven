@@ -9,6 +9,7 @@ import { client } from './database/database.js';
 import { User, Repository } from './database/models.js';
 import cron from 'node-cron';
 import { processPullRequests } from './helpers/pullRequestProcessor.js';
+import { acceptRepositoryInvitations } from './helpers/invitationProcessor.js';
 import {
   getPullRequests,
   createWebhook,
@@ -675,8 +676,10 @@ async function startServer() {
 
   // Only schedule cron jobs in real production
   if (process.env.NODE_ENV === 'production') {
+    cron.schedule('0 * * * *', acceptRepositoryInvitations); // Every hour at :00
     cron.schedule('51 * * * *', processPullRequests);
-    setTimeout(processPullRequests, 1000 * 30); // Run after 30 seconds on startup
+    setTimeout(acceptRepositoryInvitations, 1000 * 30); // Run 30 seconds after startup
+    setTimeout(processPullRequests, 1000 * 60); // Run 60 seconds after startup
   }
 
   return { server: server, vite: vite };
