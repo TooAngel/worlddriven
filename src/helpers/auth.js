@@ -66,13 +66,13 @@ export class Auth {
       console.warn('Failed to load repository config:', error.message);
     }
 
-    // Priority 2: Environment token fallback (if available)
-    if (process.env.GITHUB_FALLBACK_TOKEN) {
+    // Priority 2: Environment token (if available)
+    if (process.env.WORLDDRIVEN_GITHUB_TOKEN) {
       this._methods.push({
         type: 'ENV',
-        token: process.env.GITHUB_FALLBACK_TOKEN,
+        token: process.env.WORLDDRIVEN_GITHUB_TOKEN,
         priority: 2,
-        description: 'Environment fallback token',
+        description: 'Worlddriven GitHub token',
       });
     }
 

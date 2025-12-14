@@ -8,10 +8,12 @@ const GITHUB_API_BASE = 'https://api.github.com';
 const DOCUMENTATION_REPO = 'worlddriven/documentation';
 
 export async function acceptRepositoryInvitations() {
-  const token = process.env.GITHUB_FALLBACK_TOKEN;
+  const token = process.env.WORLDDRIVEN_GITHUB_TOKEN;
 
   if (!token) {
-    console.log('[Invitations] No GITHUB_FALLBACK_TOKEN configured, skipping');
+    console.log(
+      '[Invitations] No WORLDDRIVEN_GITHUB_TOKEN configured, skipping'
+    );
     return { accepted: 0, failed: 0 };
   }
 

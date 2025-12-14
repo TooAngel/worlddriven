@@ -27,7 +27,7 @@ The system tries authentication methods in this priority order:
 1. **Session User PAT** (Priority 1) - If user is logged in, use their personal access token
 2. **Repository GitHub App** (Priority 2) - If repository is configured with GitHub App
 3. **Repository Owner PAT** (Priority 3) - Fallback to repository owner's personal access token
-4. **Environment Token** (Priority 4) - System-wide fallback using `GITHUB_FALLBACK_TOKEN`
+4. **Environment Token** (Priority 4) - System-wide token using `WORLDDRIVEN_GITHUB_TOKEN`
 
 ## Configuration Options
 
