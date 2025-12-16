@@ -122,6 +122,14 @@ export async function processPullRequests() {
         console.log(`Found ${pullRequests.length} pull requests`);
 
         for (const pullRequest of pullRequests) {
+          // Skip draft PRs - they cannot be merged and should not be processed
+          if (pullRequest.draft) {
+            console.log(
+              `⏸️  Skipping draft PR #${pullRequest.number}: ${pullRequest.title}`
+            );
+            continue;
+          }
+
           const prResult = {
             number: pullRequest.number,
             title: pullRequest.title,
@@ -305,6 +313,11 @@ export async function processRepositoryPullRequests(owner, repo) {
   const results = [];
 
   for (const pullRequest of pullRequests) {
+    // Skip draft PRs
+    if (pullRequest.draft) {
+      continue;
+    }
+
     const pullRequestData = await getPullRequestData(
       githubClient,
       owner,

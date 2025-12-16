@@ -120,6 +120,14 @@ export async function handlePullRequestWebhook(data) {
     return { error: 'No GitHub App configured' };
   }
 
+  // Skip draft PRs - they cannot be merged and should not be processed
+  if (pullRequest.draft) {
+    console.log(
+      `⏸️  Skipping draft PR #${pullRequest.number}: ${pullRequest.title}`
+    );
+    return { info: 'Draft PR skipped' };
+  }
+
   try {
     const installationId = dbRepository.installationId;
 
@@ -202,6 +210,14 @@ export async function handlePullRequestReviewWebhook(data) {
       `No GitHub App configured for repository ${repository.full_name}`
     );
     return { error: 'No GitHub App configured' };
+  }
+
+  // Skip draft PRs
+  if (pullRequest.draft) {
+    console.log(
+      `⏸️  Skipping review for draft PR #${pullRequest.number}: ${pullRequest.title}`
+    );
+    return { info: 'Draft PR review skipped' };
   }
 
   try {
