@@ -144,11 +144,13 @@ export async function processPullRequests() {
 
             prResult.daysToMerge = pullRequestData.times.daysToMerge || null;
             prResult.daysToClose = pullRequestData.times.daysToClose || null;
-            const actionDays =
+            // Note: daysToMerge/daysToClose are actually in seconds (legacy naming)
+            const actionSeconds =
               pullRequestData.times.daysToMerge ||
               pullRequestData.times.daysToClose;
+            const actionDays = actionSeconds / 86400; // Convert to actual days
             console.log(
-              `Days to ${pullRequestData.times.action}: ${actionDays}`
+              `Days to ${pullRequestData.times.action}: ${actionDays.toFixed(2)}`
             );
 
             // Set GitHub status for this pull request
