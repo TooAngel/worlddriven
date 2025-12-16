@@ -13,7 +13,7 @@ test('Auth class', async t => {
     findByOwnerAndRepoStub = sinon.stub(Repository, 'findByOwnerAndRepo');
 
     // Clear environment variable
-    delete process.env.GITHUB_FALLBACK_TOKEN;
+    delete process.env.WORLDDRIVEN_GITHUB_TOKEN;
   });
 
   t.afterEach(() => {
@@ -68,7 +68,7 @@ test('Auth class', async t => {
       installationId: 12345,
     };
     findByOwnerAndRepoStub.resolves(mockRepo);
-    process.env.GITHUB_FALLBACK_TOKEN = 'env-token';
+    process.env.WORLDDRIVEN_GITHUB_TOKEN = 'env-token';
 
     const auth = new Auth({ owner: 'test', repo: 'repo' });
     const methods = await auth.getAllMethods();
@@ -81,7 +81,7 @@ test('Auth class', async t => {
   });
 
   await t.test('should add environment token when available', async () => {
-    process.env.GITHUB_FALLBACK_TOKEN = 'env-token';
+    process.env.WORLDDRIVEN_GITHUB_TOKEN = 'env-token';
     findByOwnerAndRepoStub.resolves(null);
 
     const auth = new Auth({ owner: 'test', repo: 'repo' });
@@ -91,7 +91,7 @@ test('Auth class', async t => {
     assert.strictEqual(methods[0].type, 'ENV');
     assert.strictEqual(methods[0].priority, 2);
     assert.strictEqual(methods[0].token, 'env-token');
-    assert.strictEqual(methods[0].description, 'Environment fallback token');
+    assert.strictEqual(methods[0].description, 'Worlddriven GitHub token');
   });
 
   await t.test('should provide auth strategy description', async () => {
@@ -102,14 +102,14 @@ test('Auth class', async t => {
       installationId: 12345,
     };
     findByOwnerAndRepoStub.resolves(mockRepo);
-    process.env.GITHUB_FALLBACK_TOKEN = 'env-token';
+    process.env.WORLDDRIVEN_GITHUB_TOKEN = 'env-token';
 
     const auth = new Auth({ owner: 'test', repo: 'repo' });
     const strategy = await auth.getAuthStrategy();
 
     assert.ok(strategy.includes('Auth strategy (with fallbacks)'));
     assert.ok(strategy.includes('1. Repository GitHub App'));
-    assert.ok(strategy.includes('2. Environment fallback token'));
+    assert.ok(strategy.includes('2. Worlddriven GitHub token'));
   });
 
   await t.test('should cache methods on repeated calls', async () => {

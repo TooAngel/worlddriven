@@ -42,7 +42,7 @@ The `repositories` collection uses GitHub App authentication:
 
 **Repository Operations (PR management, webhooks):**
 1. **GitHub App** (Priority 1): Uses `installationId` from repository configuration
-2. **Fallback Token** (Priority 2): Uses `GITHUB_FALLBACK_TOKEN` environment variable for public repositories
+2. **Worlddriven Token** (Priority 2): Uses `WORLDDRIVEN_GITHUB_TOKEN` environment variable for public repositories
 3. **Error**: If repository has no `installationId`, it cannot be processed
 
 **User-Specific Operations (UI, user API calls):**
