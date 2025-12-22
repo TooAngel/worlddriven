@@ -166,9 +166,10 @@ async function triggerDocumentationPRChecks(token, acceptedRepos) {
           }
         );
 
-        // Trigger workflow re-run by re-requesting check runs
-        const checksResponse = await fetch(
-          `${GITHUB_API_BASE}/repos/${DOCUMENTATION_REPO}/commits/${pr.head.sha}/check-runs`,
+        // Trigger workflow re-run using GitHub Actions API
+        // Find the most recent workflow run for this PR's head SHA
+        const runsResponse = await fetch(
+          `${GITHUB_API_BASE}/repos/${DOCUMENTATION_REPO}/actions/runs?head_sha=${pr.head.sha}&status=failure`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -177,12 +178,12 @@ async function triggerDocumentationPRChecks(token, acceptedRepos) {
           }
         );
 
-        if (checksResponse.ok) {
-          const checks = await checksResponse.json();
-          for (const check of checks.check_runs || []) {
-            // Re-run the check
-            await fetch(
-              `${GITHUB_API_BASE}/repos/${DOCUMENTATION_REPO}/check-runs/${check.id}/rerequest`,
+        if (runsResponse.ok) {
+          const runs = await runsResponse.json();
+          for (const run of runs.workflow_runs || []) {
+            // Re-run the failed workflow
+            const rerunResponse = await fetch(
+              `${GITHUB_API_BASE}/repos/${DOCUMENTATION_REPO}/actions/runs/${run.id}/rerun`,
               {
                 method: 'POST',
                 headers: {
@@ -191,6 +192,16 @@ async function triggerDocumentationPRChecks(token, acceptedRepos) {
                 },
               }
             );
+
+            if (rerunResponse.ok || rerunResponse.status === 201) {
+              console.log(
+                `[Invitations] ✅ Re-triggered workflow run ${run.id} for PR #${pr.number}`
+              );
+            } else {
+              console.error(
+                `[Invitations] ❌ Failed to re-run workflow ${run.id}: ${rerunResponse.status}`
+              );
+            }
           }
         }
       }
