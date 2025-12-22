@@ -148,21 +148,27 @@ async function migrateDatabase() {
       }
     }
 
+    // Delete orphaned users with expired tokens
+    // These users cannot be linked to GitHub accounts and would create
+    // duplicate records on next login anyway
+    let deletedOrphanedCount = 0;
+    if (failedUsers.length > 0) {
+      console.log(
+        `\n[MIGRATION] Cleaning up ${failedUsers.length} orphaned users with expired tokens...`
+      );
+      for (const user of failedUsers) {
+        await database.users.deleteOne({ _id: user._id });
+        console.log(`[MIGRATION]   • Deleted orphaned user ${user._id}`);
+        deletedOrphanedCount++;
+      }
+    }
+
     console.log('\n[MIGRATION] Migration summary:');
     console.log(`[MIGRATION]   • Updated: ${updatedCount} users`);
     console.log(`[MIGRATION]   • Merged: ${mergedCount} duplicate users`);
     console.log(
-      `[MIGRATION]   • Failed: ${failedUsers.length} users (expired tokens)`
+      `[MIGRATION]   • Deleted orphaned: ${deletedOrphanedCount} users (expired tokens)`
     );
-
-    if (failedUsers.length > 0) {
-      console.log(
-        '\n[MIGRATION] Users with expired tokens (will be updated on next login):'
-      );
-      for (const user of failedUsers) {
-        console.log(`[MIGRATION]   - ${user._id}`);
-      }
-    }
 
     // Create unique index on githubUserId
     console.log('\n[MIGRATION] Creating unique index on githubUserId...');
