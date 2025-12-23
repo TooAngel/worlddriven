@@ -242,15 +242,14 @@ async function startServer() {
   // ============================================================================
   // API Authentication Endpoints
   // ============================================================================
-  // Webapp Integration Pattern:
-  // 1. Webapp redirects browser to /login?redirect=<webapp-callback-url>
-  // 2. OAuth flow completes, user redirected back to webapp callback
-  // 3. Webapp calls GET /api/auth/session to get sessionId
-  // 4. Webapp sets sessionId as httpOnly cookie
-  // 5. Subsequent requests: proxy converts cookie to SESSION header
-  //
-  // Deprecated endpoints (remove after webapp migration complete):
-  // - POST /api/auth/logout -> use GET /user/logout or GET /api/user/logout
+  // Webapp Integration Pattern (API-based):
+  // 1. Webapp calls GET /api/auth/url?redirect_uri=<callback> to get OAuth URL
+  // 2. Webapp redirects user to GitHub OAuth URL
+  // 3. GitHub redirects to webapp callback with ?code=
+  // 4. Webapp calls POST /api/auth/callback with {code, redirect_uri}
+  // 5. Core exchanges code for token, creates session, returns {sessionId}
+  // 6. Webapp sets sessionId as httpOnly cookie
+  // 7. Subsequent requests: proxy converts cookie to SESSION header
   // ============================================================================
 
   app.get('/api/auth/status', async function (req, res) {
@@ -326,6 +325,108 @@ async function startServer() {
       authenticated: true,
       sessionId: req.sessionID,
     });
+  });
+
+  // Returns GitHub OAuth URL for webapp to redirect to
+  app.get('/api/auth/url', function (req, res) {
+    const redirectUri = req.query.redirect_uri;
+    if (!redirectUri) {
+      return res.status(400).json({ error: 'redirect_uri is required' });
+    }
+
+    const oauthUrl =
+      `https://github.com/login/oauth/authorize?` +
+      `client_id=${process.env.GITHUB_CLIENT_ID}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&scope=public_repo,read:org,admin:repo_hook`;
+
+    res.json({ url: oauthUrl });
+  });
+
+  // Exchanges OAuth code for session - webapp calls this after GitHub callback
+  app.post('/api/auth/callback', express.json(), async function (req, res) {
+    const { code, redirect_uri } = req.body;
+
+    if (!code || !redirect_uri) {
+      return res
+        .status(400)
+        .json({ error: 'code and redirect_uri are required' });
+    }
+
+    try {
+      // Exchange code for access token
+      const tokenResponse = await fetch(
+        'https://github.com/login/oauth/access_token',
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            client_id: process.env.GITHUB_CLIENT_ID,
+            client_secret: process.env.GITHUB_CLIENT_SECRET,
+            code,
+            redirect_uri,
+          }),
+        }
+      );
+
+      if (!tokenResponse.ok) {
+        throw new Error(
+          `GitHub token exchange failed: ${tokenResponse.status}`
+        );
+      }
+
+      const tokenData = await tokenResponse.json();
+      if (tokenData.error || !tokenData.access_token) {
+        return res.status(401).json({
+          error: tokenData.error_description || 'Failed to obtain access token',
+        });
+      }
+
+      // Fetch GitHub user info
+      const userResponse = await fetch('https://api.github.com/user', {
+        headers: {
+          Authorization: `Bearer ${tokenData.access_token}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      });
+
+      if (!userResponse.ok) {
+        throw new Error(`Failed to fetch GitHub user: ${userResponse.status}`);
+      }
+
+      const githubUser = await userResponse.json();
+      if (!githubUser.id) {
+        return res.status(401).json({ error: 'Invalid GitHub user response' });
+      }
+
+      // Find or create user
+      let user = await User.findByGithubUserId(githubUser.id);
+      if (user) {
+        user = await User.update(user._id, {
+          githubAccessToken: tokenData.access_token,
+        });
+      } else {
+        user = await User.create({
+          githubUserId: githubUser.id,
+          githubAccessToken: tokenData.access_token,
+        });
+      }
+
+      // Create session
+      req.session.userId = user._id.toString();
+
+      // Return session ID for webapp to set as httpOnly cookie
+      res.json({
+        authenticated: true,
+        sessionId: req.sessionID,
+      });
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      res.status(500).json({ error: 'Authentication failed' });
+    }
   });
 
   app.get('/v1/user', async function (req, res) {
