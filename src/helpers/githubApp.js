@@ -22,6 +22,33 @@ export async function getInstallationOctokit(installationId) {
   });
 }
 
+/**
+ * Get installation access token for a specific GitHub App
+ * Used for apps other than the main worlddriven app (e.g., migrate app)
+ * @param {number} installationId - Installation ID
+ * @param {string} appId - GitHub App ID
+ * @param {string} privateKey - GitHub App private key
+ * @returns {string} Installation access token
+ */
+export async function getInstallationAccessToken(
+  installationId,
+  appId,
+  privateKey
+) {
+  if (!appId || !privateKey) {
+    throw new Error('App ID and private key are required');
+  }
+
+  const auth = createAppAuth({
+    appId,
+    privateKey,
+    installationId: parseInt(installationId),
+  });
+
+  const { token } = await auth({ type: 'installation' });
+  return token;
+}
+
 // GitHub App API functions
 export async function getPullRequestsApp(installationId, owner, repo) {
   const octokit = await getInstallationOctokit(installationId);
