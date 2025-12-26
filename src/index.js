@@ -27,6 +27,7 @@ import {
   handleInstallationWebhook,
   handleInstallationRepositoriesWebhook,
 } from './helpers/installationHandler.js';
+import { handleMigrateInstallationWebhook } from './helpers/migrationHandler.js';
 import { removePatAuthentication } from '../scripts/remove-pat-auth.js';
 import { removeConfiguredField } from '../scripts/remove-configured-field.js';
 import { migrateDatabase as migrateUserGithubIds } from '../scripts/migrate-user-github-ids.js';
@@ -679,7 +680,7 @@ async function startServer() {
     }
   });
 
-  // GitHub webhook endpoint
+  // GitHub webhook endpoint (main worlddriven app)
   // Respond immediately to avoid GitHub's 10-second timeout and retries
   app.post('/github', function (req, res) {
     const eventType = req.headers['x-github-event'];
@@ -727,6 +728,40 @@ async function startServer() {
       } catch (error) {
         console.error(
           `Webhook ${eventType} (${deliveryId}) processing error:`,
+          error
+        );
+      }
+    })();
+  });
+
+  // GitHub webhook endpoint for worlddriven-migrate app
+  // Handles repository transfer requests when users install the migrate app
+  app.post('/api/webhooks/migrate', function (req, res) {
+    const eventType = req.headers['x-github-event'];
+    const deliveryId = req.headers['x-github-delivery'];
+    const data = req.body;
+
+    console.log(
+      `[Migration] Webhook received: ${eventType} (delivery: ${deliveryId})`
+    );
+
+    // Respond immediately to prevent GitHub timeout/retry
+    res.json({ info: 'Migration webhook received, processing asynchronously' });
+
+    // Process webhook asynchronously
+    (async () => {
+      try {
+        if (eventType === 'installation_repositories') {
+          await handleMigrateInstallationWebhook(data);
+          console.log(
+            `[Migration] Webhook ${eventType} (${deliveryId}) processed successfully`
+          );
+        } else {
+          console.log(`[Migration] Ignoring event type: ${eventType}`);
+        }
+      } catch (error) {
+        console.error(
+          `[Migration] Webhook ${eventType} (${deliveryId}) processing error:`,
           error
         );
       }
