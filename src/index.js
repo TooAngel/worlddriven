@@ -751,8 +751,11 @@ async function startServer() {
     // Process webhook asynchronously
     (async () => {
       try {
-        if (eventType === 'installation_repositories') {
-          await handleMigrateInstallationWebhook(data);
+        if (
+          eventType === 'installation_repositories' ||
+          eventType === 'installation'
+        ) {
+          await handleMigrateInstallationWebhook(data, eventType);
           console.log(
             `[Migration] Webhook ${eventType} (${deliveryId}) processed successfully`
           );

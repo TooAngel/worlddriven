@@ -15,24 +15,46 @@ const DOCUMENTATION_REPO = 'worlddriven/documentation';
 const TARGET_ORG = 'worlddriven';
 
 /**
- * Handle installation_repositories webhook from worlddriven-migrate app
+ * Handle installation or installation_repositories webhook from worlddriven-migrate app
  * @param {object} payload - Webhook payload
+ * @param {string} eventType - The GitHub event type
  */
-export async function handleMigrateInstallationWebhook(payload) {
-  const { action, repositories_added, installation } = payload;
+export async function handleMigrateInstallationWebhook(payload, eventType) {
+  const { action, repositories_added, repositories, installation } = payload;
 
-  if (action !== 'added' || !repositories_added?.length) {
-    console.log('[Migration] Ignoring non-add action or empty repositories');
+  // Handle both event types:
+  // - installation (action: created) -> repositories array
+  // - installation_repositories (action: added) -> repositories_added array
+  let repos = [];
+
+  if (
+    eventType === 'installation' &&
+    action === 'created' &&
+    repositories?.length
+  ) {
+    repos = repositories;
+    console.log(
+      `[Migration] New installation with ${repos.length} repository(ies)`
+    );
+  } else if (
+    eventType === 'installation_repositories' &&
+    action === 'added' &&
+    repositories_added?.length
+  ) {
+    repos = repositories_added;
+    console.log(
+      `[Migration] Repositories added to existing installation: ${repos.length}`
+    );
+  } else {
+    console.log(
+      `[Migration] Ignoring: event=${eventType}, action=${action}, repos=${repositories?.length || repositories_added?.length || 0}`
+    );
     return { info: 'No action needed' };
   }
 
-  console.log(
-    `[Migration] App installed on ${repositories_added.length} repository(ies)`
-  );
-
   const results = [];
 
-  for (const repo of repositories_added) {
+  for (const repo of repos) {
     const repoFullName = repo.full_name;
     console.log(`[Migration] Processing: ${repoFullName}`);
 
