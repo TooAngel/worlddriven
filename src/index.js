@@ -138,30 +138,82 @@ async function startServer() {
     res.redirect(installUrl);
   });
 
-  app.get('/login', function (req, res) {
-    // Store redirect URL for webapp integration (redirect back after OAuth)
-    if (req.query.redirect) {
-      req.session.authRedirect = req.query.redirect;
-    }
+  // Allowed callback domains for OAuth (security: prevent open redirect)
+  const allowedCallbackDomains = [
+    'www.worlddriven.org',
+    'worlddriven-webapp.tooangel.com',
+    'localhost',
+  ];
 
+  function isAllowedCallbackUrl(url) {
+    try {
+      const parsed = new URL(url);
+      return allowedCallbackDomains.some(
+        domain =>
+          parsed.hostname === domain || parsed.hostname.endsWith('.' + domain)
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  app.get('/login', function (req, res) {
     if (req.session.userId) {
-      // Already logged in - redirect to stored URL or dashboard
-      const redirectUrl = req.session.authRedirect || '/dashboard';
-      delete req.session.authRedirect;
+      // Already logged in - redirect to provided URL or dashboard
+      const redirectUrl = req.query.redirect || '/dashboard';
       res.redirect(redirectUrl);
     } else {
-      // TODO use `code`, too (https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps)
-      const redirectUri = isProduction
-        ? `https://${process.env.DOMAIN || req.get('host')}/github-callback`
-        : 'http://localhost:3000/github-callback';
+      // Build OAuth state to persist data through GitHub redirect
+      // This is necessary because sessions aren't shared across domains
+      const oauthState = {
+        // Where to redirect after successful login
+        redirect: req.query.redirect || '/dashboard',
+      };
+
+      // Allow external apps to specify their OAuth callback URL
+      // This enables multi-domain OAuth (e.g., webapp on different domain)
+      let redirectUri;
+      if (req.query.callback && isAllowedCallbackUrl(req.query.callback)) {
+        redirectUri = req.query.callback;
+        oauthState.callback = req.query.callback;
+      } else {
+        redirectUri = isProduction
+          ? `https://${process.env.DOMAIN || req.get('host')}/github-callback`
+          : 'http://localhost:3000/github-callback';
+      }
+
+      // Encode state as base64 JSON
+      const stateParam = Buffer.from(JSON.stringify(oauthState)).toString(
+        'base64url'
+      );
+
       res.redirect(
-        `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=public_repo,read:org,admin:repo_hook`
+        `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=public_repo,read:org,admin:repo_hook&state=${stateParam}`
       );
     }
   });
 
   app.get('/github-callback', async function (req, res) {
     const url = 'https://github.com/login/oauth/access_token';
+
+    // Parse OAuth state parameter (contains redirect URL and callback info)
+    let oauthState = { redirect: '/dashboard' };
+    if (req.query.state) {
+      try {
+        oauthState = JSON.parse(
+          Buffer.from(req.query.state, 'base64url').toString('utf-8')
+        );
+      } catch (e) {
+        console.warn('Failed to parse OAuth state:', e.message);
+      }
+    }
+
+    // Get the redirect_uri that was used for OAuth (must match for token exchange)
+    const redirectUri = oauthState.callback
+      ? oauthState.callback
+      : isProduction
+        ? `https://${process.env.DOMAIN || req.get('host')}/github-callback`
+        : 'http://localhost:3000/github-callback';
 
     try {
       const response = await fetch(url, {
@@ -174,6 +226,7 @@ async function startServer() {
           client_id: process.env.GITHUB_CLIENT_ID,
           client_secret: process.env.GITHUB_CLIENT_SECRET,
           code: req.query.code,
+          redirect_uri: redirectUri,
         }),
       });
 
@@ -225,18 +278,27 @@ async function startServer() {
       }
       req.session.userId = user._id.toString();
 
-      // Redirect to stored URL (webapp) or default to dashboard
-      const redirectUrl = req.session.authRedirect || '/dashboard';
-      delete req.session.authRedirect;
-      res.redirect(redirectUrl);
+      // For multi-domain OAuth, return session info as JSON so webapp can set cookie
+      // Check if this is a proxied request from webapp (has callback in state)
+      if (oauthState.callback) {
+        // Return session ID for webapp to set as httpOnly cookie
+        res.json({
+          authenticated: true,
+          sessionId: req.sessionID,
+          redirect: oauthState.redirect,
+        });
+      } else {
+        // Standard redirect for same-domain OAuth
+        res.redirect(oauthState.redirect);
+      }
     } catch (e) {
       console.error('GitHub OAuth error:', e);
-      // On error, redirect to stored error URL or home
-      const errorRedirect = req.session.authRedirect
-        ? `${req.session.authRedirect}?error=oauth_failed`
-        : '/';
-      delete req.session.authRedirect;
-      res.redirect(errorRedirect);
+      // On error, redirect to home or return error JSON
+      if (oauthState.callback) {
+        res.status(500).json({ error: 'OAuth authentication failed' });
+      } else {
+        res.redirect('/');
+      }
     }
   });
 
