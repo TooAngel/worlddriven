@@ -39,9 +39,9 @@ export async function sessionAuthMiddleware(req, res, next) {
 
   try {
     // Query MongoDB session store to get session data
-    // Session ID in MongoDB is prefixed with "sess:"
+    // Note: connect-mongo v4+ stores sessions without prefix
     const sessionDoc = await database.sessions.findOne({
-      _id: `sess:${sessionId}`,
+      _id: sessionId,
     });
 
     if (!sessionDoc || !sessionDoc.session) {
