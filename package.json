@@ -30,28 +30,28 @@
     "test:unit": "node --test tests/*.test.js"
   },
   "dependencies": {
-    "@octokit/auth-app": "8.1.2",
+    "@octokit/auth-app": "8.2.0",
     "@octokit/rest": "22.0.1",
     "@octokit/webhooks": "14.2.0",
     "connect-mongo": "^6.0.0",
     "express": "5.2.1",
-    "express-session": "1.18.2",
-    "mongodb": "^7.0.0",
+    "express-session": "1.19.0",
+    "mongodb": "^7.1.0",
     "node-cron": "4.2.1",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
     "vite": "^7.3.1"
   },
   "devDependencies": {
     "@eslint/js": "9.39.2",
-    "@vitejs/plugin-react": "5.1.2",
+    "@vitejs/plugin-react": "5.1.4",
     "eslint": "9.39.2",
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "7.0.1",
-    "globals": "^17.0.0",
+    "globals": "^17.3.0",
     "nodemon": "3.1.11",
-    "prettier": "^3.8.0",
+    "prettier": "^3.8.1",
     "sinon": "21.0.1",
-    "sort-package-json": "3.6.0"
+    "sort-package-json": "3.6.1"
   }
 }
