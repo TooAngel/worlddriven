@@ -40,11 +40,11 @@
     "node-cron": "4.2.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "vite": "^7.3.2"
+    "vite": "^8.0.16"
   },
   "devDependencies": {
     "@eslint/js": "9.39.2",
-    "@vitejs/plugin-react": "5.1.4",
+    "@vitejs/plugin-react": "5.2.0",
     "eslint": "9.39.2",
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "7.0.1",
