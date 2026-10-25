@@ -53,5 +53,8 @@
     "prettier": "^3.8.1",
     "sinon": "21.0.1",
     "sort-package-json": "3.6.1"
+  },
+  "engines": {
+    "node": "26.x"
   }
 }
