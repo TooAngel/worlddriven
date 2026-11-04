@@ -300,6 +300,7 @@ export class GitHubClient {
       id: pull.id,
       title: pull.title,
       number: pull.number,
+      draft: pull.draft,
     }));
   }
 

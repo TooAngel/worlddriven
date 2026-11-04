@@ -195,8 +195,8 @@ test('GitHubClient class', async t => {
     global.fetch.resolves({
       ok: true,
       json: async () => [
-        { id: 1, title: 'PR 1', number: 1 },
-        { id: 2, title: 'PR 2', number: 2 },
+        { id: 1, title: 'PR 1', number: 1, draft: false },
+        { id: 2, title: 'PR 2', number: 2, draft: true },
       ],
     });
 
@@ -204,8 +204,18 @@ test('GitHubClient class', async t => {
     const result = await client.getPullRequests('owner', 'repo');
 
     assert.strictEqual(result.length, 2);
-    assert.deepStrictEqual(result[0], { id: 1, title: 'PR 1', number: 1 });
-    assert.deepStrictEqual(result[1], { id: 2, title: 'PR 2', number: 2 });
+    assert.deepStrictEqual(result[0], {
+      id: 1,
+      title: 'PR 1',
+      number: 1,
+      draft: false,
+    });
+    assert.deepStrictEqual(result[1], {
+      id: 2,
+      title: 'PR 2',
+      number: 2,
+      draft: true,
+    });
 
     const [url] = global.fetch.getCall(0).args;
     assert.strictEqual(
