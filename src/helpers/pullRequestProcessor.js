@@ -2,7 +2,7 @@ import { getPullRequestData } from './pullRequest.js';
 import {
   mergePullRequest,
   closePullRequest,
-  setCommitStatus,
+  setCommitStatusIfChanged,
   getLatestCommitSha,
 } from './github.js';
 import { updateOrCreateWorlddrivenComment } from './commentManager.js';
@@ -42,7 +42,7 @@ async function setPullRequestStatus(
       description = `${coefficient.toFixed(2)} Close at ${closeDate.toISOString().split('T')[0]}`;
     }
 
-    await setCommitStatus(
+    await setCommitStatusIfChanged(
       authMethod,
       owner,
       repo,

@@ -4,6 +4,7 @@ import {
   mergePullRequestApp,
   closePullRequestApp,
   setCommitStatusApp,
+  getCommitStatusApp,
   getLatestCommitShaApp,
   createIssueCommentApp,
   listIssueCommentsApp,
@@ -465,6 +466,116 @@ export async function setCommitStatus(
     );
     return;
   }
+}
+
+/**
+ * getCommitStatus - Hybrid authentication (GitHub App or PAT)
+ *
+ * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} sha - commit SHA
+ * @param {string} context - status context/name
+ * @return {object|null} the latest status of this context, if any
+ */
+export async function getCommitStatus(
+  userOrInstallationId,
+  owner,
+  repo,
+  sha,
+  context = 'World driven'
+) {
+  // If it's a number, treat as installationId (GitHub App)
+  if (
+    typeof userOrInstallationId === 'number' ||
+    (typeof userOrInstallationId === 'string' && !isNaN(userOrInstallationId))
+  ) {
+    return await getCommitStatusApp(
+      parseInt(userOrInstallationId),
+      owner,
+      repo,
+      sha,
+      context
+    );
+  }
+
+  // Otherwise, use existing PAT logic
+  const user = userOrInstallationId;
+  const url = `https://api.github.com/repos/${owner}/${repo}/commits/${sha}/status?per_page=100`;
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/vnd.github.v3+json',
+      Authorization: `token ${user.githubAccessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  const { statuses } = await response.json();
+  return statuses.find(status => status.context === context) || null;
+}
+
+/**
+ * setCommitStatusIfChanged - Post a status only if it differs from the latest
+ *
+ * GitHub limits the number of statuses per commit and context. Posting the same
+ * status on every run fills that limit, after which each POST fails with 422.
+ *
+ * @param {object|number} userOrInstallationId - User object with githubAccessToken or installationId number
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} sha - commit SHA
+ * @param {string} state - pending, success, error, or failure
+ * @param {string} targetUrl - URL for more details
+ * @param {string} description - status description
+ * @param {string} context - status context/name
+ * @return {object|undefined} the response of the POST, if one was made
+ */
+export async function setCommitStatusIfChanged(
+  userOrInstallationId,
+  owner,
+  repo,
+  sha,
+  state,
+  targetUrl,
+  description,
+  context = 'World driven'
+) {
+  let current = null;
+  try {
+    current = await getCommitStatus(
+      userOrInstallationId,
+      owner,
+      repo,
+      sha,
+      context
+    );
+  } catch (e) {
+    // Not knowing the current status must not lose an update
+    console.error(
+      `Failed to read status for ${owner}/${repo}@${sha}:`,
+      e.message
+    );
+  }
+
+  if (current?.state === state && current?.description === description) {
+    console.log(`Status unchanged for ${owner}/${repo}@${sha}: ${description}`);
+    return;
+  }
+
+  return await setCommitStatus(
+    userOrInstallationId,
+    owner,
+    repo,
+    sha,
+    state,
+    targetUrl,
+    description,
+    context
+  );
 }
 
 /**
