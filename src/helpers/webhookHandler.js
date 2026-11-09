@@ -1,5 +1,5 @@
 import { getPullRequestData } from './pullRequest.js';
-import { setCommitStatus, getLatestCommitSha } from './github.js';
+import { setCommitStatusIfChanged, getLatestCommitSha } from './github.js';
 import { updateOrCreateWorlddrivenComment } from './commentManager.js';
 import { Repository } from '../database/models.js';
 import { Auth } from './auth.js';
@@ -41,7 +41,7 @@ async function setPullRequestStatus(
       description = `${coefficient.toFixed(2)} Will not merge`;
     }
 
-    await setCommitStatus(
+    await setCommitStatusIfChanged(
       installationId,
       owner,
       repo,

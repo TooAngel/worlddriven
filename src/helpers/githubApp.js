@@ -138,6 +138,23 @@ export async function setCommitStatusApp(
   }
 }
 
+export async function getCommitStatusApp(
+  installationId,
+  owner,
+  repo,
+  sha,
+  context = 'World driven'
+) {
+  const octokit = await getInstallationOctokit(installationId);
+  const { data } = await octokit.rest.repos.getCombinedStatusForRef({
+    owner,
+    repo,
+    ref: sha,
+    per_page: 100,
+  });
+  return data.statuses.find(status => status.context === context) || null;
+}
+
 export async function getLatestCommitShaApp(
   installationId,
   owner,
